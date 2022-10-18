@@ -2,6 +2,7 @@
 
 type env = Map<string, int>
 
+/// Question 1.
 module Env =
 
     let empty : env = Map.empty
@@ -21,6 +22,7 @@ type arith =
     | Variable of string
     | Num of int
 
+/// Question 1.
 module Arith =
 
     let rec evaluate arith env =

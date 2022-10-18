@@ -2,8 +2,9 @@ namespace Assignment1
 
 open Microsoft.VisualStudio.TestTools.UnitTesting
 
+/// Question 2.
 [<TestClass>]
-type Question2() =
+type ArithTests() =
 
     [<TestMethod>]
     member _.``3 * (4 + 5)``() =
