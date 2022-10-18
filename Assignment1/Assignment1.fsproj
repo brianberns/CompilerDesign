@@ -8,6 +8,7 @@
   <ItemGroup>
     <Compile Include="Arith.fs" />
     <Compile Include="Tok.fs" />
+    <Compile Include="SExp.fs" />
   </ItemGroup>
 
   <ItemGroup>
