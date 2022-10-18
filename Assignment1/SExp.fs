@@ -17,12 +17,25 @@ type sexp<'a> =
 
 module SExp =
 
-    let rec private parse_sexp tok (tail : List<tok<pos>>) : Result<sexp<pos> * List<tok<pos>>, string> =
+    let getPos = function
+        | Sym (_, pos) -> pos
+        | Int (_, pos) -> pos
+        | Bool (_, pos) -> pos
+        | Nest (_, pos) -> pos
+
+    let rec private parse_sexp tok tail =
         result {
             match tok with
                 | LPAREN pos ->
                     let! sexps, tail' = parse_sexps pos tail
-                    return Nest (sexps, pos), tail'
+                    if List.isEmpty sexps then
+                        return! Error $"Empty expression at {pos}"
+                    else
+                        let pos' =
+                            let (startline, startcol, _, _) = pos
+                            let (_, _, endline, endcol) = getPos (List.last sexps)
+                            startline, startcol, endline, endcol
+                        return Nest (sexps, pos'), tail'
                 | RPAREN pos ->
                     return! Error $"Unmatched right paren at {pos}"
                 | TSym (sym, pos) ->
@@ -47,7 +60,7 @@ module SExp =
         }
 
     /// Question 4.
-    let rec parse_toks (toks : List<tok<pos>>) : Result<List<sexp<pos>>, string> =
+    let rec parse_toks toks =
         result {
             match toks with
                 | tok :: tail ->
