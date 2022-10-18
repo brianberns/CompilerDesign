@@ -7,6 +7,11 @@
 
   <ItemGroup>
     <Compile Include="Arith.fs" />
+    <Compile Include="Tok.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FParsec" Version="1.1.1" />
   </ItemGroup>
 
 </Project>
