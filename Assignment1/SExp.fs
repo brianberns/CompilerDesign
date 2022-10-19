@@ -22,37 +22,38 @@ module SExp =
                     // parse sub-expressions until the corresponding r-paren
                 | LPAREN (pos : pos) ->
                     let! sexps, pos', tail' = parse_nested pos tail
-                    if List.isEmpty sexps then
-                        let line, col, _ , _ = pos
-                        return! Error $"Empty expression at line {line}, col {col}"
-                    else
-                        let range =
-                            let (startline, startcol, _, _) = pos
-                            let (_, _, endline, endcol) = pos'
-                            startline, startcol, endline, endcol
-                        return Nest (sexps, range), tail'
+                    let range =
+                        let (startline, startcol, _, _) = pos
+                        let (_, _, endline, endcol) = pos'
+                        startline, startcol, endline, endcol
+                    return Nest (sexps, range), tail'
 
-                    
+                    // unexpected r-paren
                 | RPAREN pos ->
                     let line, col, _ , _ = pos
                     return! Error $"Unmatched right paren at line {line}, col {col}"
-                | TSym (sym, pos) ->
-                    return Sym (sym, pos), tail
-                | TInt (n, pos) ->
-                    return Int (n, pos), tail
-                | TBool (b, pos) ->
-                    return Bool (b, pos), tail
+
+                | TSym (sym, pos) -> return Sym (sym, pos), tail
+                | TInt (n, pos) -> return Int (n, pos), tail
+                | TBool (b, pos) -> return Bool (b, pos), tail
         }
 
-    and private parse_nested pos toks : Result<List<_> * pos * List<_>, string> =
+    /// Parses nested sub-expressions.
+    and private parse_nested pos toks =
         result {
             match toks with
-                | RPAREN pos' :: tail ->
+
+                    // no sub-expressions to parse
+                | RPAREN (pos' : pos) :: tail ->
                     return [], pos', tail
+
+                    // parse sub-expression starting at the current token
                 | tok :: tail ->
                     let! sexp, tail' = parse_sexp tok tail
                     let! sexps, pos', tail'' = parse_nested pos tail'
                     return sexp :: sexps, pos', tail''
+
+                    // ran out of tokens
                 | [] ->
                     let line, col, _ , _ = pos
                     return! Error $"Unmatched left paren at line {line}, col {col}"

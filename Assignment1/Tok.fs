@@ -10,11 +10,16 @@ type tok<'a> =
     | TBool of bool * 'a
 
 (* startline, startcol, endline, endcol *)
-type pos = int * int * int * int
+type pos = int * int * int * int   // this is really ugly, but we'll use what we're given
 
 module Tok =
 
-    let private parsePos p makeToken : Parser<_, unit> =
+    (*
+    Use FParsec to tokenize, since we don't have access to the original
+    OCaml tokenizer.
+    *)
+
+    let private parsePos p makeToken =
         parse {
             let! startPos = getPosition
             let! value = p
