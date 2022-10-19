@@ -7,4 +7,6 @@ type ResultBuilder() =
 
 [<AutoOpen>]
 module ResultBuilder =
+
+    /// Monadic result builder.
     let result = ResultBuilder()

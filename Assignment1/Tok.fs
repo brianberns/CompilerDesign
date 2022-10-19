@@ -10,7 +10,7 @@ type tok<'a> =
     | TBool of bool * 'a
 
 (* startline, startcol, endline, endcol *)
-type pos = int * int * int * int   // this is really ugly, but we'll use what we're given
+type pos = int * int * int * int   // this is really ugly, but we use what we're given
 
 module Tok =
 

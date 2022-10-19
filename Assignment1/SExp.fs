@@ -22,7 +22,7 @@ module SExp =
                     // parse sub-expressions until the corresponding r-paren
                 | LPAREN (pos : pos) ->
                     let! sexps, pos', tail' = parse_nested pos tail
-                    let range =
+                    let range : pos =
                         let (startline, startcol, _, _) = pos
                         let (_, _, endline, endcol) = pos'
                         startline, startcol, endline, endcol
@@ -43,7 +43,7 @@ module SExp =
         result {
             match toks with
 
-                    // no sub-expressions to parse
+                    // no further sub-expressions to parse
                 | RPAREN (pos' : pos) :: tail ->
                     return [], pos', tail
 
