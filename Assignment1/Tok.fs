@@ -43,7 +43,7 @@ module Tok =
             (snd >> RPAREN)
 
     let private parseSym =
-        let psym = identifier (IdentifierOptions ())
+        let psym = identifier (IdentifierOptions ())   // details not specified in the assignment, so assume something basic
         parsePos psym TSym
 
     let private parseInt =
