@@ -18,15 +18,15 @@ module SExp =
         result {
             match tok with
                 | LPAREN pos ->
-                    let! sexps, tail' = parse_nested pos tail
+                    let! sexps, pos', tail' = parse_nested pos tail
                     if List.isEmpty sexps then
                         return! Error $"Empty expression at {pos}"
                     else
-                        let pos' =
+                        let range =
                             let (startline, startcol, _, _) = pos
-                            let (_, _, endline, endcol) = getPos (List.last sexps)
+                            let (_, _, endline, endcol) = pos'
                             startline, startcol, endline, endcol
-                        return Nest (sexps, pos'), tail'
+                        return Nest (sexps, range), tail'
                 | RPAREN pos ->
                     return! Error $"Unmatched right paren at {pos}"
                 | TSym (sym, pos) ->
@@ -37,15 +37,15 @@ module SExp =
                     return Bool (b, pos), tail
         }
 
-    and private parse_nested pos toks =
+    and private parse_nested pos toks : Result<List<_> * pos * List<_>, string> =
         result {
             match toks with
-                | RPAREN pos :: tail ->
-                    return [], tail
+                | RPAREN pos' :: tail ->
+                    return [], pos', tail
                 | tok :: tail ->
                     let! sexp, tail' = parse_sexp tok tail
-                    let! sexps, tail'' = parse_nested pos tail'
-                    return sexp :: sexps, tail''
+                    let! sexps, pos', tail'' = parse_nested pos tail'
+                    return sexp :: sexps, pos', tail''
                 | [] ->
                     return! Error $"Unmatched left paren at {pos}"
         }
