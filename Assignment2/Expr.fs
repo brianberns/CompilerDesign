@@ -26,7 +26,11 @@ module Program =
         let typBld =
             let modBld =
                 asmBld.DefineDynamicModule("AdderModule")
-            modBld.DefineType("AdderType")
+            modBld.DefineType(
+                "AdderType",
+                TypeAttributes.Abstract   // attributes for a C# static class
+                    ||| TypeAttributes.Sealed
+                    ||| TypeAttributes.BeforeFieldInit)
 
         let ilGen =
             let mthBld =
