@@ -23,8 +23,8 @@ module SExp =
                 | LPAREN (pos : pos) ->
                     let! sexps, pos', tail' = parse_nested pos tail
                     let range : pos =
-                        let (startline, startcol, _, _) = pos
-                        let (_, _, endline, endcol) = pos'
+                        let startline, startcol, _, _ = pos
+                        let _, _, endline, endcol = pos'
                         startline, startcol, endline, endcol
                     return Nest (sexps, range), tail'
 
