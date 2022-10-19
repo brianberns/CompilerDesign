@@ -45,5 +45,5 @@ type ArithTests() =
             "(x + 1)",
             Arith.pretty arith env)
         Assert.ThrowsException(fun () ->
-            Arith.evaluate arith env :> obj)
+            Arith.evaluate arith env)
             |> ignore

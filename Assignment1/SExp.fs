@@ -23,7 +23,8 @@ module SExp =
                 | LPAREN (pos : pos) ->
                     let! sexps, pos', tail' = parse_nested pos tail
                     if List.isEmpty sexps then
-                        return! Error $"Empty expression at {pos}"
+                        let line, col, _ , _ = pos
+                        return! Error $"Empty expression at line {line}, col {col}"
                     else
                         let range =
                             let (startline, startcol, _, _) = pos
@@ -33,7 +34,8 @@ module SExp =
 
                     
                 | RPAREN pos ->
-                    return! Error $"Unmatched right paren at {pos}"
+                    let line, col, _ , _ = pos
+                    return! Error $"Unmatched right paren at line {line}, col {col}"
                 | TSym (sym, pos) ->
                     return Sym (sym, pos), tail
                 | TInt (n, pos) ->
@@ -52,7 +54,8 @@ module SExp =
                     let! sexps, pos', tail'' = parse_nested pos tail'
                     return sexp :: sexps, pos', tail''
                 | [] ->
-                    return! Error $"Unmatched left paren at {pos}"
+                    let line, col, _ , _ = pos
+                    return! Error $"Unmatched left paren at line {line}, col {col}"
         }
 
     /// Question 4.

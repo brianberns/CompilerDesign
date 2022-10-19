@@ -58,7 +58,7 @@ module Tok =
             parseRparen
             parseInt
             parseBool
-            parseSym   // must follow parseBool to avoid parsing Boolean literals as symbols
+            parseSym   // last to avoid parsing literals as symbols (e.g. "true")
         ] .>> spaces
 
     let private parseText =

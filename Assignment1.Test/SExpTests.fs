@@ -38,3 +38,9 @@ type SExpTests() =
             ]
         let actual = SExp.parse_toks (Tok.tokenize "(a (b true) 3)")
         Assert.AreEqual<_>(expected, actual)
+
+    [<TestMethod>]
+    member _.``(a``() =
+        let expected = Error "Unmatched left paren at line 0, col 0"
+        let actual = SExp.parse_toks (Tok.tokenize "(a")
+        Assert.AreEqual<_>(expected, actual)
