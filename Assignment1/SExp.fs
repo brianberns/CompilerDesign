@@ -14,10 +14,13 @@ module SExp =
         | Bool (_, pos) -> pos
         | Nest (_, pos) -> pos
 
+    /// Parses a single expression starting at the given token.
     let rec private parse_sexp tok tail =
         result {
             match tok with
-                | LPAREN pos ->
+
+                    // parse sub-expressions until the corresponding r-paren
+                | LPAREN (pos : pos) ->
                     let! sexps, pos', tail' = parse_nested pos tail
                     if List.isEmpty sexps then
                         return! Error $"Empty expression at {pos}"
@@ -27,6 +30,8 @@ module SExp =
                             let (_, _, endline, endcol) = pos'
                             startline, startcol, endline, endcol
                         return Nest (sexps, range), tail'
+
+                    
                 | RPAREN pos ->
                     return! Error $"Unmatched right paren at {pos}"
                 | TSym (sym, pos) ->

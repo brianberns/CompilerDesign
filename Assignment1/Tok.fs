@@ -56,9 +56,9 @@ module Tok =
         choice [
             parseLparen
             parseRparen
-            parseSym
             parseInt
             parseBool
+            parseSym   // must follow parseBool to avoid parsing Boolean literals as symbols
         ] .>> spaces
 
     let private parseText =

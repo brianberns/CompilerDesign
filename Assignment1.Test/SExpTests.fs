@@ -18,3 +18,23 @@ type SExpTests() =
             ]
         let actual = SExp.parse_toks (Tok.tokenize "(a b)")
         Assert.AreEqual<_>(expected, actual)
+
+    [<TestMethod>]
+    member _.``(a (b true) 3)``() =
+        let expected =
+            Ok [
+                Nest (
+                    [
+                        Sym ("a", (0, 1, 0, 2))
+                        Nest (
+                            [
+                                Sym ("b", (0, 4, 0, 5))
+                                Bool (true, (0, 6, 0, 10))
+                            ],
+                            (0, 3, 0, 11))
+                        Int (3, (0, 12, 0, 13))
+                    ],
+                    (0, 0, 0, 14))
+            ]
+        let actual = SExp.parse_toks (Tok.tokenize "(a (b true) 3)")
+        Assert.AreEqual<_>(expected, actual)
