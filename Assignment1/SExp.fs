@@ -2,8 +2,8 @@
 
 type ResultBuilder() =
     member _.Return(x) = Ok x
-    member _.ReturnFrom(res) = res
-    member _.Bind(x, f) = Result.bind f x
+    member _.ReturnFrom(res : Result<_, _>) = res
+    member _.Bind(res, f) = Result.bind f res
 
 [<AutoOpen>]
 module ResultBuilder =
@@ -27,7 +27,7 @@ module SExp =
         result {
             match tok with
                 | LPAREN pos ->
-                    let! sexps, tail' = parse_sexps pos tail
+                    let! sexps, tail' = parse_nested pos tail
                     if List.isEmpty sexps then
                         return! Error $"Empty expression at {pos}"
                     else
@@ -46,14 +46,14 @@ module SExp =
                     return Bool (b, pos), tail
         }
 
-    and private parse_sexps pos toks =
+    and private parse_nested pos toks =
         result {
             match toks with
                 | RPAREN pos :: tail ->
                     return [], tail
                 | tok :: tail ->
                     let! sexp, tail' = parse_sexp tok tail
-                    let! sexps, tail'' = parse_sexps pos tail'
+                    let! sexps, tail'' = parse_nested pos tail'
                     return sexp :: sexps, tail''
                 | [] ->
                     return! Error $"Unmatched left paren at {pos}"

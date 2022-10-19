@@ -17,6 +17,4 @@ type SExpTests() =
                     (0, 0, 0, 5))
             ]
         let actual = SExp.parse_toks (Tok.tokenize "(a b)")
-        printfn "%A" expected
-        printfn "%A" actual
         Assert.AreEqual<_>(expected, actual)
