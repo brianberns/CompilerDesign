@@ -69,3 +69,6 @@ module SExp =
                     return sexp :: sexps
                 | [] -> return List.empty
         }
+
+    /// Question 5.
+    let parse = Tok.tokenize >> parse_toks

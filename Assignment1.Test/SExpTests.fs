@@ -2,6 +2,7 @@ namespace Assignment1
 
 open Microsoft.VisualStudio.TestTools.UnitTesting
 
+/// Question 6.
 [<TestClass>]
 type SExpTests() =
 
@@ -16,7 +17,7 @@ type SExpTests() =
                     ],
                     (0, 0, 0, 5))
             ]
-        let actual = SExp.parse_toks (Tok.tokenize "(a b)")
+        let actual = SExp.parse "(a b)"
         Assert.AreEqual<_>(expected, actual)
 
     [<TestMethod>]
@@ -36,19 +37,19 @@ type SExpTests() =
                     ],
                     (0, 0, 0, 14))
             ]
-        let actual = SExp.parse_toks (Tok.tokenize "(a (b true) 3)")
+        let actual = SExp.parse "(a (b true) 3)"
         Assert.AreEqual<_>(expected, actual)
 
     [<TestMethod>]
     member _.``(a``() =
         let expected = Error "Unmatched left paren at line 0, col 0"
-        let actual = SExp.parse_toks (Tok.tokenize "(a")
+        let actual = SExp.parse "(a"
         Assert.AreEqual<_>(expected, actual)
 
     [<TestMethod>]
     member _.``(a (b c``() =
         let expected = Error "Unmatched left paren at line 0, col 3"
-        let actual = SExp.parse_toks (Tok.tokenize "(a (b c")
+        let actual = SExp.parse "(a (b c"
         Assert.AreEqual<_>(expected, actual)
 
     [<TestMethod>]
@@ -59,5 +60,5 @@ type SExpTests() =
                     List.empty,
                     (0, 0, 0, 2))
             ]
-        let actual = SExp.parse_toks (Tok.tokenize "()")
+        let actual = SExp.parse "()"
         Assert.AreEqual<_>(expected, actual)
