@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Result.fs" />
     <Compile Include="Arith.fs" />
     <Compile Include="Tok.fs" />
     <Compile Include="SExp.fs" />
