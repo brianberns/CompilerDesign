@@ -5,6 +5,7 @@ open Assignment1   // for S-expression parser
 
 module Compiler =
 
+    /// Converts an S-expression into an Adder expression.
     let rec convert = function
 
         | Int (n, pos) ->
