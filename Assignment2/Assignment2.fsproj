@@ -9,6 +9,8 @@
     <Content Include="App.runtimeconfig.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Compile Include="CompilerResult.fs" />
+    <Compile Include="Env.fs" />
     <Compile Include="Expr.fs" />
     <Compile Include="CompilationUnit.fs" />
     <Compile Include="Assembly.fs" />

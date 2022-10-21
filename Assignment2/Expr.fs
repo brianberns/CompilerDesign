@@ -4,7 +4,7 @@ open Microsoft.CodeAnalysis
 open Microsoft.CodeAnalysis.CSharp
 open type SyntaxFactory
 
-open Assignment1   // for S-expression parser
+open Assignment1.ResultBuilder
 
 /// Abstract syntax for the Adder language.
 type expr<'a> =
@@ -19,32 +19,6 @@ type expr<'a> =
 and prim1 =
     | Add1
     | Sub1
-
-/// Standard return type for compiler results. (This is
-/// preferable to throwing exceptions.)
-type CompilerResult<'a> = Result<'a, string[]>
-
-[<AutoOpen>]
-module private CompilerResult =
-
-    let error<'a> msg : CompilerResult<'a> =
-        Error [| msg |]
-
-/// Variable environment.
-type env = Map<string, Syntax.ExpressionSyntax>
-
-module Env =
-
-    let tryAdd name node (env : env) : CompilerResult<env> =
-        if Map.containsKey name env then
-            error $"Variable already exists: {name}"
-        else
-            Ok (Map.add name node env)
-
-    let tryFind name (env : env) =
-        match Map.tryFind name env with
-            | Some node -> Ok node
-            | None -> error $"Unbound identifier: {name}"
 
 /// Functions for converting expressions into Rosyln syntax
 /// nodes. (It would've be nice to generate a .NET assembly
@@ -68,12 +42,12 @@ module Expr =
         Env.tryFind name env
             |> Result.map (fun node -> node, env)
 
-    let rec private compileExp exp env =
+    let rec private compileExp exp env : CompilerResult<_> =
         match exp with
             | Number (n, _) -> compileNumber n env
             | Prim1 (op, e, _) -> compilePrim1 op e env
             | Let (bindings, e, _) -> compileLet bindings e env
-            | Id (id, _) -> compileId id env
+            | Id (name, _) -> compileId name env
 
     and private compilePrim1 op exp env =
         let kind =
