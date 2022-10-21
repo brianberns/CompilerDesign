@@ -8,7 +8,7 @@ module Compiler =
     let rec convert = function
 
         | Int (n, pos) :: [] ->
-            Ok (expr.Num (n, pos))
+            Ok (Number (n, pos))
 
         | Sym ("add1", startpos) :: Nest (sexps, endpos) :: [] ->
             makePrim Add1 sexps startpos endpos

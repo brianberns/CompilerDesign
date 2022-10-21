@@ -9,7 +9,7 @@ type prim1 =
     | Sub1
 
 type expr<'a> =
-    | Num of int64 * 'a
+    | Number of int64 * 'a
     | Prim1 of prim1 * expr<'a> * 'a
 
 module Expr =
@@ -22,7 +22,7 @@ module Expr =
     /// Corresponds to compile_expr in Lecture 3.
     /// https://course.ccs.neu.edu/cs4410sp22/lec_let-and-stack_notes.html
     let rec compile_expr = function
-        | Num (n, _) ->
+        | Number (n, _) ->
             numericLiteral n
                 :> Syntax.ExpressionSyntax
         | Prim1 (op, e, _) ->
