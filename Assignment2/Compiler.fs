@@ -16,12 +16,34 @@ module Compiler =
         | Nest (Sym ("sub1", _) :: sexp :: [], pos) ->
             makePrim Sub1 sexp pos
 
+        | Nest (Sym ("let", _) :: Nest (sexps, _) :: sexp :: [], pos) ->
+            makeLet sexps sexp pos
+
         | sexp -> error $"Invalid S-expression: {sexp}"
 
     and private makePrim op sexp pos =
         result {
             let! e = convert sexp
             return Prim1 (op, e, pos)
+        }
+
+    and private makeLet sexps sexp pos =
+
+        let rec makeBindings sexps =
+            match sexps with
+                | Sym (name, _ : pos) :: sexp :: tail ->
+                    result {
+                        let! exp = convert sexp
+                        let! bindings = makeBindings tail
+                        return (name, exp) :: bindings
+                    }
+                | [] -> Ok []
+                | sexp :: _ -> error $"Unexpected binding: {sexp}"
+
+        result {
+            let! bindings = makeBindings sexps
+            let! exp = convert sexp
+            return Let (bindings, exp, pos)
         }
 
     /// Helper function roughly corresponding to function "t"
