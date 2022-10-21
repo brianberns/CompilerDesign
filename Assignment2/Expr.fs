@@ -18,6 +18,11 @@ type expr<'a> =
 
 type env = Map<string, Syntax.ExpressionSyntax>
 
+module Env =
+
+    let add name node (env : env) : env =
+        Map.add name node env
+
 type CompilerResult<'a> = Result<'a, string[]>
 
 [<AutoOpen>]
@@ -60,7 +65,7 @@ module Expr =
     let private compileId id (env : env) =
         match Map.tryFind id env with
             | Some node -> Ok (node, env)
-            | None -> error $"No such variable: {id}"
+            | None -> error $"Unbound identifier: {id}"
 
     let rec private compileExp exp (env : env) : Result<Syntax.ExpressionSyntax * env, _> =
         match exp with
@@ -91,7 +96,8 @@ module Expr =
                 | (name, exp) :: tail ->
                     result {
                         let! node, env' = compileExp exp env
-                        return env' |> Map.add name node
+                        let env'' = env' |> Env.add name node
+                        return! loop tail env''
                     }
                 | [] -> Ok env
 

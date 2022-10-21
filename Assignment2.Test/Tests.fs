@@ -38,5 +38,5 @@ type AdderTests () =
                 (sub1 y))
             """
         Assert.AreEqual<_>(
-            Ok "6",
+            Ok "3",
             Compiler.run text)
