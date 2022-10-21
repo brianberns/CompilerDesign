@@ -9,10 +9,10 @@
 
   <ItemGroup>
     <Compile Include="Assert.fs" />
-    <Compile Include="ArithTests.fs" />
-    <Compile Include="TokTests.fs" />
-    <Compile Include="SExpTests.fs" />
-    <Compile Include="AdderTests.fs" />
+    <Compile Include="Assignment1\ArithTests.fs" />
+    <Compile Include="Assignment1\TokTests.fs" />
+    <Compile Include="Assignment1\SExpTests.fs" />
+    <Compile Include="Assignment2\AdderTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
