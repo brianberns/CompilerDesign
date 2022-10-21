@@ -35,11 +35,7 @@ module Compiler =
             | Ok sexps ->
                 result {
                     let! e = convert sexps
-                    let diagnostics = Assembly.compile_prog "Adder" e
-                    if diagnostics.Length = 0 then
-                        return 0
-                    else
-                        return! Error diagnostics
+                    do! Assembly.compile_prog "Adder" e
                 }
             | Error msg ->
                 Error [| msg |]

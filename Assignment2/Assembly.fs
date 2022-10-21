@@ -46,8 +46,9 @@ module Assembly =
                 sourcePath,
                 $"{assemblyName}.runtimeconfig.json",
                 overwrite = true)
-            Array.empty
+            Ok ()
         else
             result.Diagnostics
                 |> Seq.map string
                 |> Seq.toArray
+                |> Error
