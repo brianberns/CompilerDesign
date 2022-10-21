@@ -1,7 +1,7 @@
 ﻿namespace Assignment2
 
 open System.Diagnostics
-open Assignment1
+open Assignment1   // for S-expression parser
 
 module Compiler =
 
@@ -52,7 +52,7 @@ module Compiler =
     /// Helper function roughly corresponding to function "t"
     /// in the assignment.
     let compile assemblyName text =
-        match Assignment1.SExp.parse text with
+        match SExp.parse text with
             | Ok [ sexp ] ->
                 result {
                     let! e = convert sexp

@@ -4,7 +4,7 @@ open Microsoft.CodeAnalysis
 open Microsoft.CodeAnalysis.CSharp
 open type SyntaxFactory
 
-open Assignment1
+open Assignment1.ResultBuilder
 
 module CompilationUnit =
 

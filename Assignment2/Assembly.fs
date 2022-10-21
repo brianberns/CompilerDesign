@@ -8,7 +8,7 @@ open Microsoft.CodeAnalysis.CSharp
 
 open Basic.Reference.Assemblies
 
-open Assignment1
+open Assignment1.ResultBuilder
 
 module Assembly =
 
