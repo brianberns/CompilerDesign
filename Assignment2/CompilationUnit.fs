@@ -29,7 +29,7 @@ module CompilationUnit =
         static int Main()
         {
             var result = our_code_starts_here();
-            System.Console.WriteLine(result);
+            System.Console.Write(result);
             return 0;
         }
     *)
@@ -68,7 +68,7 @@ module CompilationUnit =
                                     SyntaxKind.SimpleMemberAccessExpression,
                                     IdentifierName("System"),
                                     IdentifierName("Console")),
-                                IdentifierName("WriteLine")))
+                                IdentifierName("Write")))
                             .WithArgumentList(
                                 ArgumentList(
                                     SingletonSeparatedList(

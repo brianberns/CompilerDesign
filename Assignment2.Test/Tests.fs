@@ -1,11 +1,13 @@
-namespace Assignment2.Test
+namespace Assignment2
 
-open System
 open Microsoft.VisualStudio.TestTools.UnitTesting
+open Assignment1
 
 [<TestClass>]
-type TestClass () =
+type AdderTests () =
 
     [<TestMethod>]
-    member this.TestMethodPassing () =
-        Assert.IsTrue(true);
+    member _.``5`` () =
+        Assert.AreEqual<_>(
+            Ok "5",
+            Compiler.run "5")
