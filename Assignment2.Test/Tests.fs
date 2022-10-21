@@ -28,3 +28,15 @@ type AdderTests () =
         Assert.AreEqual<_>(
             Ok "6",
             Compiler.run text)
+
+    [<TestMethod>]
+    member _.``(let ((x 5) (y (sub1 x))) (sub1 y))`` () =
+        let text =
+            """
+            (let ((x 5)
+                  (y (sub1 x)))
+                (sub1 y))
+            """
+        Assert.AreEqual<_>(
+            Ok "6",
+            Compiler.run text)

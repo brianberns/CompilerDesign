@@ -10,14 +10,17 @@ module Compiler =
         | Int (n, pos) ->
             Ok (Number (n, pos))
 
-        | Nest (Sym ("add1", _) :: sexp :: [], pos) ->
+        | Nest ([Sym ("add1", _); sexp], pos) ->
             makePrim Add1 sexp pos
 
-        | Nest (Sym ("sub1", _) :: sexp :: [], pos) ->
+        | Nest ([Sym ("sub1", _); sexp], pos) ->
             makePrim Sub1 sexp pos
 
-        | Nest (Sym ("let", _) :: Nest (sexps, _) :: sexp :: [], pos) ->
+        | Nest ([Sym ("let", _); Nest (sexps, _); sexp], pos) ->
             makeLet sexps sexp pos
+
+        | Sym (name, pos) ->
+            Ok (Id (name, pos))
 
         | sexp -> error $"Invalid S-expression: {sexp}"
 
@@ -31,7 +34,7 @@ module Compiler =
 
         let rec makeBindings sexps =
             match sexps with
-                | Sym (name, _ : pos) :: sexp :: tail ->
+                | Nest ([Sym (name, _ : pos); sexp], _) :: tail ->
                     result {
                         let! exp = convert sexp
                         let! bindings = makeBindings tail
