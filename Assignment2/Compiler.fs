@@ -1,12 +1,9 @@
 ﻿namespace Assignment2
 
+open System.Diagnostics
 open Assignment1
 
 module Compiler =
-
-    // Question 1.
-    let compile e =
-        Expr.compile_expr e
 
     let rec convert = function
 
@@ -29,13 +26,27 @@ module Compiler =
 
     /// Helper function roughly corresponding to function "t"
     /// in the assignment.
-    let run text =
-
+    let compile assemblyName text =
         match Assignment1.SExp.parse text with
             | Ok sexps ->
                 result {
                     let! e = convert sexps
-                    do! Assembly.compile_prog "Adder" e
+                    do! Assembly.compile_prog assemblyName e
                 }
             | Error msg ->
                 Error [| msg |]
+
+    let run text =
+        let assemblyName = "Adder"
+        result {
+            do! compile assemblyName text
+
+            let psi =
+                ProcessStartInfo(
+                    FileName = "dotnet",
+                    Arguments = $"{assemblyName}.dll",
+                    RedirectStandardOutput = true)
+            use proc = new Process(StartInfo = psi)
+            proc.Start() |> ignore
+            return proc.StandardOutput.ReadToEnd()
+        }
