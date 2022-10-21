@@ -1,7 +1,6 @@
 namespace Assignment2
 
 open Microsoft.VisualStudio.TestTools.UnitTesting
-open Assignment1
 
 [<TestClass>]
 type AdderTests () =

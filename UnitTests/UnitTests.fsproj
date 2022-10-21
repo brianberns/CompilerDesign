@@ -8,7 +8,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Tests.fs" />
+    <Compile Include="Assert.fs" />
+    <Compile Include="ArithTests.fs" />
+    <Compile Include="TokTests.fs" />
+    <Compile Include="SExpTests.fs" />
+    <Compile Include="AdderTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
@@ -20,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Assignment1.Test\Assignment1.Test.fsproj" />
+    <ProjectReference Include="..\Assignment1\Assignment1.fsproj" />
     <ProjectReference Include="..\Assignment2\Assignment2.fsproj" />
   </ItemGroup>
 

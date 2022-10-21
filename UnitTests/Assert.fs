@@ -1,6 +1,4 @@
-namespace Assignment1
-
-open Microsoft.VisualStudio.TestTools.UnitTesting
+namespace Microsoft.VisualStudio.TestTools.UnitTesting
 
 module Assert =
 
