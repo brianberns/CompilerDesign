@@ -5,6 +5,9 @@ open Assignment1
 
 module Compiler =
 
+    let private error msg =
+        Error [| msg |]
+
     let rec convert = function
 
         | Int (n, pos) ->
@@ -16,7 +19,7 @@ module Compiler =
         | Nest (Sym ("sub1", _) :: sexp :: [], pos) ->
             makePrim Sub1 sexp pos
 
-        | sexp -> Error [| $"Invalid S-expression: {sexp}" |]
+        | sexp -> error $"Invalid S-expression: {sexp}"
 
     and private makePrim op sexp pos =
         result {
@@ -34,21 +37,23 @@ module Compiler =
                     do! Assembly.compile_prog assemblyName e
                 }
             | Ok sexps ->
-                Error [| $"Too many S-expressions: ${sexps}" |]
+                error $"Too many S-expressions: ${sexps}"
             | Error msg ->
-                Error [| msg |]
+                error msg
 
     let run text =
-        let assemblyName = "Adder"
-        result {
-            do! compile assemblyName text
+        try
+            let assemblyName = "Adder"
+            result {
+                do! compile assemblyName text
 
-            let psi =
-                ProcessStartInfo(
-                    FileName = "dotnet",
-                    Arguments = $"{assemblyName}.dll",
-                    RedirectStandardOutput = true)
-            use proc = new Process(StartInfo = psi)
-            proc.Start() |> ignore
-            return proc.StandardOutput.ReadToEnd()
-        }
+                let psi =
+                    ProcessStartInfo(
+                        FileName = "dotnet",
+                        Arguments = $"{assemblyName}.dll",
+                        RedirectStandardOutput = true)
+                use proc = new Process(StartInfo = psi)
+                proc.Start() |> ignore
+                return proc.StandardOutput.ReadToEnd()
+            }
+        with exn -> error exn.Message
