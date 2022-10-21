@@ -7,33 +7,34 @@ module Compiler =
 
     let rec convert = function
 
-        | Int (n, pos) :: [] ->
+        | Int (n, pos) ->
             Ok (Number (n, pos))
 
-        | Sym ("add1", startpos) :: Nest (sexps, endpos) :: [] ->
-            makePrim Add1 sexps startpos endpos
+        | Nest (Sym ("add1", _) :: sexp :: [], pos) ->
+            makePrim Add1 sexp pos
 
-        | Sym ("sub1", startpos) :: Nest (sexps, endpos) :: [] ->
-            makePrim Sub1 sexps startpos endpos
+        | Nest (Sym ("sub1", _) :: sexp :: [], pos) ->
+            makePrim Sub1 sexp pos
 
-        | sexps -> Error [| $"Invalid S-expressions: {sexps}" |]
+        | sexp -> Error [| $"Invalid S-expression: {sexp}" |]
 
-    and private makePrim op sexps startpos endpos =
+    and private makePrim op sexp pos =
         result {
-            let! e = convert sexps
-            let range = Pos.range startpos endpos
-            return Prim1 (op, e, range)
+            let! e = convert sexp
+            return Prim1 (op, e, pos)
         }
 
     /// Helper function roughly corresponding to function "t"
     /// in the assignment.
     let compile assemblyName text =
         match Assignment1.SExp.parse text with
-            | Ok sexps ->
+            | Ok [ sexp ] ->
                 result {
-                    let! e = convert sexps
+                    let! e = convert sexp
                     do! Assembly.compile_prog assemblyName e
                 }
+            | Ok sexps ->
+                Error [| $"Too many S-expressions: ${sexps}" |]
             | Error msg ->
                 Error [| msg |]
 
