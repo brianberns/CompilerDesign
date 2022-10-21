@@ -12,6 +12,14 @@ type tok<'a> =
 (* startline, startcol, endline, endcol *)
 type pos = int * int * int * int   // this is really ugly, but we use what we're given
 
+module Pos =
+
+    let range
+        ((startline, startcol, _, _) : pos)
+        ((_, _, endline, endcol) : pos) : pos =
+            startline, startcol, endline, endcol
+        
+
 module Tok =
 
     (*

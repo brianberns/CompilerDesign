@@ -7,22 +7,23 @@ module Compiler =
 
     let rec convert = function
 
-        | Int (n, _) :: [] ->
-            Ok (expr.Num n)
+        | Int (n, pos) :: [] ->
+            Ok (expr.Num (n, pos))
 
-        | Sym ("add1", _) :: Nest (sexps, _) :: [] ->
-            result {
-                let! e = convert sexps
-                return Add1 e
-            }
+        | Sym ("add1", startpos) :: Nest (sexps, endpos) :: [] ->
+            makePrim Add1 sexps startpos endpos
 
-        | Sym ("sub1", _) :: Nest (sexps, _) :: [] ->
-            result {
-                let! e = convert sexps
-                return Sub1 e
-            }
+        | Sym ("sub1", startpos) :: Nest (sexps, endpos) :: [] ->
+            makePrim Sub1 sexps startpos endpos
 
         | sexps -> Error [| $"Invalid S-expressions: {sexps}" |]
+
+    and private makePrim op sexps startpos endpos =
+        result {
+            let! e = convert sexps
+            let range = Pos.range startpos endpos
+            return Prim1 (op, e, range)
+        }
 
     /// Helper function roughly corresponding to function "t"
     /// in the assignment.

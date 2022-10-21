@@ -22,10 +22,7 @@ module SExp =
                     // parse sub-expressions until the corresponding r-paren
                 | LPAREN (pos : pos) ->
                     let! sexps, pos', tail' = parse_nested pos tail
-                    let range : pos =
-                        let startline, startcol, _, _ = pos
-                        let _, _, endline, endcol = pos'
-                        startline, startcol, endline, endcol
+                    let range = Pos.range pos pos'
                     return Nest (sexps, range), tail'
 
                     // unexpected r-paren

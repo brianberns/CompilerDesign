@@ -4,32 +4,33 @@ open Microsoft.CodeAnalysis
 open Microsoft.CodeAnalysis.CSharp
 open type SyntaxFactory
 
-type expr =
-    | Num of int64
-    | Add1 of expr
-    | Sub1 of expr
+type prim1 =
+    | Add1
+    | Sub1
+
+type expr<'a> =
+    | Num of int64 * 'a
+    | Prim1 of prim1 * expr<'a> * 'a
 
 module Expr =
+
+    let private numericLiteral (n : int64) =
+        LiteralExpression(
+            SyntaxKind.NumericLiteralExpression,
+            Literal(n))
 
     /// Corresponds to compile_expr in Lecture 3.
     /// https://course.ccs.neu.edu/cs4410sp22/lec_let-and-stack_notes.html
     let rec compile_expr = function
-        | Num n ->
-            LiteralExpression(
-                SyntaxKind.NumericLiteralExpression,
-                Literal(n))
+        | Num (n, _) ->
+            numericLiteral n
                 :> Syntax.ExpressionSyntax
-        | Add1 e ->
+        | Prim1 (op, e, _) ->
+            let kind =
+                match op with
+                    | Add1 -> SyntaxKind.AddExpression
+                    | Sub1 -> SyntaxKind.SubtractExpression
             BinaryExpression(
-                SyntaxKind.AddExpression,
+                kind,
                 compile_expr e,
-                LiteralExpression(
-                    SyntaxKind.NumericLiteralExpression,
-                    Literal(1)))
-        | Sub1 e ->
-            BinaryExpression(
-                SyntaxKind.SubtractExpression,
-                compile_expr e,
-                LiteralExpression(
-                    SyntaxKind.NumericLiteralExpression,
-                    Literal(1)))
+                numericLiteral 1L)
