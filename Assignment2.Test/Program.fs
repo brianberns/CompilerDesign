@@ -1,3 +1,7 @@
-let diagnostics = Assignment2.Assembly.compile_prog 87L
-for diagnostic in diagnostics do
-    printfn "%s" diagnostic
+open Assignment2
+
+match Compiler.run "sub1(add1(add1(42)))" with
+    | Ok n -> printfn $"Success: {n}"
+    | Error msgs ->
+        for msg in msgs do
+            printfn $"{msg}"
