@@ -45,7 +45,7 @@ module Assembly =
                         Path.GetDirectoryName(
                             Assembly.GetExecutingAssembly().Location),
                         "App.runtimeconfig.json")
-                return File.Copy(
+                File.Copy(
                     sourcePath,
                     $"{assemblyName}.runtimeconfig.json",
                     overwrite = true)
