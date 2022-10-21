@@ -5,9 +5,6 @@ open Assignment1
 
 module Compiler =
 
-    let private error msg =
-        Error [| msg |]
-
     let rec convert = function
 
         | Int (n, pos) ->
