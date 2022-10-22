@@ -1,6 +1,7 @@
-﻿namespace Assignment3
+﻿namespace CompilerDesign.Assignment3
 
 open FParsec
+open CompilerDesign.Core
 
 type Prim1 =
     | Add1
@@ -67,10 +68,7 @@ and Binding<'tag> =
         Tag : 'tag
     }
 
-module Parser =
-
-    let private (>..>) p1 p2 =
-        p1 >>= (fun _ -> p2 >>% ())
+module Expr =
 
     let private parseExpr, parseExprRef =
         createParserForwardedToRef ()
@@ -106,9 +104,9 @@ module Parser =
                     pstring "add1" >>% Add1
                     pstring "sub1" >>% Sub1
                 ]
-            do! spaces >..> skipChar '(' >..> spaces
+            do! spaces >>. skipChar '(' >>. spaces
             let! expr = parseExpr
-            do! spaces >..> skipChar ')'
+            do! spaces >>. skipChar ')'
             return op, expr
         } |> parsePos (fun (op, expr) tag ->
             Prim1Expr {|
@@ -141,3 +139,14 @@ module Parser =
             parseIdentifier
             parsePrim1
         ]
+
+    let private parseText =
+        spaces
+            >>. parseExpr
+            .>> spaces
+            .>> eof
+
+    let parse text =
+        match runParserOnString parseText () "" text with
+            | Success (result, _, _) -> Result.Ok result
+            | Failure (msg, _, _) -> CompilerDesign.Core.CompilerResult.error msg

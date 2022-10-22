@@ -1,4 +1,4 @@
-namespace Assignment1
+namespace CompilerDesign.Assignment1
 
 open Microsoft.VisualStudio.TestTools.UnitTesting
 

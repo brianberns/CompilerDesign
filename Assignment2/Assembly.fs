@@ -1,4 +1,4 @@
-﻿namespace Assignment2
+﻿namespace CompilerDesign.Assignment2
  
 open System.IO
 open System.Reflection
@@ -8,7 +8,7 @@ open Microsoft.CodeAnalysis.CSharp
 
 open Basic.Reference.Assemblies
 
-open Assignment1.ResultBuilder
+open CompilerDesign.Core
 
 module Assembly =
 

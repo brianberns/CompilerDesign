@@ -9,7 +9,6 @@
     <Content Include="App.runtimeconfig.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Compile Include="CompilerResult.fs" />
     <Compile Include="Env.fs" />
     <Compile Include="Expr.fs" />
     <Compile Include="CompilationUnit.fs" />
@@ -24,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Assignment1\Assignment1.fsproj" />
+    <ProjectReference Include="..\Core\Core.fsproj" />
   </ItemGroup>
 
 </Project>

@@ -13,4 +13,8 @@
     <PackageReference Include="FParsec" Version="1.1.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Core\Core.fsproj" />
+  </ItemGroup>
+
 </Project>

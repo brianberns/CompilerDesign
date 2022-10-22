@@ -1,10 +1,10 @@
-﻿namespace Assignment2
+﻿namespace CompilerDesign.Assignment2
 
 open Microsoft.CodeAnalysis
 open Microsoft.CodeAnalysis.CSharp
 open type SyntaxFactory
 
-open Assignment1.ResultBuilder
+open CompilerDesign.Core
 
 module CompilationUnit =
 

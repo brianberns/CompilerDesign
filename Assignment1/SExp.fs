@@ -1,4 +1,6 @@
-﻿namespace Assignment1
+﻿namespace CompilerDesign.Assignment1
+
+open CompilerDesign.Core
 
 type sexp<'a> =
     | Sym of string * 'a

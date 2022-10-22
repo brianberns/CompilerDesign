@@ -1,7 +1,9 @@
-﻿namespace Assignment2
+﻿namespace CompilerDesign.Assignment2
 
 open System.Diagnostics
-open Assignment1   // for S-expression parser
+
+open CompilerDesign.Core
+open CompilerDesign.Assignment1   // for S-expression parser
 
 module Compiler =
 
