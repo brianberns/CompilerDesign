@@ -115,31 +115,32 @@ module Expr =
                 Tag = tag
             |})
 
-    let private parsePrim2 =
-        let create op left right =
-            Prim2Expr {|
-                Operator = op
-                Left = left
-                Right = right
-                Tag = fst left.Tagg, snd right.Tagg
-            |}
-        let parseOp =
-            choice [
-                pchar '+' >>% create Plus
-                pchar '-' >>% create Minus
-                pchar '*' >>% create Times
-            ]
-        chainl1
-            parseExpr
-            (spaces >>. parseOp .>> spaces)
-
-    do parseExprRef.Value <-
+    let private parseExprStart =
         choice [
             parseNumber
             parsePrim1
-            parsePrim2
             parseIdentifier   // must be last
         ]
+
+    let private parseExprEnd =
+        parse {
+            do! skipChar '-'
+            return! parseExpr
+        } |> opt
+
+    do parseExprRef.Value <-
+        parseExprStart
+            .>>. parseExprEnd
+            |> parsePos (fun (exprStart, exprEndOpt) tag ->
+                match exprEndOpt with
+                    | Some exprEnd ->
+                        Prim2Expr {|
+                            Operator = Minus
+                            Left = exprStart
+                            Right = exprEnd
+                            Tag = tag
+                        |}
+                    | None -> exprStart)
 
     let private parseText =
         spaces
