@@ -115,7 +115,7 @@ module Expr =
                 Tag = tag
             |})
 
-    let private parsePrim2s =
+    let private parsePrim2 =
         let create op left right =
             Prim2Expr {|
                 Operator = op
@@ -136,8 +136,9 @@ module Expr =
     do parseExprRef.Value <-
         choice [
             parseNumber
-            parseIdentifier
             parsePrim1
+            parsePrim2
+            parseIdentifier   // must be last
         ]
 
     let private parseText =
