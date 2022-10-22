@@ -24,7 +24,7 @@ and prim1 =
 /// nodes. (It would've be nice to generate a .NET assembly
 /// by emitting CIL opcodes instead, but there's currently
 /// no reliable way to save such an assembly to a file.
-/// See https://github.com/dotnet/runtime/issues/15704.
+/// See https://github.com/dotnet/runtime/issues/15704.)
 module Expr =
 
     let private numericLiteral (n : int64) =
