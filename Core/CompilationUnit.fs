@@ -82,20 +82,17 @@ module CompilationUnit =
 
     let create (compilation : Compilation) node =
         let assemblyName = compilation.AssemblyName
-        let ourMethod = our_code_starts_here node
         let classNode =
             ClassDeclaration($"{assemblyName}Type")
                 .AddModifiers(
                     Token(SyntaxKind.StaticKeyword))
                 .AddMembers(
-                    ourMethod,
+                    our_code_starts_here node,
                     mainMethod)
-
         let namespaceNode =
             NamespaceDeclaration(
-                IdentifierName(assemblyName : string))
+                IdentifierName(assemblyName))
                 .AddMembers(classNode)
-
         let compilationUnit =
             CompilationUnit().AddMembers(namespaceNode)
         let mainTypeName =
