@@ -4,7 +4,7 @@ open Microsoft.CodeAnalysis
 open Microsoft.CodeAnalysis.CSharp
 open type SyntaxFactory
 
-module CompilationUnit =
+module private CompilationUnit =
 
     (*
         static long our_code_starts_here()
@@ -78,8 +78,7 @@ module CompilationUnit =
                             SyntaxKind.NumericLiteralExpression,
                             Literal(0)))))
 
-    let create (compilation : Compilation) node =
-        let assemblyName = compilation.AssemblyName
+    let create assemblyName node =
         let classNode =
             ClassDeclaration($"{assemblyName}Type")
                 .AddModifiers(
@@ -89,7 +88,7 @@ module CompilationUnit =
                     mainMethod)
         let namespaceNode =
             NamespaceDeclaration(
-                IdentifierName(assemblyName))
+                IdentifierName(assemblyName : string))
                 .AddMembers(classNode)
         let compilationUnit =
             CompilationUnit().AddMembers(namespaceNode)

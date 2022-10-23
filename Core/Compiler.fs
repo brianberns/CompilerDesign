@@ -1,5 +1,5 @@
 ﻿namespace CompilerDesign.Core
- 
+
 open System.IO
 open System.Reflection
 
@@ -8,7 +8,7 @@ open Microsoft.CodeAnalysis.CSharp
 
 open Basic.Reference.Assemblies
 
-module Assembly =
+module Compiler =
 
     /// Helper function corresponding to compile_prog in Lecture 3.
     /// https://course.ccs.neu.edu/cs4410sp22/lec_let-and-stack_notes.html
@@ -23,7 +23,7 @@ module Assembly =
                         Net60.SystemConsole)
 
             let compilationUnit, mainTypeName =
-                CompilationUnit.create compilation node
+                CompilationUnit.create assemblyName node
     #if DEBUG
             printfn "%A" <| compilationUnit.NormalizeWhitespace()
     #endif

@@ -60,7 +60,7 @@ module Compiler =
                 result {
                     let! e = convert sexp
                     let! node = Expr.compile e
-                    do! Assembly.compile_prog assemblyName node
+                    do! Compiler.compile_prog assemblyName node
                 }
             | Ok sexps ->
                 error $"Too many S-expressions: ${sexps}"
