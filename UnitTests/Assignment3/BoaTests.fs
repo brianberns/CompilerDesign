@@ -7,6 +7,6 @@ type BoaTests() =
 
     [<TestMethod>]
     member _.Parse() =
-        let text = "add1(x) + (sub1(2) - sub1(y)) * add1(3)"
+        let text = "if 1 : 2 else: 3"
         let actual = Expr.parse text
         printfn "%A" actual

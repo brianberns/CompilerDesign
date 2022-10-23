@@ -163,8 +163,8 @@ module Expr =
                 pchar '*' >>% create Times
             ]
         chainl1
-            parseSimpleExpr
-            (spaces >>. parseOp .>> spaces)
+            (parseSimpleExpr .>> spaces)
+            (parseOp .>> spaces)
 
     let private parseText =
         spaces
