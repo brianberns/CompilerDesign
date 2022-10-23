@@ -8,7 +8,7 @@ open CompilerDesign.Core
 
 module Compiler =
 
-    let private numericLiteral (n : int64) =
+    let private numericLiteral (n : int) =
         LiteralExpression(
             SyntaxKind.NumericLiteralExpression,
             Literal(n))
@@ -44,7 +44,7 @@ module Compiler =
                 BinaryExpression(
                     kind,
                     left,
-                    numericLiteral 1L)
+                    numericLiteral 1)
             return node, env'
         }
 

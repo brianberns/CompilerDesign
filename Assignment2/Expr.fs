@@ -8,7 +8,7 @@ open CompilerDesign.Core
 
 /// Abstract syntax for the Adder language.
 type expr<'a> =
-    | Number of int64 * 'a
+    | Number of int * 'a
     | Prim1 of prim1 * expr<'a> * 'a
     | Let of
         bindings : List<string * expr<'a>>
@@ -27,7 +27,7 @@ and prim1 =
 /// See https://github.com/dotnet/runtime/issues/15704.)
 module Expr =
 
-    let private numericLiteral (n : int64) =
+    let private numericLiteral (n : int) =
         LiteralExpression(
             SyntaxKind.NumericLiteralExpression,
             Literal(n))
@@ -60,7 +60,7 @@ module Expr =
                 BinaryExpression(
                     kind,
                     left,
-                    numericLiteral 1L)
+                    numericLiteral 1)
             return node, env'
         }
 

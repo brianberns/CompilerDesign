@@ -7,7 +7,7 @@ open type SyntaxFactory
 module private CompilationUnit =
 
     (*
-        static long our_code_starts_here()
+        static int our_code_starts_here()
         {
             return node;
         }
@@ -16,7 +16,7 @@ module private CompilationUnit =
         MethodDeclaration(
             returnType =
                 PredefinedType(
-                    Token(SyntaxKind.LongKeyword)),
+                    Token(SyntaxKind.IntKeyword)),
             identifier = "our_code_starts_here")
             .AddModifiers(
                 Token(SyntaxKind.StaticKeyword))
