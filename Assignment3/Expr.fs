@@ -109,8 +109,8 @@ module Expr =
         parse {
             let! op = 
                 choice [
-                    pstring "add1" >>% Add1
-                    pstring "sub1" >>% Sub1
+                    skipString "add1" >>% Add1
+                    skipString "sub1" >>% Sub1
                 ]
             do! spaces
             let! expr = parseParens
@@ -122,11 +122,29 @@ module Expr =
                 Tag = tag
             |})
 
+    let private parseIf =
+        parse {
+            do! skipString "if" >>. spaces
+            let! cond = parseExpr
+            do! spaces >>. skipChar ':' >>. spaces
+            let! trueBranch = parseExpr
+            do! spaces >>. skipString "else:" >>. spaces
+            let! falseBranch = parseExpr
+            return cond, trueBranch, falseBranch
+        } |> parsePos (fun (cond, trueBranch, falseBranch) tag ->
+            IfExpr {|
+                Condition = cond
+                TrueBranch = trueBranch
+                FalseBranch = falseBranch
+                Tag = tag
+            |})
+
     let private parseSimpleExpr =
         choice [
             parseNumber
             parsePrim1
-            parseIdentifier   // must come after prim1
+            parseIf
+            parseIdentifier   // must come after any parser that looks for keywords
             parseParens
         ]
 
