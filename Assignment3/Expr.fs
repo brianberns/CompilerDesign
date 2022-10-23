@@ -124,18 +124,26 @@ module Expr =
 
     let private parseExprEnd =
         parse {
-            do! skipChar '-'
-            return! parseExpr
+            let! op =
+                choice [
+                    pchar '+' >>% Plus
+                    pchar '-' >>% Minus
+                    pchar '*' >>% Times
+                ]
+            do! spaces
+            let! expr = parseExpr
+            return op, expr
         } |> opt
 
     do parseExprRef.Value <-
         parseExprStart
+            .>> spaces
             .>>. parseExprEnd
             |> parsePos (fun (exprStart, exprEndOpt) tag ->
                 match exprEndOpt with
-                    | Some exprEnd ->
+                    | Some (op, exprEnd) ->
                         Prim2Expr {|
-                            Operator = Minus
+                            Operator = op
                             Left = exprStart
                             Right = exprEnd
                             Tag = tag
