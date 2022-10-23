@@ -13,30 +13,28 @@ module Compiler =
     /// Helper function corresponding to compile_prog in Lecture 3.
     /// https://course.ccs.neu.edu/cs4410sp22/lec_let-and-stack_notes.html
     let compile_prog assemblyName node =
-        result {
 
+        let emitResult =
+
+            let compilationUnit, mainTypeName =
+                CompilationUnit.create assemblyName node
+#if DEBUG
+            printfn "%A" <| compilationUnit.NormalizeWhitespace()
+#endif
             let compilation =
+                let options =
+                    CSharpCompilationOptions(OutputKind.ConsoleApplication)
+                        .WithMainTypeName(mainTypeName)
                 CSharpCompilation
                     .Create(assemblyName)
                     .WithReferences(
                         Net60.SystemRuntime,
                         Net60.SystemConsole)
+                    .AddSyntaxTrees(compilationUnit.SyntaxTree)
+                    .WithOptions(options)
+            compilation.Emit($"{assemblyName}.dll")
 
-            let compilationUnit, mainTypeName =
-                CompilationUnit.create assemblyName node
-    #if DEBUG
-            printfn "%A" <| compilationUnit.NormalizeWhitespace()
-    #endif
-
-            let emitResult =
-                let compilation' =
-                    let options =
-                        CSharpCompilationOptions(OutputKind.ConsoleApplication)
-                            .WithMainTypeName(mainTypeName)
-                    compilation
-                        .AddSyntaxTrees(compilationUnit.SyntaxTree)
-                        .WithOptions(options)
-                compilation'.Emit($"{assemblyName}.dll")
+        result {
             if emitResult.Success then
                 let sourcePath =
                     Path.Combine(
