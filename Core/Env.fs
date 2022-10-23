@@ -7,6 +7,9 @@ type env = Map<string, Syntax.ExpressionSyntax>
 
 module Env =
 
+    let empty : env =
+        Map.empty
+
     let tryAdd name node (env : env) =
         if Map.containsKey name env then
             error $"Variable already exists: {name}"

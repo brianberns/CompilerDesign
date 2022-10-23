@@ -67,8 +67,9 @@ module Compiler =
         }
     *)
 
-    let compile text =
+    let compile assemblyName text =
         result {
             let! expr = Parser.parse text
-            return compileExpr expr
+            let! node, _ = compileExpr expr Env.empty
+            do! Compiler.compile_prog assemblyName node
         }

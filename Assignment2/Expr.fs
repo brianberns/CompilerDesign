@@ -85,6 +85,6 @@ module Expr =
     /// in the assignment.
     let compile exp : CompilerResult<_> =
         result {
-            let! node, _ = compileExp exp Map.empty
+            let! node, _ = compileExp exp Env.empty
             return node
         }
