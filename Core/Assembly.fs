@@ -14,7 +14,7 @@ module Assembly =
 
     /// Helper function corresponding to compile_prog in Lecture 3.
     /// https://course.ccs.neu.edu/cs4410sp22/lec_let-and-stack_notes.html
-    let compile_prog assemblyName expr =
+    let compile_prog assemblyName node =
         result {
 
             let compilation =
@@ -25,7 +25,7 @@ module Assembly =
                         Net60.SystemConsole)
 
             let compilationUnit, mainTypeName =
-                CompilationUnit.create compilation expr
+                CompilationUnit.create compilation node
     #if DEBUG
             printfn "%A" <| compilationUnit.NormalizeWhitespace()
     #endif
