@@ -52,7 +52,7 @@ type Expr<'tag> =
 
     with
     
-    member expr.Tagg =   // F# uses the name "Tag" internally :(
+    member expr.Tag' =   // F# uses the name "Tag" internally :(
         match expr with
             | LetExpr x -> x.Tag
             | Prim1Expr x -> x.Tag
@@ -136,7 +136,7 @@ module Expr =
                 Operator = op
                 Left = left
                 Right = right
-                Tag = fst left.Tagg, snd right.Tagg
+                Tag = fst left.Tag', snd right.Tag'
             |}
         let parseOp =
             choice [
