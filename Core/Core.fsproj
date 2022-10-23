@@ -6,7 +6,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="App.runtimeconfig.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Compile Include="Result.fs" />
+    <Compile Include="CompilationUnit.fs" />
+    <Compile Include="Assembly.fs" />
+    <Compile Include="Env.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Basic.Reference.Assemblies.Net60" Version="1.2.4" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.3.1" />
   </ItemGroup>
 
 </Project>

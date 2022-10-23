@@ -7,6 +7,6 @@ type BoaTests() =
 
     [<TestMethod>]
     member _.Parse() =
-        let text = "if 1 : 2 else: 3"
+        let text = "let a = b, c = d in a + c"
         let actual = Expr.parse text
         printfn "%A" actual

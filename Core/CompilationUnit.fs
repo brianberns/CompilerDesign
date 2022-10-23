@@ -1,4 +1,4 @@
-﻿namespace CompilerDesign.Assignment2
+﻿namespace CompilerDesign.Core
 
 open Microsoft.CodeAnalysis
 open Microsoft.CodeAnalysis.CSharp
@@ -11,23 +11,20 @@ module CompilationUnit =
     (*
         static long our_code_starts_here()
         {
-            return e;
+            return node;
         }
     *)
-    let private our_code_starts_here e =
-        result {
-            let! node = Expr.compile e
-            return MethodDeclaration(
-                returnType =
-                    PredefinedType(
-                        Token(SyntaxKind.LongKeyword)),
-                identifier = "our_code_starts_here")
-                .AddModifiers(
-                    Token(SyntaxKind.StaticKeyword))
-                .WithBody(
-                    Block(
-                        ReturnStatement(node)))
-        }
+    let private our_code_starts_here node =
+        MethodDeclaration(
+            returnType =
+                PredefinedType(
+                    Token(SyntaxKind.LongKeyword)),
+            identifier = "our_code_starts_here")
+            .AddModifiers(
+                Token(SyntaxKind.StaticKeyword))
+            .WithBody(
+                Block(
+                    ReturnStatement(node)))
 
     (*
         static int Main()
@@ -83,27 +80,24 @@ module CompilationUnit =
                             SyntaxKind.NumericLiteralExpression,
                             Literal(0)))))
 
-    let create (compilation : Compilation) e =
-        result {
+    let create (compilation : Compilation) node =
+        let assemblyName = compilation.AssemblyName
+        let ourMethod = our_code_starts_here node
+        let classNode =
+            ClassDeclaration($"{assemblyName}Type")
+                .AddModifiers(
+                    Token(SyntaxKind.StaticKeyword))
+                .AddMembers(
+                    ourMethod,
+                    mainMethod)
 
-            let assemblyName = compilation.AssemblyName
-            let! ourMethod = our_code_starts_here e
-            let classNode =
-                ClassDeclaration($"{assemblyName}Type")
-                    .AddModifiers(
-                        Token(SyntaxKind.StaticKeyword))
-                    .AddMembers(
-                        ourMethod,
-                        mainMethod)
+        let namespaceNode =
+            NamespaceDeclaration(
+                IdentifierName(assemblyName : string))
+                .AddMembers(classNode)
 
-            let namespaceNode =
-                NamespaceDeclaration(
-                    IdentifierName(assemblyName : string))
-                    .AddMembers(classNode)
-
-            let compilationUnit =
-                CompilationUnit().AddMembers(namespaceNode)
-            let mainTypeName =
-                $"{namespaceNode.Name}.{classNode.Identifier}"
-            return compilationUnit, mainTypeName
-        }
+        let compilationUnit =
+            CompilationUnit().AddMembers(namespaceNode)
+        let mainTypeName =
+            $"{namespaceNode.Name}.{classNode.Identifier}"
+        compilationUnit, mainTypeName

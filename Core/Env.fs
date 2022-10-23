@@ -1,4 +1,4 @@
-﻿namespace CompilerDesign.Assignment2
+﻿namespace CompilerDesign.Core
 
 open Microsoft.CodeAnalysis.CSharp
 open CompilerDesign.Core

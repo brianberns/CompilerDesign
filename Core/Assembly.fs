@@ -1,4 +1,4 @@
-﻿namespace CompilerDesign.Assignment2
+﻿namespace CompilerDesign.Core
  
 open System.IO
 open System.Reflection
@@ -24,7 +24,7 @@ module Assembly =
                         Net60.SystemRuntime,
                         Net60.SystemConsole)
 
-            let! compilationUnit, mainTypeName =
+            let compilationUnit, mainTypeName =
                 CompilationUnit.create compilation expr
     #if DEBUG
             printfn "%A" <| compilationUnit.NormalizeWhitespace()
