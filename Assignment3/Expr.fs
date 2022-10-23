@@ -50,17 +50,6 @@ type Expr<'tag> =
             Tag : 'tag
         |}
 
-    with
-    
-    member expr.Tagg =   // F# uses the name "Tag" internally :(
-        match expr with
-            | LetExpr x -> x.Tag
-            | Prim1Expr x -> x.Tag
-            | Prim2Expr x -> x.Tag
-            | IfExpr x -> x.Tag
-            | NumberExpr x -> x.Tag
-            | IdentifierExpr x -> x.Tag
-
 and Binding<'tag> =
     {
         Identifier : string
