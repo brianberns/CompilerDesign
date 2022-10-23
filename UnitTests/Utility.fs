@@ -15,15 +15,13 @@ module Assert =
         Assert.ThrowsException(
             fun () -> ignore (action ()))
 
-module Compiler =
+module Process =
 
     open System.Diagnostics
 
-    let run assemblyName text =
+    let run assemblyName =
         try
             result {
-                do! CompilerDesign.Assignment2.Compiler.compile assemblyName text
-
                 let psi =
                     ProcessStartInfo(
                         FileName = "dotnet",

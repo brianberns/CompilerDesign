@@ -1,11 +1,17 @@
 namespace CompilerDesign.Assignment2
 
 open Microsoft.VisualStudio.TestTools.UnitTesting
+open CompilerDesign.Core
 
 [<TestClass>]
 type AdderTests() =
 
-    let run = Compiler.run "Adder"
+    let run text =
+        let assemblyName = "Adder"
+        result {
+            do! Compiler.compile assemblyName text
+            return! Process.run assemblyName
+        }
 
     [<TestMethod>]
     member _.``5``() =
