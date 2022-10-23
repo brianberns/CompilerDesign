@@ -1,7 +1,5 @@
 ﻿namespace CompilerDesign.Assignment2
 
-open System.Diagnostics
-
 open CompilerDesign.Core
 open CompilerDesign.Assignment1   // for S-expression parser
 
@@ -66,20 +64,3 @@ module Compiler =
                 error $"Too many S-expressions: ${sexps}"
             | Error msg ->
                 error msg
-
-    let run text =
-        try
-            let assemblyName = "Adder"
-            result {
-                do! compile assemblyName text
-
-                let psi =
-                    ProcessStartInfo(
-                        FileName = "dotnet",
-                        Arguments = $"{assemblyName}.dll",
-                        RedirectStandardOutput = true)
-                use proc = new Process(StartInfo = psi)
-                proc.Start() |> ignore
-                return proc.StandardOutput.ReadToEnd()
-            }
-        with exn -> error exn.Message
