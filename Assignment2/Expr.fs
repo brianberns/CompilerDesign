@@ -21,7 +21,7 @@ and prim1 =
     | Sub1
 
 /// Functions for converting expressions into Rosyln syntax
-/// nodes. (It would've be nice to generate a .NET assembly
+/// nodes. (It would be nice to generate a .NET assembly
 /// by emitting CIL opcodes instead, but there's currently
 /// no reliable way to save such an assembly to a file.
 /// See https://github.com/dotnet/runtime/issues/15704.)
