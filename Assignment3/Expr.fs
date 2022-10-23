@@ -50,6 +50,17 @@ type Expr<'tag> =
             Tag : 'tag
         |}
 
+    with
+    
+    member expr.Tagg =   // F# uses the name "Tag" internally :(
+        match expr with
+            | LetExpr x -> x.Tag
+            | Prim1Expr x -> x.Tag
+            | Prim2Expr x -> x.Tag
+            | IfExpr x -> x.Tag
+            | NumberExpr x -> x.Tag
+            | IdentifierExpr x -> x.Tag
+
 and Binding<'tag> =
     {
         Identifier : string
@@ -104,40 +115,31 @@ module Expr =
                 Tag = tag
             |})
 
-    let private parseExprStart =
+    let private parsePrim2 =
+        let create op left right =
+            Prim2Expr {|
+                Operator = op
+                Left = left
+                Right = right
+                Tag = fst left.Tagg, snd right.Tagg
+            |}
+        let parseOp =
+            choice [
+                pchar '+' >>% create Plus
+                pchar '-' >>% create Minus
+                pchar '*' >>% create Times
+            ]
+        chainl1
+            parseExpr
+            (spaces >>. parseOp .>> spaces)
+
+    let private parseExprImpl =
         choice [
             parseNumber
             parsePrim1
+            parsePrim2
             parseIdentifier   // must be last
         ]
-
-    let private parseExprEnd =
-        parse {
-            let! op =
-                choice [
-                    pchar '+' >>% Plus
-                    pchar '-' >>% Minus
-                    pchar '*' >>% Times
-                ]
-            do! spaces
-            let! expr = parseExpr
-            return op, expr
-        } |> opt
-
-    let private parseExprImpl =
-        parseExprStart
-            .>> spaces
-            .>>. parseExprEnd
-            |> parsePos (fun (exprStart, exprEndOpt) tag ->
-                match exprEndOpt with
-                    | Some (op, exprEnd) ->
-                        Prim2Expr {|
-                            Operator = op
-                            Left = exprStart
-                            Right = exprEnd
-                            Tag = tag
-                        |}
-                    | None -> exprStart)
 
     let private parseText =
         spaces
