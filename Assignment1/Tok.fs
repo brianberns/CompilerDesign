@@ -18,7 +18,6 @@ module Pos =
         ((startline, startcol, _, _) : pos)
         ((_, _, endline, endcol) : pos) : pos =
             startline, startcol, endline, endcol
-        
 
 module Tok =
 
