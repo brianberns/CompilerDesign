@@ -115,7 +115,14 @@ module Expr =
                 Tag = tag
             |})
 
-    let private parsePrim2 =
+    let private parseSimpleExpr =
+        choice [
+            parseNumber
+            parsePrim1
+            parseIdentifier   // must be last
+        ]
+
+    let private parseExprImpl =
         let create op left right =
             Prim2Expr {|
                 Operator = op
@@ -130,16 +137,8 @@ module Expr =
                 pchar '*' >>% create Times
             ]
         chainl1
-            parseExpr
+            parseSimpleExpr
             (spaces >>. parseOp .>> spaces)
-
-    let private parseExprImpl =
-        choice [
-            parseNumber
-            parsePrim1
-            parsePrim2
-            parseIdentifier   // must be last
-        ]
 
     let private parseText =
         spaces
