@@ -89,9 +89,14 @@ module Expr =
                     Tag = tag
                 |})
 
-    let private parseIdentifier =
+    let private parseIdentifierName =
         identifier (IdentifierOptions ())
             |> parsePos (fun ident tag ->
+                (ident, tag))
+
+    let private parseIdentifier =
+        parseIdentifierName
+            |>> (fun (ident, tag) ->
                 IdentifierExpr {|
                     Identifier = ident
                     Tag = tag
@@ -139,11 +144,43 @@ module Expr =
                 Tag = tag
             |})
 
+    let private parseBinding =
+        parse {
+            let! (ident, tag) = parseIdentifierName
+            do! spaces >>. skipChar '=' >>. spaces
+            let! expr = parseExpr
+            return {
+                Identifier = ident
+                Expr = expr
+                Tag = tag   // identifier tag, not for entire binding
+            }
+        }
+
+    let private parseBindings =
+        sepBy1
+            (parseBinding .>> spaces)
+            (skipChar ',' .>> spaces)
+
+    let private parseLet =
+        parse {
+            do! skipString "let" >>. spaces
+            let! bindings = parseBindings
+            do! spaces >>. skipString "in" >>. spaces
+            let! expr = parseExpr
+            return bindings, expr
+        } |> parsePos (fun (bindings, expr) tag ->
+            LetExpr {|
+                Bindings = bindings
+                Expr = expr
+                Tag = tag
+            |})
+
     let private parseSimpleExpr =
         choice [
             parseNumber
             parsePrim1
             parseIf
+            parseLet
             parseIdentifier   // must come after any parser that looks for keywords
             parseParens
         ]
