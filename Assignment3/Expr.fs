@@ -97,6 +97,14 @@ module Expr =
                     Tag = tag
                 |})
 
+    let private parseParens =
+        parse {
+            do! skipChar '(' >>. spaces
+            let! expr = parseExpr
+            do! spaces >>. skipChar ')'
+            return expr
+        }
+
     let private parsePrim1 =
         parse {
             let! op = 
@@ -104,9 +112,8 @@ module Expr =
                     pstring "add1" >>% Add1
                     pstring "sub1" >>% Sub1
                 ]
-            do! spaces >>. skipChar '(' >>. spaces
-            let! expr = parseExpr
-            do! spaces >>. skipChar ')'
+            do! spaces
+            let! expr = parseParens
             return op, expr
         } |> parsePos (fun (op, expr) tag ->
             Prim1Expr {|
@@ -119,7 +126,8 @@ module Expr =
         choice [
             parseNumber
             parsePrim1
-            parseIdentifier   // must be last
+            parseIdentifier   // must come after prim1
+            parseParens
         ]
 
     let private parseExprImpl =
