@@ -1,7 +1,6 @@
 ﻿namespace CompilerDesign.Core
 
 open Microsoft.CodeAnalysis.CSharp
-open CompilerDesign.Core
 
 /// Variable environment.
 type env = Map<string, Syntax.ExpressionSyntax>

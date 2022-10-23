@@ -4,8 +4,6 @@ open Microsoft.CodeAnalysis
 open Microsoft.CodeAnalysis.CSharp
 open type SyntaxFactory
 
-open CompilerDesign.Core
-
 module CompilationUnit =
 
     (*

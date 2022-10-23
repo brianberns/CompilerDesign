@@ -8,8 +8,6 @@ open Microsoft.CodeAnalysis.CSharp
 
 open Basic.Reference.Assemblies
 
-open CompilerDesign.Core
-
 module Assembly =
 
     /// Helper function corresponding to compile_prog in Lecture 3.
