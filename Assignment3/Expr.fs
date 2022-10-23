@@ -135,7 +135,7 @@ module Expr =
             return op, expr
         } |> opt
 
-    do parseExprRef.Value <-
+    let private parseExprImpl =
         parseExprStart
             .>> spaces
             .>>. parseExprEnd
@@ -159,4 +159,6 @@ module Expr =
     let parse text =
         match runParserOnString parseText () "" text with
             | Success (result, _, _) -> Result.Ok result
-            | Failure (msg, _, _) -> CompilerDesign.Core.CompilerResult.error msg
+            | Failure (msg, _, _) -> CompilerResult.error msg
+
+    do parseExprRef.Value <- parseExprImpl
