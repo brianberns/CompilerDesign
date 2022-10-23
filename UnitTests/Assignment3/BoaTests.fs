@@ -8,5 +8,5 @@ type BoaTests() =
     [<TestMethod>]
     member _.Parse() =
         let text = "let a = b, c = d in a + c"
-        let actual = Expr.parse text
+        let actual = Parser.parse text
         printfn "%A" actual

@@ -7,9 +7,9 @@
   <ItemGroup>
     <None Include="Readme.md" />
     <Compile Include="Expr.fs" />
+    <Compile Include="Parser.fs" />
+    <Compile Include="Compiler.fs" />
   </ItemGroup>
-
-  <ItemGroup />
 
   <ItemGroup>
     <PackageReference Include="FParsec" Version="1.1.1" />
