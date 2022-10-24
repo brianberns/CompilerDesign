@@ -92,7 +92,7 @@ module Expr =
             $"let {bindings} in {unparse def.Expr}"
         | Prim1Expr def ->
             let op = (string def.Operator).ToLower()
-            $"op({unparse def.Expr})"
+            $"{op}({unparse def.Expr})"
         | Prim2Expr def ->
             let op = function
                 | Plus -> '+'

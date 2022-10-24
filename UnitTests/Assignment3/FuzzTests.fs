@@ -8,6 +8,20 @@ module Generator =
 
     let from<'t> = Arb.from<'t>.Generator   // is there a better way to get this?
 
+type Identifier =
+    Ident of string
+    with
+    member this.Get =
+        let (Ident str) = this
+        str
+
+module Identifier =
+
+    let arb =
+        Gen.elements ['a' .. 'z']
+            |> Gen.map string
+            |> Arb.fromGen
+
 module LetDef =
 
     let arb =
@@ -23,18 +37,11 @@ module LetDef =
             }
         } |> Arb.fromGen
 
-module NonWhiteSpaceString =
-
-    let arb =
-        Generator.from<NonWhiteSpaceString>
-            |> Gen.where (fun nwss ->
-                nwss.Get |> Seq.forall Char.IsLetter)
-
 module Binding =
 
     let arb =
         gen {
-            let! ident = Generator.from<NonWhiteSpaceString>
+            let! ident = Generator.from<Identifier>
             let! expr = Generator.from<Expr<_>>
             return {
                 Identifier = ident.Get
@@ -57,10 +64,10 @@ module NumberDef =
 module IdentifierDef =
 
     let arb =
-        Generator.from<NonWhiteSpaceString>
-            |> Gen.map (fun nwss ->
+        Generator.from<Identifier>
+            |> Gen.map (fun ident ->
                 {
-                    Identifier = nwss.Get
+                    Identifier = ident.Get
                     Tag = ()
                 })
             |> Arb.fromGen
@@ -69,7 +76,7 @@ type Arbitraries =
     static member LetDef() = LetDef.arb
     static member NumberDef() = NumberDef.arb
     static member IdentifierDef() = IdentifierDef.arb
-    static member NonWhiteSpaceString() = NonWhiteSpaceString.arb
+    static member Identifier() = Identifier.arb
 
 [<TestClass>]
 type FuzzTests() =
