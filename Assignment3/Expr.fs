@@ -98,7 +98,7 @@ module Expr =
                 | Plus -> '+'
                 | Minus -> '-'
                 | Times -> '*'
-            $"{def.Left} {op} {def.Right}"
+            $"{unparse def.Left} {op def.Operator} {unparse def.Right}"
         | IfExpr def ->
             $"if {unparse def.Condition} : \
                 {unparse def.TrueBranch} \
