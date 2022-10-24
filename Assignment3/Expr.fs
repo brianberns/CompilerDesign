@@ -12,42 +12,12 @@ type Prim2 =
     | Times
 
 type Expr<'tag> =
-    | LetExpr of
-        {|
-            Bindings : List<Binding<'tag>>
-            Expr : Expr<'tag>
-            Tag : 'tag
-        |}
-    | Prim1Expr of
-        {|
-            Operator : Prim1
-            Expr : Expr<'tag>
-            Tag : 'tag
-        |}
-    | Prim2Expr of
-        {|
-            Operator : Prim2
-            Left : Expr<'tag>
-            Right : Expr<'tag>
-            Tag : 'tag
-        |}
-    | IfExpr of
-        {|
-            Condition : Expr<'tag>
-            TrueBranch : Expr<'tag>
-            FalseBranch : Expr<'tag>
-            Tag : 'tag
-        |}
-    | NumberExpr of
-        {|
-            Number : int
-            Tag : 'tag
-        |}
-    | IdentifierExpr of
-        {|
-            Identifier : string
-            Tag : 'tag
-        |}
+    | LetExpr of LetDef<'tag>
+    | Prim1Expr of Prim1Def<'tag>
+    | Prim2Expr of Prim2Def<'tag>
+    | IfExpr of IfDef<'tag>
+    | NumberExpr of NumberDef<'tag>
+    | IdentifierExpr of IdentifierDef<'tag>
 
     with
     
@@ -60,6 +30,13 @@ type Expr<'tag> =
             | NumberExpr x -> x.Tag
             | IdentifierExpr x -> x.Tag
 
+and LetDef<'tag> =
+    {
+        Bindings : List<Binding<'tag>>
+        Expr : Expr<'tag>
+        Tag : 'tag
+    }
+
 and Binding<'tag> =
     {
         Identifier : string
@@ -67,29 +44,64 @@ and Binding<'tag> =
         Tag : 'tag
     }
 
+and Prim1Def<'tag> =
+    {
+        Operator : Prim1
+        Expr : Expr<'tag>
+        Tag : 'tag
+    }
+
+and Prim2Def<'tag> =
+    {
+        Operator : Prim2
+        Left : Expr<'tag>
+        Right : Expr<'tag>
+        Tag : 'tag
+    }
+
+and IfDef<'tag> =
+    {
+        Condition : Expr<'tag>
+        TrueBranch : Expr<'tag>
+        FalseBranch : Expr<'tag>
+        Tag : 'tag
+    }
+
+and NumberDef<'tag> =
+    {
+        Number : int
+        Tag : 'tag
+    }
+
+and IdentifierDef<'tag> =
+    {
+        Identifier : string
+        Tag : 'tag
+    }
+
 module Expr =
 
     let rec unparse = function
-        | LetExpr rcd ->
+        | LetExpr def ->
             let bindings =
                 let exprs =
-                    rcd.Bindings
+                    def.Bindings
                         |> Seq.map (fun binding ->
                             $"{binding.Identifier} = {unparse binding.Expr}")
                 String.Join(", ", exprs)
-            $"let {bindings} in {rcd.Expr}"
-        | Prim1Expr rcd ->
-            let op = (string rcd.Operator).ToLower()
-            $"op({unparse rcd.Expr})"
-        | Prim2Expr rcd ->
+            $"let {bindings} in {def.Expr}"
+        | Prim1Expr def ->
+            let op = (string def.Operator).ToLower()
+            $"op({unparse def.Expr})"
+        | Prim2Expr def ->
             let op = function
                 | Plus -> '+'
                 | Minus -> '-'
                 | Times -> '*'
-            $"{rcd.Left} {op} {rcd.Right}"
-        | IfExpr rcd ->
-            $"if {unparse rcd.Condition} : \
-                {unparse rcd.TrueBranch} \
-                else: {unparse rcd.FalseBranch}"
-        | NumberExpr rcd -> string rcd.Number
-        | IdentifierExpr rcd -> rcd.Identifier
+            $"{def.Left} {op} {def.Right}"
+        | IfExpr def ->
+            $"if {unparse def.Condition} : \
+                {unparse def.TrueBranch} \
+                else: {unparse def.FalseBranch}"
+        | NumberExpr def -> string def.Number
+        | IdentifierExpr def -> def.Identifier

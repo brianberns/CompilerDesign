@@ -25,18 +25,18 @@ module Compiler =
 
     let rec private compileExpr expr env : CompilerResult<_> =
         match expr with
-            | LetExpr rcd ->
-                compileLet rcd.Bindings rcd.Expr env
-            | Prim1Expr rcd ->
-                compilePrim1 rcd.Operator rcd.Expr env
-            | Prim2Expr rcd ->
-                compilePrim2 rcd.Operator rcd.Left rcd.Right env
-            | IfExpr rcd ->
-                compileIf rcd.Condition rcd.TrueBranch rcd.FalseBranch env
-            | NumberExpr rcd ->
-                compileNumber rcd.Number env
-            | IdentifierExpr rcd ->
-                compileIdentifier rcd.Identifier env
+            | LetExpr def ->
+                compileLet def.Bindings def.Expr env
+            | Prim1Expr def ->
+                compilePrim1 def.Operator def.Expr env
+            | Prim2Expr def ->
+                compilePrim2 def.Operator def.Left def.Right env
+            | IfExpr def ->
+                compileIf def.Condition def.TrueBranch def.FalseBranch env
+            | NumberExpr def ->
+                compileNumber def.Number env
+            | IdentifierExpr def ->
+                compileIdentifier def.Identifier env
 
     and private compileLet bindings expr env =
 

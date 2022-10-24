@@ -8,84 +8,86 @@ module Generator =
 
     let from<'t> = Arb.from<'t>.Generator   // is there a better way to get this?
 
-module Number =
+module NumberDef =
 
     let arb =
         Generator.from<int>
             |> Gen.map (fun n ->
-                NumberExpr {|
+                {
                     Number = n
                     Tag = ()
-                |})
+                })
             |> Arb.fromGen
 
-module Identifier =
+module IdentifierDef =
 
     let arb =
         Generator.from<NonWhiteSpaceString>
             |> Gen.where (fun nwss ->
                 nwss.Get |> Seq.forall Char.IsLetter)
             |> Gen.map (fun nwss ->
-                IdentifierExpr {|
+                {
                     Identifier = nwss.Get
                     Tag = ()
-                |})
+                })
             |> Arb.fromGen
 
 type Arbitraries =
-    static member Number() = Number.arb
-    static member Identifier() = Identifier.arb
+    static member NumberDef() = NumberDef.arb
+    static member IdentifierDef() = IdentifierDef.arb
 
 [<TestClass>]
 type FuzzTests() =
 
     let rec untag = function
-        | LetExpr rcd ->
-            LetExpr {|
+        | LetExpr def ->
+            LetExpr {
                 Bindings =
-                    rcd.Bindings
+                    def.Bindings
                         |> List.map (fun binding ->
                             {
-                                Identifier = binding.Identifier   // why is this necessary?
+                                Identifier = binding.Identifier
                                 Expr = untag binding.Expr
                                 Tag = ()
                             })
-                Expr = untag rcd.Expr
+                Expr = untag def.Expr
                 Tag = ()
-            |}
-        | Prim1Expr rcd ->
-            Prim1Expr {|
-                rcd with
-                    Expr = untag rcd.Expr
-                    Tag = ()
-            |}
-        | Prim2Expr rcd ->
-            Prim2Expr {|
-                rcd with
-                    Left = untag rcd.Left
-                    Right = untag rcd.Right
-                    Tag = ()
-            |}
-        | IfExpr rcd ->
-            IfExpr {|
-                Condition = untag rcd.Condition
-                TrueBranch = untag rcd.TrueBranch
-                FalseBranch = untag rcd.FalseBranch
+            }
+        | Prim1Expr def ->
+            Prim1Expr {
+                Operator = def.Operator
+                Expr = untag def.Expr
                 Tag = ()
-            |}
-        | NumberExpr rcd ->
-            NumberExpr {|
-                rcd with Tag = ()
-            |}
-        | IdentifierExpr rcd ->
-            IdentifierExpr {|
-                rcd with Tag = ()
-            |}
+            }
+        | Prim2Expr def ->
+            Prim2Expr {
+                Operator = def.Operator
+                Left = untag def.Left
+                Right = untag def.Right
+                Tag = ()
+            }
+        | IfExpr def ->
+            IfExpr {
+                Condition = untag def.Condition
+                TrueBranch = untag def.TrueBranch
+                FalseBranch = untag def.FalseBranch
+                Tag = ()
+            }
+        | NumberExpr def ->
+            NumberExpr {
+                Number = def.Number
+                Tag = ()
+            }
+        | IdentifierExpr def ->
+            IdentifierExpr {
+                Identifier = def.Identifier
+                Tag = ()
+            }
 
     [<TestMethod>]
     member _.ParseUnparseIsOriginal() =
 
-        let parseUnparseIsOriginal (expr : Expr<unit>) =
+        let parseUnparseIsOriginal expr =
             let unparsed = Expr.unparse expr
             let reparsed =
                 Parser.parse unparsed

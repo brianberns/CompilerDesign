@@ -19,10 +19,10 @@ module Parser =
     let private parseNumber : Parser<_, unit> =
         pint32
             |> parsePos (fun n tag ->
-                NumberExpr {|
+                NumberExpr {
                     Number = n
                     Tag = tag
-                |})
+                })
 
     let private parseIdentifierName =
         identifier (IdentifierOptions ())
@@ -32,10 +32,10 @@ module Parser =
     let private parseIdentifier =
         parseIdentifierName
             |>> (fun (ident, tag) ->
-                IdentifierExpr {|
+                IdentifierExpr {
                     Identifier = ident
                     Tag = tag
-                |})
+                })
 
     let private parseParens =
         parse {
@@ -56,11 +56,11 @@ module Parser =
             let! expr = parseParens
             return op, expr
         } |> parsePos (fun (op, expr) tag ->
-            Prim1Expr {|
+            Prim1Expr {
                 Operator = op
                 Expr = expr
                 Tag = tag
-            |})
+            })
 
     let private parseIf =
         parse {
@@ -72,12 +72,12 @@ module Parser =
             let! falseBranch = parseExpr
             return cond, trueBranch, falseBranch
         } |> parsePos (fun (cond, trueBranch, falseBranch) tag ->
-            IfExpr {|
+            IfExpr {
                 Condition = cond
                 TrueBranch = trueBranch
                 FalseBranch = falseBranch
                 Tag = tag
-            |})
+            })
 
     let private parseBinding =
         parse {
@@ -104,11 +104,11 @@ module Parser =
             let! expr = parseExpr
             return bindings, expr
         } |> parsePos (fun (bindings, expr) tag ->
-            LetExpr {|
+            LetExpr {
                 Bindings = bindings
                 Expr = expr
                 Tag = tag
-            |})
+            })
 
     let private parseSimpleExpr =
         choice [
@@ -122,12 +122,12 @@ module Parser =
 
     let private parseExprImpl =
         let create op left right =
-            Prim2Expr {|
+            Prim2Expr {
                 Operator = op
                 Left = left
                 Right = right
                 Tag = fst left.Tag', snd right.Tag'
-            |}
+            }
         let parseOp =
             choice [
                 pchar '+' >>% create Plus
