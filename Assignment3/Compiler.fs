@@ -91,12 +91,22 @@ module Compiler =
 
     and private compileIf cond trueBranch falseBranch env =
         result {
+
             let! condNode, _ = compileExpr cond env
             let! trueNode, _ = compileExpr trueBranch env
             let! falseNode, _ = compileExpr falseBranch env
+
             let node =
+                let condNode' =
+                    BinaryExpression(
+                        SyntaxKind.NotEqualsExpression,
+                        condNode,
+                        LiteralExpression(
+                            SyntaxKind.NumericLiteralExpression,
+                            Literal(0)))
                 ConditionalExpression(
-                    condNode, trueNode, falseNode)
+                    condNode', trueNode, falseNode)
+
             return node, env
         }
 
