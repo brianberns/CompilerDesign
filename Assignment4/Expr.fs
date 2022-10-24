@@ -5,11 +5,22 @@ open System
 type Prim1 =
     | Add1
     | Sub1
+    | Prim1
+    | IsBool
+    | IsNum
+    | Not
 
 type Prim2 =
     | Plus
     | Minus
     | Times
+    | And
+    | Or
+    | Greater
+    | GreaterEq
+    | Less
+    | LessEq
+    | Eq
 
 type Expr<'tag> =
     | LetExpr of LetDef<'tag>
@@ -18,17 +29,19 @@ type Expr<'tag> =
     | IfExpr of IfDef<'tag>
     | NumberExpr of NumberDef<'tag>
     | IdentifierExpr of IdentifierDef<'tag>
+    | BoolExpr of BoolDef<'tag>
 
     with
     
     member expr.Tag' =   // F# uses the name "Tag" internally :(
         match expr with
-            | LetExpr x -> x.Tag
-            | Prim1Expr x -> x.Tag
-            | Prim2Expr x -> x.Tag
-            | IfExpr x -> x.Tag
-            | NumberExpr x -> x.Tag
-            | IdentifierExpr x -> x.Tag
+            | LetExpr def -> def.Tag
+            | Prim1Expr def -> def.Tag
+            | Prim2Expr def -> def.Tag
+            | IfExpr def -> def.Tag
+            | NumberExpr def -> def.Tag
+            | IdentifierExpr def -> def.Tag
+            | BoolExpr def -> def.Tag
 
 and LetDef<'tag> =
     {
@@ -79,6 +92,12 @@ and IdentifierDef<'tag> =
         Tag : 'tag
     }
 
+and BoolDef<'tag> =
+    {
+        Flag : bool
+        Tag : 'tag
+    }
+
 module Expr =
 
     let rec unparse = function
@@ -95,9 +114,16 @@ module Expr =
             $"{op}({unparse def.Expr})"
         | Prim2Expr def ->
             let op = function
-                | Plus -> '+'
-                | Minus -> '-'
-                | Times -> '*'
+                | Plus -> "+"
+                | Minus -> "-"
+                | Times -> "*"
+                | And -> "&&"
+                | Or -> "||"
+                | Greater -> ">"
+                | GreaterEq -> ">="
+                | Less -> "<"
+                | LessEq -> "<="
+                | Eq -> "=="
             $"({unparse def.Left} {op def.Operator} {unparse def.Right})"
         | IfExpr def ->
             $"(if {unparse def.Condition} : \
@@ -105,3 +131,4 @@ module Expr =
                 else: {unparse def.FalseBranch})"
         | NumberExpr def -> string def.Number
         | IdentifierExpr def -> def.Identifier
+        | BoolExpr def -> string def.Flag
