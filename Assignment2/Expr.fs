@@ -55,13 +55,13 @@ module Expr =
                 | Add1 -> SyntaxKind.AddExpression
                 | Sub1 -> SyntaxKind.SubtractExpression
         result {
-            let! left, env' = compileExp exp env
+            let! left, _ = compileExp exp env
             let node =
                 BinaryExpression(
                     kind,
                     left,
                     numericLiteral 1)
-            return node, env'
+            return node, env
         }
 
     and private compileLet bindings exp env =
