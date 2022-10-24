@@ -14,10 +14,12 @@
     <Compile Include="Assignment1\SExpTests.fs" />
     <Compile Include="Assignment2\AdderTests.fs" />
     <Compile Include="Assignment3\BoaTests.fs" />
+    <Compile Include="Assignment3\FuzzTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="FsCheck" Version="2.16.5" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.2" />
     <PackageReference Include="MSTest.TestAdapter" Version="2.2.10" />
     <PackageReference Include="MSTest.TestFramework" Version="2.2.10" />
