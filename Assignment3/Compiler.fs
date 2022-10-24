@@ -30,7 +30,8 @@ module Compiler =
                 compilePrim1 rcd.Operator rcd.Expr env
             | Prim2Expr rcd ->
                 compilePrim2 rcd.Operator rcd.Left rcd.Right env
-            | IfExpr rcd -> failwith "oops"
+            | IfExpr rcd ->
+                compileIf rcd.Condition rcd.TrueBranch rcd.FalseBranch env
             | NumberExpr rcd ->
                 compileNumber rcd.Number env
             | IdentifierExpr rcd ->
@@ -65,6 +66,17 @@ module Compiler =
                     kind,
                     leftNode,
                     rightNode)
+            return node, env
+        }
+
+    and private compileIf cond trueBranch falseBranch env =
+        result {
+            let! condNode, _ = compileExpr cond env
+            let! trueNode, _ = compileExpr trueBranch env
+            let! falseNode, _ = compileExpr falseBranch env
+            let node =
+                ConditionalExpression(
+                    condNode, trueNode, falseNode)
             return node, env
         }
 
