@@ -19,6 +19,7 @@ type BoaTests() =
             """
             let a = 3, b = 4 in
                 let asq = a * a, bsq = b * b in
-                    asq + bsq
+                    if a : asq + bsq
+                    else: add1(a)
             """
         Assert.AreEqual<_>(Ok "25", run text)
