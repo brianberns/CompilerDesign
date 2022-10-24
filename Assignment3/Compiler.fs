@@ -25,7 +25,8 @@ module Compiler =
 
     let rec private compileExpr expr env : CompilerResult<_> =
         match expr with
-            | LetExpr rcd -> failwith "oops"
+            | LetExpr rcd ->
+                compileLet rcd.Bindings rcd.Expr env
             | Prim1Expr rcd ->
                 compilePrim1 rcd.Operator rcd.Expr env
             | Prim2Expr rcd ->
@@ -36,6 +37,25 @@ module Compiler =
                 compileNumber rcd.Number env
             | IdentifierExpr rcd ->
                 compileIdentifier rcd.Identifier env
+
+    and private compileLet bindings expr env =
+
+        let rec loop (bindings : List<Binding<_>>) env=
+            match bindings with
+                | binding :: tail ->
+                    result {
+                        let! node, env' =
+                            compileExpr binding.Expr env
+                        let! env'' =
+                            env' |> Env.tryAdd binding.Identifier node
+                        return! loop tail env''
+                    }
+                | [] -> Ok env
+
+        result {
+            let! env' = loop bindings env
+            return! compileExpr expr env'
+        }
 
     and private compilePrim1 op expr env =
         let kind =
@@ -79,25 +99,6 @@ module Compiler =
                     condNode, trueNode, falseNode)
             return node, env
         }
-
-    (*
-    and private compileLet bindings exp env =
-
-        let rec loop bindings (env : env) =
-            match bindings with
-                | (name, exp) :: tail ->
-                    result {
-                        let! node, env' = compileExp exp env
-                        let! env'' = env' |> Env.tryAdd name node
-                        return! loop tail env''
-                    }
-                | [] -> Ok env
-
-        result {
-            let! env' = loop bindings env
-            return! compileExp exp env'
-        }
-    *)
 
     let compile assemblyName text =
         result {
