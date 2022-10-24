@@ -89,7 +89,7 @@ module Expr =
                         |> Seq.map (fun binding ->
                             $"{binding.Identifier} = {unparse binding.Expr}")
                 String.Join(", ", exprs)
-            $"let {bindings} in {unparse def.Expr}"
+            $"(let {bindings} in {unparse def.Expr})"
         | Prim1Expr def ->
             let op = (string def.Operator).ToLower()
             $"{op}({unparse def.Expr})"
@@ -98,10 +98,10 @@ module Expr =
                 | Plus -> '+'
                 | Minus -> '-'
                 | Times -> '*'
-            $"{unparse def.Left} {op def.Operator} {unparse def.Right}"
+            $"({unparse def.Left} {op def.Operator} {unparse def.Right})"
         | IfExpr def ->
-            $"if {unparse def.Condition} : \
+            $"(if {unparse def.Condition} : \
                 {unparse def.TrueBranch} \
-                else: {unparse def.FalseBranch}"
+                else: {unparse def.FalseBranch})"
         | NumberExpr def -> string def.Number
         | IdentifierExpr def -> def.Identifier
