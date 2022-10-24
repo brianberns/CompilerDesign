@@ -25,13 +25,16 @@ module Compiler =
 
     let rec private compileExpr expr env : CompilerResult<_> =
         match expr with
-            | NumberExpr rcd ->
-                compileNumber rcd.Number env
+            | LetExpr rcd -> failwith "oops"
             | Prim1Expr rcd ->
                 compilePrim1 rcd.Operator rcd.Expr env
+            | Prim2Expr rcd ->
+                compilePrim2 rcd.Operator rcd.Left rcd.Right env
+            | IfExpr rcd -> failwith "oops"
+            | NumberExpr rcd ->
+                compileNumber rcd.Number env
             | IdentifierExpr rcd ->
                 compileIdentifier rcd.Identifier env
-            | _ -> failwith "oops"
 
     and private compilePrim1 op expr env =
         let kind =
@@ -39,13 +42,30 @@ module Compiler =
                 | Add1 -> SyntaxKind.AddExpression
                 | Sub1 -> SyntaxKind.SubtractExpression
         result {
-            let! left, env' = compileExpr expr env
+            let! left, _ = compileExpr expr env
             let node =
                 BinaryExpression(
                     kind,
                     left,
                     numericLiteral 1)
-            return node, env'
+            return node, env
+        }
+
+    and private compilePrim2 op left right env =
+        let kind =
+            match op with
+                | Plus -> SyntaxKind.AddExpression
+                | Minus -> SyntaxKind.SubtractExpression
+                | Times -> SyntaxKind.MultiplyExpression
+        result {
+            let! leftNode, _ = compileExpr left env
+            let! rightNode, _ = compileExpr right env
+            let node =
+                BinaryExpression(
+                    kind,
+                    leftNode,
+                    rightNode)
+            return node, env
         }
 
     (*
