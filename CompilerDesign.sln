@@ -12,11 +12,13 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Assignment1", "Assignment1\
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Assignment2", "Assignment2\Assignment2.fsproj", "{8CF0AD89-F58E-4B3D-916D-BF113DDD98B4}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "UnitTests", "UnitTests\UnitTests.fsproj", "{C4F05FC1-E80F-48CE-AA64-2C7002DB570F}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "UnitTests", "UnitTests\UnitTests.fsproj", "{C4F05FC1-E80F-48CE-AA64-2C7002DB570F}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Assignment3", "Assignment3\Assignment3.fsproj", "{B3F42990-CF60-4F88-8C43-312C329F8EB4}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Assignment3", "Assignment3\Assignment3.fsproj", "{B3F42990-CF60-4F88-8C43-312C329F8EB4}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Core", "Core\Core.fsproj", "{9500A25B-F738-4CE7-96BB-C70C23C70EFD}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Core", "Core\Core.fsproj", "{9500A25B-F738-4CE7-96BB-C70C23C70EFD}"
+EndProject
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Assignment4", "Assignment4\Assignment4.fsproj", "{39BD6766-BB91-478D-957E-D45EB308F5AF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -44,6 +46,10 @@ Global
 		{9500A25B-F738-4CE7-96BB-C70C23C70EFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9500A25B-F738-4CE7-96BB-C70C23C70EFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9500A25B-F738-4CE7-96BB-C70C23C70EFD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{39BD6766-BB91-478D-957E-D45EB308F5AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{39BD6766-BB91-478D-957E-D45EB308F5AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{39BD6766-BB91-478D-957E-D45EB308F5AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{39BD6766-BB91-478D-957E-D45EB308F5AF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
