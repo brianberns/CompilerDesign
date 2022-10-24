@@ -1,6 +1,5 @@
 ﻿namespace CompilerDesign.Assignment3
 
-open System
 open Microsoft.VisualStudio.TestTools.UnitTesting
 open FsCheck
 
@@ -126,6 +125,12 @@ type FuzzTests() =
                 Tag = ()
             }
 
+    let config =
+        { Config.QuickThrowOnFailure with
+            Arbitrary = [ typeof<Arbitraries> ]
+            MaxTest = 1000
+            Replay = Some (Random.StdGen (0, 0)) }
+
     [<TestMethod>]
     member _.ParseUnparseIsOriginal() =
 
@@ -136,9 +141,4 @@ type FuzzTests() =
                     |> Result.map untag
             reparsed = Ok expr |@ unparsed
 
-        let config =
-            { Config.QuickThrowOnFailure with
-                Arbitrary = [ typeof<Arbitraries> ]
-                MaxTest = 1000
-                Replay = Some (Random.StdGen (0, 0)) }
         Check.One(config, parseUnparseIsOriginal)
