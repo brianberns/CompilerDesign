@@ -89,7 +89,7 @@ module Expr =
                         |> Seq.map (fun binding ->
                             $"{binding.Identifier} = {unparse binding.Expr}")
                 String.Join(", ", exprs)
-            $"let {bindings} in {def.Expr}"
+            $"let {bindings} in {unparse def.Expr}"
         | Prim1Expr def ->
             let op = (string def.Operator).ToLower()
             $"op({unparse def.Expr})"
