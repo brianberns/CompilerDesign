@@ -23,3 +23,16 @@ type CobraTests() =
                     else: add1(a)
             """
         Assert.AreEqual<_>(Ok "25", run text)
+
+    [<TestMethod>]
+    member _.WontRun() =
+        let text =
+            """
+            if true > 0 : print(100) else: print(false)
+            """
+        match run text with
+            | Error [| msg |] ->
+                Assert.IsTrue(
+                    msg.Contains(
+                        "Operator '>' cannot be applied to operands of type 'bool' and 'int'"))
+            | _ -> Assert.Fail()
