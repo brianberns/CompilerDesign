@@ -25,6 +25,16 @@ type CobraTests() =
         Assert.AreEqual<_>(Ok "25", run text)
 
     [<TestMethod>]
+    member _.Print() =
+        let text =
+            """
+            let x = 1 in
+            let y = print(x + 1) in
+            print(y + 2)
+            """
+        Assert.AreEqual(Ok "2\n4\n4", run text)
+
+    [<TestMethod>]
     member _.IfPrint() =
         let text =
             """

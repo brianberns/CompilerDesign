@@ -6,28 +6,31 @@ open type SyntaxFactory
 module private CompilationUnit =
 
     (*
-    static object Print(object obj)
-    {
-        System.Console.WriteLine(obj);
-        return obj;
-    }
+        static T Print<T>(T t)
+        {
+            System.Console.WriteLine(node);
+            return t;
+        }
     *)
     let private printMethod =
         MethodDeclaration(
-            PredefinedType(
-                Token(SyntaxKind.ObjectKeyword)),
+            IdentifierName("T"),
             Identifier("Print"))
             .WithModifiers(
                 TokenList(
                     Token(SyntaxKind.StaticKeyword)))
+            .WithTypeParameterList(
+                TypeParameterList(
+                    SingletonSeparatedList(
+                        TypeParameter(
+                            Identifier("T")))))
             .WithParameterList(
                 ParameterList(
                     SingletonSeparatedList(
                         Parameter(
-                            Identifier("obj"))
+                            Identifier("t"))
                             .WithType(
-                                PredefinedType(
-                                    Token(SyntaxKind.ObjectKeyword))))))
+                                IdentifierName("T")))))
             .WithBody(
                 Block(
                     ExpressionStatement(
@@ -43,10 +46,9 @@ module private CompilationUnit =
                                 ArgumentList(
                                     SingletonSeparatedList(
                                         Argument(
-                                            IdentifierName("obj")))))),
+                                            IdentifierName("t")))))),
                     ReturnStatement(
-                        IdentifierName("obj"))))
-
+                        IdentifierName("t"))))
     (*
         static int our_code_starts_here()
         {

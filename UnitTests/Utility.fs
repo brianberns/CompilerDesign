@@ -29,6 +29,8 @@ module Process =
                         RedirectStandardOutput = true)
                 use proc = new Process(StartInfo = psi)
                 proc.Start() |> ignore
-                return proc.StandardOutput.ReadToEnd()
+                return proc.StandardOutput
+                    .ReadToEnd()
+                    .Replace("\r", "")
             }
         with exn -> error exn.Message
