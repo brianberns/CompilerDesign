@@ -124,6 +124,11 @@ type FuzzTests() =
                 Identifier = def.Identifier
                 Tag = ()
             }
+        | BoolExpr def ->
+            BoolExpr {
+                Flag = def.Flag
+                Tag = ()
+            }
 
     let config =
         { Config.QuickThrowOnFailure with

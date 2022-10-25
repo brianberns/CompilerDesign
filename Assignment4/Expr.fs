@@ -5,7 +5,7 @@ open System
 type Prim1 =
     | Add1
     | Sub1
-    | Prim1
+    | Print
     | IsBool
     | IsNum
     | Not
@@ -27,9 +27,9 @@ type Expr<'tag> =
     | Prim1Expr of Prim1Def<'tag>
     | Prim2Expr of Prim2Def<'tag>
     | IfExpr of IfDef<'tag>
-    | NumberExpr of NumberDef<'tag>
+    | NumberExpr of NumberDef<'tag>   // numeric literal
     | IdentifierExpr of IdentifierDef<'tag>
-    | BoolExpr of BoolDef<'tag>
+    | BoolExpr of BoolDef<'tag>       // Boolean literal
 
     with
     
@@ -110,8 +110,10 @@ module Expr =
                 String.Join(", ", exprs)
             $"(let {bindings} in {unparse def.Expr})"
         | Prim1Expr def ->
-            let op = (string def.Operator).ToLower()
-            $"{op}({unparse def.Expr})"
+            let op = function
+                | Not -> "!"
+                | prim1 -> (string prim1).ToLower()
+            $"{op def.Operator}({unparse def.Expr})"
         | Prim2Expr def ->
             let op = function
                 | Plus -> "+"

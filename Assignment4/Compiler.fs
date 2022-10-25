@@ -19,6 +19,18 @@ module Compiler =
                 :> Syntax.ExpressionSyntax
         Ok (node, env)
 
+    let private boolLiteral flag =
+        let kind =
+            if flag then SyntaxKind.TrueLiteralExpression
+            else SyntaxKind.FalseLiteralExpression
+        LiteralExpression(kind)
+
+    let private compileBool flag (env : env) =
+        let node =
+            boolLiteral flag
+                :> Syntax.ExpressionSyntax
+        Ok (node, env)
+
     let private compileIdentifier ident env =
         Env.tryFind ident env
             |> Result.map (fun node -> node, env)
@@ -37,6 +49,8 @@ module Compiler =
                 compileNumber def.Number env
             | IdentifierExpr def ->
                 compileIdentifier def.Identifier env
+            | BoolExpr def ->
+                compileBool def.Flag env
 
     and private compileLet bindings expr env =
 
