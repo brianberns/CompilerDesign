@@ -37,6 +37,23 @@ module Parser =
                     Tag = tag
                 })
 
+    let private choiceF pairs =
+        pairs
+            |> Seq.map (fun (str, f) ->
+                skipString str >>% f)
+            |> choice
+
+    let private parseBool =
+        choiceF [
+            "true", true
+            "false", false
+        ]
+            |> parsePos (fun flag tag ->
+                BoolExpr {
+                    Flag = flag
+                    Tag = tag
+                })
+
     let private parseParens =
         parse {
             do! skipChar '(' >>. spaces
@@ -44,12 +61,6 @@ module Parser =
             do! spaces >>. skipChar ')'
             return expr
         }
-
-    let private choiceF pairs =
-        pairs
-            |> Seq.map (fun (str, f) ->
-                skipString str >>% f)
-            |> choice
 
     let private parsePrim1 =
         parse {
@@ -123,6 +134,7 @@ module Parser =
     let private parseSimpleExpr =
         choice [
             parseNumber
+            parseBool
             parsePrim1
             parseIf
             parseLet

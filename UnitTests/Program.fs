@@ -1,5 +1,5 @@
-open CompilerDesign.Assignment3
+open CompilerDesign.Assignment4
 
-let text = "add1(x) + sub1(2) * add1(3)"
+let text = "true"
 let actual = Parser.parse text
 printfn "%A" actual
