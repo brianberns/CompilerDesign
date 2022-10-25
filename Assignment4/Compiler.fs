@@ -19,12 +19,29 @@ module private Syntax =
             else SyntaxKind.FalseLiteralExpression
         LiteralExpression(kind)
 
+    let by1 node kind =
+        BinaryExpression(
+            kind,
+            node,
+            numericLiteral 1)
+
+    let isType node kind =
+        BinaryExpression(
+            SyntaxKind.IsExpression,
+            node,
+            PredefinedType(Token(kind)))
+
     let print node =
         InvocationExpression(IdentifierName("Print"))
             .WithArgumentList(
                 ArgumentList(
                     SingletonSeparatedList(
                         Argument(node))))
+
+    let not node =
+        PrefixUnaryExpression(
+            SyntaxKind.LogicalNotExpression,
+            node)
 
 module Compiler =
 
@@ -85,16 +102,22 @@ module Compiler =
         result {
             let! node, _ = compileExpr expr env
 
-            let by1 kind =
-                BinaryExpression(kind, node, Syntax.numericLiteral 1)
-
-            match op with
-                | Add1 ->
-                    return by1 SyntaxKind.AddExpression, env
-                | Sub1 ->
-                    return by1 SyntaxKind.SubtractExpression, env
-                | Print ->
-                    return Syntax.print node, env
+            let prim1Node =
+                match op with
+                    | Add1 ->
+                        Syntax.by1 node SyntaxKind.AddExpression
+                            :> Syntax.ExpressionSyntax
+                    | Sub1 ->
+                        Syntax.by1 node SyntaxKind.SubtractExpression
+                    | Print ->
+                        Syntax.print node
+                    | IsBool ->
+                        Syntax.isType node SyntaxKind.BoolKeyword
+                    | IsNum ->
+                        Syntax.isType node SyntaxKind.IntKeyword
+                    | Not ->
+                        Syntax.not node
+            return prim1Node, env
         }
 
     and private compilePrim2 op left right env =

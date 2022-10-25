@@ -4,10 +4,10 @@ open Microsoft.VisualStudio.TestTools.UnitTesting
 open CompilerDesign.Core
 
 [<TestClass>]
-type BoaTests() =
+type CobraTests() =
 
     let run text =
-        let assemblyName = "Boa"
+        let assemblyName = "Cobra"
         result {
             do! Compiler.compile assemblyName text
             return! Process.run assemblyName
