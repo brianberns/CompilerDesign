@@ -152,15 +152,8 @@ module Compiler =
             let! falseNode, _ = compileExpr falseBranch env
 
             let node =
-                let condNode' =
-                    BinaryExpression(
-                        SyntaxKind.NotEqualsExpression,
-                        condNode,
-                        LiteralExpression(
-                            SyntaxKind.NumericLiteralExpression,
-                            Literal(0)))
                 ConditionalExpression(
-                    condNode', trueNode, falseNode)
+                    condNode, trueNode, falseNode)
 
             return node, env
         }

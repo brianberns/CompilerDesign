@@ -19,10 +19,18 @@ type CobraTests() =
             """
             let a = 3, b = 4 in
                 let asq = a * a, bsq = b * b in
-                    if a : asq + bsq
+                    if a < b : asq + bsq
                     else: add1(a)
             """
         Assert.AreEqual<_>(Ok "25", run text)
+
+    [<TestMethod>]
+    member _.IfPrint() =
+        let text =
+            """
+            if true : print(100) else: print(false)
+            """
+        Assert.AreEqual(Ok "100\n100", run text)
 
     [<TestMethod>]
     member _.WontRun() =
