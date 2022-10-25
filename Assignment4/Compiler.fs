@@ -6,28 +6,37 @@ open type SyntaxFactory
 
 open CompilerDesign.Core
 
-module Compiler =
+module private Syntax =
 
-    let private numericLiteral (n : int) =
+    let numericLiteral (n : int) =
         LiteralExpression(
             SyntaxKind.NumericLiteralExpression,
             Literal(n))
 
-    let private compileNumber num (env : env) =
-        let node =
-            numericLiteral num
-                :> Syntax.ExpressionSyntax
-        Ok (node, env)
-
-    let private boolLiteral flag =
+    let boolLiteral flag =
         let kind =
             if flag then SyntaxKind.TrueLiteralExpression
             else SyntaxKind.FalseLiteralExpression
         LiteralExpression(kind)
 
+    let print node =
+        InvocationExpression(IdentifierName("Print"))
+            .WithArgumentList(
+                ArgumentList(
+                    SingletonSeparatedList(
+                        Argument(node))))
+
+module Compiler =
+
+    let private compileNumber num (env : env) =
+        let node =
+            Syntax.numericLiteral num
+                :> Syntax.ExpressionSyntax
+        Ok (node, env)
+
     let private compileBool flag (env : env) =
         let node =
-            boolLiteral flag
+            Syntax.boolLiteral flag
                 :> Syntax.ExpressionSyntax
         Ok (node, env)
 
@@ -72,18 +81,20 @@ module Compiler =
         }
 
     and private compilePrim1 op expr env =
-        let kind =
-            match op with
-                | Add1 -> SyntaxKind.AddExpression
-                | Sub1 -> SyntaxKind.SubtractExpression
+
         result {
-            let! left, _ = compileExpr expr env
-            let node =
-                BinaryExpression(
-                    kind,
-                    left,
-                    numericLiteral 1)
-            return node, env
+            let! node, _ = compileExpr expr env
+
+            let by1 kind =
+                BinaryExpression(kind, node, Syntax.numericLiteral 1)
+
+            match op with
+                | Add1 ->
+                    return by1 SyntaxKind.AddExpression, env
+                | Sub1 ->
+                    return by1 SyntaxKind.SubtractExpression, env
+                | Print ->
+                    return Syntax.print node, env
         }
 
     and private compilePrim2 op left right env =

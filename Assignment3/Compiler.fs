@@ -101,9 +101,7 @@ module Compiler =
                     BinaryExpression(
                         SyntaxKind.NotEqualsExpression,
                         condNode,
-                        LiteralExpression(
-                            SyntaxKind.NumericLiteralExpression,
-                            Literal(0)))
+                        numericLiteral 0)
                 ConditionalExpression(
                     condNode', trueNode, falseNode)
 
