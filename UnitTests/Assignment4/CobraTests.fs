@@ -38,7 +38,7 @@ type CobraTests() =
     member _.IfPrint() =
         let text =
             """
-            if true : print(100) else: print(false)
+            if true : print(100) else: print(99)
             """
         Assert.AreEqual(Ok "100\n100", run text)
 
