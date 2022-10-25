@@ -126,6 +126,13 @@ module Compiler =
                 | Plus -> SyntaxKind.AddExpression
                 | Minus -> SyntaxKind.SubtractExpression
                 | Times -> SyntaxKind.MultiplyExpression
+                | And -> SyntaxKind.LogicalAndExpression
+                | Or -> SyntaxKind.LogicalOrExpression
+                | Greater -> SyntaxKind.GreaterThanExpression
+                | GreaterEq -> SyntaxKind.GreaterThanOrEqualExpression
+                | Less -> SyntaxKind.LessThanExpression
+                | LessEq -> SyntaxKind.LessThanOrEqualExpression
+                | Eq -> SyntaxKind.EqualsExpression
         result {
             let! leftNode, _ = compileExpr left env
             let! rightNode, _ = compileExpr right env
