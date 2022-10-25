@@ -157,10 +157,10 @@ module Parser =
                 "*", create Times
                 "&&", create And
                 "||", create Or
+                ">=", create GreaterEq   // must come before ">"
                 ">", create Greater
-                ">=", create GreaterEq
+                "<=", create LessEq      // must come before "<"
                 "<", create Less
-                "<=", create LessEq
                 "==", create Eq
             ]
         chainl1
