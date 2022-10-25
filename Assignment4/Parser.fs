@@ -45,12 +45,22 @@ module Parser =
             return expr
         }
 
+    let private choiceF pairs =
+        pairs
+            |> Seq.map (fun (str, f) ->
+                skipString str >>% f)
+            |> choice
+
     let private parsePrim1 =
         parse {
             let! op = 
-                choice [
-                    skipString "add1" >>% Add1
-                    skipString "sub1" >>% Sub1
+                choiceF [
+                    "add1", Add1
+                    "sub1", Sub1
+                    "print", Print
+                    "isbool", IsBool
+                    "isnum", IsNum
+                    "!", Not
                 ]
             do! spaces
             let! expr = parseParens
@@ -129,10 +139,17 @@ module Parser =
                 Tag = fst left.Tag', snd right.Tag'
             }
         let parseOp =
-            choice [
-                pchar '+' >>% create Plus
-                pchar '-' >>% create Minus
-                pchar '*' >>% create Times
+            choiceF [
+                "+", create Plus
+                "-", create Minus
+                "*", create Times
+                "&&", create And
+                "||", create Or
+                ">", create Greater
+                ">=", create GreaterEq
+                "<", create Less
+                "<=", create LessEq
+                "==", create Eq
             ]
         chainl1
             (parseSimpleExpr .>> spaces)

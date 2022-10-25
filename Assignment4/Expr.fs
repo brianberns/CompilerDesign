@@ -133,4 +133,4 @@ module Expr =
                 else: {unparse def.FalseBranch})"
         | NumberExpr def -> string def.Number
         | IdentifierExpr def -> def.Identifier
-        | BoolExpr def -> string def.Flag
+        | BoolExpr def -> (string def.Flag).ToLower()
