@@ -121,14 +121,15 @@ module private CompilationUnit =
                             SyntaxKind.NumericLiteralExpression,
                             Literal(0)))))
 
-    let create assemblyName node =
+    let create assemblyName declNodes mainNode =
         let classNode =
             ClassDeclaration($"{assemblyName}Type")
                 .AddModifiers(
                     Token(SyntaxKind.StaticKeyword))
+                .AddMembers(declNodes)
                 .AddMembers(
                     printMethod,
-                    our_code_starts_here node,
+                    our_code_starts_here mainNode,
                     mainMethod)
         let namespaceNode =
             NamespaceDeclaration(

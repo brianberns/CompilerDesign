@@ -15,6 +15,28 @@ module ResultBuilder =
     /// Monadic result builder.
     let result = ResultBuilder()
 
+// https://stackoverflow.com/a/53029378/344223
+module Result =
+
+    module List =
+
+        let private empty<'t, 'err> : Result<List<'t>, 'err> =
+            result {
+                return List.empty
+            }
+
+        let traverse f items = 
+            let folder head tail =
+                result {
+                    let! h = f head
+                    let! t = tail
+                    return h :: t
+                }
+            List.foldBack folder items empty
+
+        let sequence items =
+            traverse id items
+
 /// Standard return type for compiler results. (This is
 /// preferable to throwing exceptions.)
 type CompilerResult<'a> = Result<'a, string[]>
