@@ -206,6 +206,30 @@ module Parser =
 
         do parseExprRef.Value <- parseExprImpl
 
+    module private Decl =
+
+        let private parseParameters =
+            sepBy
+                (parseIdentifierName .>> spaces)
+                (skipChar ',' >>. spaces)
+
+        let parse =
+            parse {
+                do! skipString "def" >>. spaces
+                let! ident = parseIdentifierName
+                do! spaces
+                let! params = parseParens parseParameters
+                do! spaces >>. skipChar ':' >>. spaces
+                let! body = Expr.parse
+                return ident, params, body
+            } |> parsePos (fun (ident, params, body) tag ->
+                {
+                    Identifier = ident
+                    Parameters = params
+                    Body = body
+                    Tag = tag
+                })
+
     let private parseText =
         spaces
             >>. Expr.parse
