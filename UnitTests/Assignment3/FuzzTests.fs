@@ -36,19 +36,6 @@ module LetDef =
             }
         } |> Arb.fromGen
 
-module Binding =
-
-    let arb =
-        gen {
-            let! ident = Generator.from<Identifier>
-            let! expr = Generator.from<Expr<_>>
-            return {
-                Identifier = ident.Get
-                Expr = expr
-                Tag = ()
-            }
-        } |> Arb.fromGen
-
 module NumberDef =
 
     let arb =
