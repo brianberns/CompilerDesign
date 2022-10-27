@@ -1,6 +1,6 @@
 open CompilerDesign.Assignment5
 
-let text = "y()"
+let text = "y(1)"
 let parsed = Parser.parse text
 printfn "%A" parsed
 match parsed with

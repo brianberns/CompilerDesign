@@ -150,6 +150,7 @@ type FuzzTests() =
             let reparsed =
                 Parser.parse unparsed
                     |> Result.map untag
-            reparsed = Ok expr |@ unparsed
+            let msg = sprintf "Text: %s\nResult: %A" unparsed reparsed
+            reparsed = Ok expr |@ msg
 
         Check.One(config, parseUnparseIsOriginal)

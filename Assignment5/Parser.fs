@@ -66,12 +66,12 @@ module Parser =
                     Tag = tag
                 })
 
-    let private parseParens =
+    let private parseParens parser =
         parse {
             do! skipChar '(' >>. spaces
-            let! expr = parseExpr
+            let! value = parser
             do! spaces >>. skipChar ')'
-            return expr
+            return value
         }
 
     let private parsePrim1 =
@@ -86,7 +86,7 @@ module Parser =
                     "!", Not
                 ]
             do! spaces
-            let! expr = parseParens
+            let! expr = parseParens parseExpr
             return op, expr
         } |> parsePos (fun (op, expr) tag ->
             Prim1Expr {
@@ -143,15 +143,16 @@ module Parser =
                 Tag = tag
             })
 
+    let private parseArguments =
+        sepBy
+            (parseExpr .>> spaces)
+            (skipChar ',' >>. spaces)
+
     let parseApplication =
         parse {
             let! (ident, _) = parseIdentifierName
-            do! spaces >>. skipChar '('
-            let! args =
-                sepBy
-                    (parseExpr .>> spaces)
-                    (skipChar ',' >>. spaces)
-            do! skipChar ')'
+            do! spaces
+            let! args = parseParens parseArguments
             return ident, args
         }
             |> parsePos (fun (ident, args) tag ->
@@ -171,7 +172,7 @@ module Parser =
             parseLet
             parseApplication
             parseIdentifier   // must come after other parsers
-            parseParens
+            parseParens parseExpr
         ]
 
     let private parseExprImpl =
