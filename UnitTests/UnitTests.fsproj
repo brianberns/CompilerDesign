@@ -17,6 +17,8 @@
     <Compile Include="Assignment3\FuzzTests.fs" />
     <Compile Include="Assignment4\CobraTests.fs" />
     <Compile Include="Assignment4\FuzzTests.fs" />
+    <Compile Include="Assignment5\DiamondbackTests.fs" />
+    <Compile Include="Assignment5\FuzzTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
@@ -33,6 +35,7 @@
     <ProjectReference Include="..\Assignment2\Assignment2.fsproj" />
     <ProjectReference Include="..\Assignment3\Assignment3.fsproj" />
     <ProjectReference Include="..\Assignment4\Assignment4.fsproj" />
+    <ProjectReference Include="..\Assignment5\Assignment5.fsproj" />
   </ItemGroup>
 
 </Project>
