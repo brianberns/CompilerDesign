@@ -77,6 +77,7 @@ module Compiler =
                 compileIdentifier def.Identifier env
             | BoolExpr def ->
                 compileBool def.Flag env
+            | ApplicationExpr def -> failwith "boom"
 
     and private compileLet bindings expr env =
 

@@ -1,7 +1,5 @@
 ﻿namespace CompilerDesign.Assignment5
 
-open System
-
 type Prim1 =
     | Add1
     | Sub1
@@ -30,6 +28,7 @@ type Expr<'tag> =
     | NumberExpr of NumberDef<'tag>   // numeric literal
     | IdentifierExpr of IdentifierDef<'tag>
     | BoolExpr of BoolDef<'tag>       // Boolean literal
+    | ApplicationExpr of ApplicationDef<'tag>
 
     with
     
@@ -42,6 +41,7 @@ type Expr<'tag> =
             | NumberExpr def -> def.Tag
             | IdentifierExpr def -> def.Tag
             | BoolExpr def -> def.Tag
+            | ApplicationExpr def -> def.Tag
 
 and LetDef<'tag> =
     {
@@ -98,16 +98,23 @@ and BoolDef<'tag> =
         Tag : 'tag
     }
 
+and ApplicationDef<'tag> =
+    {
+        /// Name of function being called.
+        Identifier : string
+        Arguments : List<Expr<'tag>>
+        Tag : 'tag
+    }
+
 module Expr =
 
     let rec unparse = function
         | LetExpr def ->
             let bindings =
-                let exprs =
-                    def.Bindings
-                        |> Seq.map (fun binding ->
-                            $"{binding.Identifier} = {unparse binding.Expr}")
-                String.Join(", ", exprs)
+                def.Bindings
+                    |> Seq.map (fun binding ->
+                        $"{binding.Identifier} = {unparse binding.Expr}")
+                    |> String.concat ", "
             $"(let {bindings} in {unparse def.Expr})"
         | Prim1Expr def ->
             let op = function
@@ -134,3 +141,5 @@ module Expr =
         | NumberExpr def -> string def.Number
         | IdentifierExpr def -> def.Identifier
         | BoolExpr def -> (string def.Flag).ToLower()
+        | ApplicationExpr def ->
+            $"{def.Identifier}()"

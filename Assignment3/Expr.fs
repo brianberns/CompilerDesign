@@ -1,7 +1,5 @@
 ﻿namespace CompilerDesign.Assignment3
 
-open System
-
 type Prim1 =
     | Add1
     | Sub1
@@ -84,11 +82,10 @@ module Expr =
     let rec unparse = function
         | LetExpr def ->
             let bindings =
-                let exprs =
-                    def.Bindings
-                        |> Seq.map (fun binding ->
-                            $"{binding.Identifier} = {unparse binding.Expr}")
-                String.Join(", ", exprs)
+                def.Bindings
+                    |> Seq.map (fun binding ->
+                        $"{binding.Identifier} = {unparse binding.Expr}")
+                    |> String.concat ", "
             $"(let {bindings} in {unparse def.Expr})"
         | Prim1Expr def ->
             let op = (string def.Operator).ToLower()
