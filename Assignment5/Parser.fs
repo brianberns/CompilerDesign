@@ -1,9 +1,21 @@
 ﻿namespace CompilerDesign.Assignment5
 
+open System
 open FParsec
 open CompilerDesign.Core
 
 module Parser =
+
+    let private skipComment =
+        skipChar '#'
+            >>. skipManyTill
+                anyChar
+                (skipNewline <|> eof)
+
+    let private spaces =
+        skipMany (
+            skipSatisfy Char.IsWhiteSpace
+                <|> skipComment)
 
     let private parseExpr, parseExprRef =
         createParserForwardedToRef ()

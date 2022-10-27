@@ -14,10 +14,15 @@ type DiamondbackTests() =
         }
 
     [<TestMethod>]
+    member _.Comment() =
+        let text = "1 # comment"
+        Assert.AreEqual<_>(Ok "1", run text)
+
+    [<TestMethod>]
     member _.SumOfSquares() =
         let text =
             """
-            let a = 3, b = 4 in
+            let a = 3, b = 4 in   # this is a comment
                 let asq = a * a, bsq = b * b in
                     if a < b : asq + bsq
                     else: add1(a)
