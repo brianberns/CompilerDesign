@@ -222,13 +222,22 @@ module Parser =
                 }
             }
 
-    let private parseText =
-        spaces
-            >>. Expr.parse
-            .>> spaces
-            .>> eof
+    module private Program =
+
+        let parse =
+            parse {
+                do! spaces
+                let! decls =
+                    many (Decl.parse .>> spaces)
+                let! main = Expr.parse .>> spaces
+                do! eof
+                return {
+                    Declarations = decls
+                    Main = main
+                }
+            }
 
     let parse text =
-        match runParserOnString parseText () "" text with
+        match runParserOnString Program.parse () "" text with
             | Success (result, _, _) -> Result.Ok result
             | Failure (msg, _, _) -> CompilerResult.error msg

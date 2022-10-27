@@ -161,7 +161,7 @@ module Compiler =
 
     let compile assemblyName text =
         result {
-            let! expr = Parser.parse text
-            let! node, _ = compileExpr expr Env.empty
+            let! program = Parser.parse text
+            let! node, _ = compileProgram program Env.empty
             do! Compiler.compile_prog assemblyName node
         }
