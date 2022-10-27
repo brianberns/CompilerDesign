@@ -25,10 +25,13 @@ module Parser =
             return create value (startPos, endPos)
         }
 
-    let private parseIdentifierName =
+    let private parseIdentifierDef =
         identifier (IdentifierOptions ())
-            |> parsePos (fun ident tag ->
-                (ident, tag))
+            |> parsePos (fun name tag ->
+                {
+                    Name = name
+                    Tag = tag
+                })
 
     let private choiceF pairs =
         pairs
@@ -58,12 +61,8 @@ module Parser =
                     })
 
         let private parseIdentifier =
-            parseIdentifierName
-                |>> (fun (ident, tag) ->
-                    IdentifierExpr {
-                        Identifier = ident
-                        Tag = tag
-                    })
+            parseIdentifierDef
+                |>> IdentifierExpr
 
         let private parseBool =
             choiceF [
@@ -116,13 +115,12 @@ module Parser =
 
         let private parseBinding =
             parse {
-                let! (ident, tag) = parseIdentifierName
+                let! ident = parseIdentifierDef
                 do! spaces >>. skipChar '=' >>. spaces
                 let! expr = parseExpr
                 return {
                     Identifier = ident
                     Expr = expr
-                    Tag = tag   // identifier tag, not for entire binding
                 }
             }
 
@@ -152,18 +150,14 @@ module Parser =
 
         let private parseApplication =
             parse {
-                let! (ident, _) = parseIdentifierName
+                let! ident = parseIdentifierDef
                 do! spaces
                 let! args = parseParens parseArguments
-                return ident, args
-            }
-                |> parsePos (fun (ident, args) tag ->
-                    ApplicationExpr {
-                        Identifier = ident
-                        Arguments = args
-                        Tag = tag   // should we use the identifier's tag instead?
-                    })
-                |> attempt          // rollback if needed
+                return ApplicationExpr {
+                    Identifier = ident
+                    Arguments = args
+                }
+            } |> attempt          // rollback if needed
 
         let private parseSimpleExpr =
             choice [
@@ -210,25 +204,23 @@ module Parser =
 
         let private parseParameters =
             sepBy
-                (parseIdentifierName .>> spaces)
+                (parseIdentifierDef .>> spaces)
                 (skipChar ',' >>. spaces)
 
         let parse =
             parse {
                 do! skipString "def" >>. spaces
-                let! ident = parseIdentifierName
+                let! ident = parseIdentifierDef
                 do! spaces
-                let! params = parseParens parseParameters
+                let! parms = parseParens parseParameters
                 do! spaces >>. skipChar ':' >>. spaces
                 let! body = Expr.parse
-                return ident, params, body
-            } |> parsePos (fun (ident, params, body) tag ->
-                {
+                return {
                     Identifier = ident
-                    Parameters = params
+                    Parameters = parms
                     Body = body
-                    Tag = tag
-                })
+                }
+            }
 
     let private parseText =
         spaces

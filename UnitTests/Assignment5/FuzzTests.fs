@@ -7,18 +7,15 @@ module Generator =
 
     let from<'t> = Arb.from<'t>.Generator   // is there a better way to get this?
 
-type Identifier =
-    Ident of string
-    with
-    member this.Get =
-        let (Ident str) = this
-        str
-
-module Identifier =
+module IdentifierDef =
 
     let arb =
         Gen.elements ['a' .. 'z']
-            |> Gen.map string
+            |> Gen.map (fun c ->
+                {
+                    Name = string c
+                    Tag = ()
+                })
             |> Arb.fromGen
 
 module LetDef =
@@ -36,19 +33,6 @@ module LetDef =
             }
         } |> Arb.fromGen
 
-module Binding =
-
-    let arb =
-        gen {
-            let! ident = Generator.from<Identifier>
-            let! expr = Generator.from<Expr<_>>
-            return {
-                Identifier = ident.Get
-                Expr = expr
-                Tag = ()
-            }
-        } |> Arb.fromGen
-
 module NumberDef =
 
     let arb =
@@ -60,36 +44,29 @@ module NumberDef =
                 })
             |> Arb.fromGen
 
-module IdentifierDef =
-
-    let arb =
-        Generator.from<Identifier>
-            |> Gen.map (fun ident ->
-                {
-                    Identifier = ident.Get
-                    Tag = ()
-                })
-            |> Arb.fromGen
-
 type Arbitraries =
     static member LetDef() = LetDef.arb
     static member NumberDef() = NumberDef.arb
     static member IdentifierDef() = IdentifierDef.arb
-    static member Identifier() = Identifier.arb
 
 [<TestClass>]
 type FuzzTests() =
 
+    let untagIdent (ident : IdentifierDef<_>) =
+        {
+            Name = ident.Name
+            Tag = ()
+        }
+
     let rec untag = function
-        | LetExpr def ->
+        | LetExpr def->
             LetExpr {
                 Bindings =
                     def.Bindings
                         |> List.map (fun binding ->
                             {
-                                Identifier = binding.Identifier
+                                Identifier = untagIdent binding.Identifier
                                 Expr = untag binding.Expr
-                                Tag = ()
                             })
                 Expr = untag def.Expr
                 Tag = ()
@@ -121,7 +98,7 @@ type FuzzTests() =
             }
         | IdentifierExpr def ->
             IdentifierExpr {
-                Identifier = def.Identifier
+                Name = def.Name
                 Tag = ()
             }
         | BoolExpr def ->
@@ -131,9 +108,8 @@ type FuzzTests() =
             }
         | ApplicationExpr def ->
             ApplicationExpr {
-                Identifier = def.Identifier
+                Identifier = untagIdent def.Identifier
                 Arguments = List.map untag def.Arguments
-                Tag = ()
             }
 
     let config =

@@ -74,7 +74,7 @@ module Compiler =
             | NumberExpr def ->
                 compileNumber def.Number env
             | IdentifierExpr def ->
-                compileIdentifier def.Identifier env
+                compileIdentifier def.Name env
             | BoolExpr def ->
                 compileBool def.Flag env
             | ApplicationExpr def -> failwith "boom"
@@ -88,7 +88,7 @@ module Compiler =
                         let! node, env' =
                             compileExpr binding.Expr env
                         let! env'' =
-                            env' |> Env.tryAdd binding.Identifier node
+                            env' |> Env.tryAdd binding.Identifier.Name node
                         return! loop tail env''
                     }
                 | [] -> Ok env

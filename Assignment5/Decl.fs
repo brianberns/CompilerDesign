@@ -3,10 +3,9 @@
 type Decl<'tag> =
     {
         /// Name of function begin declared.
-        Identifier : string
-        Parameters : List<string>
+        Identifier : IdentifierDef<'tag>
+        Parameters : List<IdentifierDef<'tag>>
         Body : Expr<'tag>
-        Tag : 'tag
     }
 
 type Program<'tag> =

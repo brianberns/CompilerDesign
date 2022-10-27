@@ -20,6 +20,24 @@ type Prim2 =
     | LessEq
     | Eq
 
+type IdentifierDef<'tag> =
+    {
+        Name : string
+        Tag : 'tag
+    }
+
+type NumberDef<'tag> =
+    {
+        Number : int
+        Tag : 'tag
+    }
+
+type BoolDef<'tag> =
+    {
+        Flag : bool
+        Tag : 'tag
+    }
+
 type Expr<'tag> =
     | LetExpr of LetDef<'tag>
     | Prim1Expr of Prim1Def<'tag>
@@ -41,7 +59,7 @@ type Expr<'tag> =
             | NumberExpr def -> def.Tag
             | IdentifierExpr def -> def.Tag
             | BoolExpr def -> def.Tag
-            | ApplicationExpr def -> def.Tag
+            | ApplicationExpr def -> def.Identifier.Tag
 
 and LetDef<'tag> =
     {
@@ -52,9 +70,8 @@ and LetDef<'tag> =
 
 and Binding<'tag> =
     {
-        Identifier : string
+        Identifier : IdentifierDef<'tag>
         Expr : Expr<'tag>
-        Tag : 'tag
     }
 
 and Prim1Def<'tag> =
@@ -80,30 +97,11 @@ and IfDef<'tag> =
         Tag : 'tag
     }
 
-and NumberDef<'tag> =
-    {
-        Number : int
-        Tag : 'tag
-    }
-
-and IdentifierDef<'tag> =
-    {
-        Identifier : string
-        Tag : 'tag
-    }
-
-and BoolDef<'tag> =
-    {
-        Flag : bool
-        Tag : 'tag
-    }
-
 and ApplicationDef<'tag> =
     {
         /// Name of function being called.
-        Identifier : string
+        Identifier : IdentifierDef<'tag>
         Arguments : List<Expr<'tag>>
-        Tag : 'tag
     }
 
 module Expr =
@@ -113,7 +111,7 @@ module Expr =
             let bindings =
                 def.Bindings
                     |> Seq.map (fun binding ->
-                        $"{binding.Identifier} = {unparse binding.Expr}")
+                        $"{binding.Identifier.Name} = {unparse binding.Expr}")
                     |> String.concat ", "
             $"(let {bindings} in {unparse def.Expr})"
         | Prim1Expr def ->
@@ -139,11 +137,11 @@ module Expr =
                 {unparse def.TrueBranch} \
                 else: {unparse def.FalseBranch})"
         | NumberExpr def -> string def.Number
-        | IdentifierExpr def -> def.Identifier
+        | IdentifierExpr def -> def.Name
         | BoolExpr def -> (string def.Flag).ToLower()
         | ApplicationExpr def ->
             let args =
                 def.Arguments
                     |> Seq.map unparse
                     |> String.concat ", "
-            $"{def.Identifier}({args})"
+            $"{def.Identifier.Name}({args})"
