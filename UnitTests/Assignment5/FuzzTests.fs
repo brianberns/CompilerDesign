@@ -129,6 +129,12 @@ type FuzzTests() =
                 Flag = def.Flag
                 Tag = ()
             }
+        | ApplicationExpr def ->
+            ApplicationExpr {
+                Identifier = def.Identifier
+                Arguments = List.map untag def.Arguments
+                Tag = ()
+            }
 
     let config =
         { Config.QuickThrowOnFailure with

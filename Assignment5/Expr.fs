@@ -142,4 +142,8 @@ module Expr =
         | IdentifierExpr def -> def.Identifier
         | BoolExpr def -> (string def.Flag).ToLower()
         | ApplicationExpr def ->
-            $"{def.Identifier}()"
+            let args =
+                def.Arguments
+                    |> Seq.map unparse
+                    |> String.concat ", "
+            $"{def.Identifier}({args})"

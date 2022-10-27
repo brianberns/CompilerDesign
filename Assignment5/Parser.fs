@@ -143,6 +143,25 @@ module Parser =
                 Tag = tag
             })
 
+    let parseApplication =
+        parse {
+            let! (ident, _) = parseIdentifierName
+            do! spaces >>. skipChar '('
+            let! args =
+                sepBy
+                    (parseExpr .>> spaces)
+                    (skipChar ',' >>. spaces)
+            do! skipChar ')'
+            return ident, args
+        }
+            |> parsePos (fun (ident, args) tag ->
+                ApplicationExpr {
+                    Identifier = ident
+                    Arguments = args
+                    Tag = tag   // should we use the identifier's tag instead?
+                })
+            |> attempt          // rollback if needed
+
     let private parseSimpleExpr =
         choice [
             parseNumber
@@ -150,7 +169,8 @@ module Parser =
             parsePrim1
             parseIf
             parseLet
-            parseIdentifier   // must come after any parser that looks for keywords
+            parseApplication
+            parseIdentifier   // must come after other parsers
             parseParens
         ]
 

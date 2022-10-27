@@ -1,5 +1,10 @@
-open CompilerDesign.Assignment4
+open CompilerDesign.Assignment5
 
-let text = "true + 0"
-let actual = Parser.parse text
-printfn "%A" actual
+let text = "y()"
+let parsed = Parser.parse text
+printfn "%A" parsed
+match parsed with
+    | Ok expr ->
+        printfn "%A" (Expr.unparse expr)
+    | _ -> ()
+
