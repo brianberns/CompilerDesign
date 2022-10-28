@@ -136,7 +136,11 @@ module Expr =
             $"(if {unparse def.Condition} : \
                 {unparse def.TrueBranch} \
                 else: {unparse def.FalseBranch})"
-        | NumberExpr def -> string def.Number
+        | NumberExpr def ->
+            if def.Number < 0 then
+                $"({def.Number})"   // use parens to avoid ambiguity
+            else
+                $"{def.Number}"
         | IdentifierExpr def -> def.Name
         | BoolExpr def -> (string def.Flag).ToLower()
         | ApplicationExpr def ->
