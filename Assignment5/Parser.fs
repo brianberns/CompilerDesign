@@ -151,7 +151,7 @@ module Parser =
         let private parseApplication =
             parse {
                 let! ident = parseIdentifierDef
-                do! spaces
+                // no spaces allowed here!
                 let! args = parseParens parseArguments
                 return ApplicationExpr {
                     Identifier = ident

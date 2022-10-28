@@ -36,10 +36,10 @@ module LetDef =
 module NumberDef =
 
     let arb =
-        Generator.from<int>
+        Generator.from<NonNegativeInt>   // prevent negative numbers to avoid ambiguity (e.g. "def f(): 0 -1")
             |> Gen.map (fun n ->
                 {
-                    Number = n
+                    Number = n.Get
                     Tag = ()
                 })
             |> Arb.fromGen
