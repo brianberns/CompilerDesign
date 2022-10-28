@@ -170,6 +170,7 @@ module Compiler =
                         PredefinedType(
                             Token(SyntaxKind.IntKeyword)),
                     identifier = decl.Identifier.Name)
+                        :> Syntax.MemberDeclarationSyntax
             }
 
     module private Program =
@@ -180,13 +181,14 @@ module Compiler =
                     program.Declarations
                         |> List.map Decl.compile
                         |> Result.List.sequence
+                        |> Result.map Seq.toArray
                 let! mainNode, _ = Expr.compile program.Main Env.empty
-                return declNodes, mainNode
+                return mainNode, declNodes
             }
 
     let compile assemblyName text =
         result {
             let! program = Parser.parse text
-            let! declNodes, mainNode = Program.compile program
-            do! Compiler.compile_prog assemblyName declNodes mainNode
+            let! mainNode, declNodes = Program.compile program
+            do! Compiler.compileWithMembers assemblyName mainNode declNodes
         }

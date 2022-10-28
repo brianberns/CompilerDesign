@@ -10,14 +10,12 @@ open Basic.Reference.Assemblies
 
 module Compiler =
 
-    /// Helper function corresponding to compile_prog in Lecture 3.
-    /// https://course.ccs.neu.edu/cs4410sp22/lec_let-and-stack_notes.html
-    let compile_prog assemblyName declNodes mainNode =
+    let compileWithMembers assemblyName mainNode memberNodes =
 
         let emitResult =
 
             let compilationUnit, mainTypeName =
-                CompilationUnit.create assemblyName declNodes mainNode
+                CompilationUnit.create assemblyName memberNodes mainNode
 #if DEBUG
             printfn "%A" <| compilationUnit.NormalizeWhitespace()
 #endif
@@ -51,3 +49,8 @@ module Compiler =
                     |> Seq.toArray
                     |> Error
         }
+
+    /// Helper function corresponding to compile_prog in Lecture 3.
+    /// https://course.ccs.neu.edu/cs4410sp22/lec_let-and-stack_notes.html
+    let compile_prog assemblyName mainNode =
+        compileWithMembers assemblyName mainNode Array.empty
