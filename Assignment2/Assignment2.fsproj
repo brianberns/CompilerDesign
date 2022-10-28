@@ -7,7 +7,6 @@
 
   <ItemGroup>
     <None Include="Readme.md" />
-    <Compile Include="Env.fs" />
     <Compile Include="Expr.fs" />
     <Compile Include="Compiler.fs" />
   </ItemGroup>

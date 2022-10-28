@@ -10,6 +10,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Compile Include="Result.fs" />
+    <Compile Include="Env.fs" />
     <Compile Include="CompilationUnit.fs" />
     <Compile Include="Compiler.fs" />
   </ItemGroup>
