@@ -22,6 +22,7 @@ type DiamondbackTests() =
     member _.Factorial() =
         let text =
             """
+            # recursive factorial function
             def factorial(n):
                 if n <= 0: 1
                 else: n * factorial(n-1)
