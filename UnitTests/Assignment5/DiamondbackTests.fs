@@ -19,43 +19,13 @@ type DiamondbackTests() =
         Assert.AreEqual<_>(Ok "1", run text)
 
     [<TestMethod>]
-    member _.SumOfSquares() =
+    member _.Factorial() =
         let text =
             """
-            let a = 3, b = 4 in   # this is a comment
-                let asq = a * a, bsq = b * b in
-                    if a < b : asq + bsq
-                    else: add1(a)
-            """
-        Assert.AreEqual<_>(Ok "25", run text)
+            def factorial(n):
+                if n <= 0: 1
+                else: n * factorial(n-1)
 
-    [<TestMethod>]
-    member _.Print() =
-        let text =
+            factorial(6)
             """
-            let x = 1 in
-            let y = print(x + 1) in
-            print(y + 2)
-            """
-        Assert.AreEqual(Ok "2\n4\n4", run text)
-
-    [<TestMethod>]
-    member _.IfPrint() =
-        let text =
-            """
-            if true : print(100) else: print(99)
-            """
-        Assert.AreEqual(Ok "100\n100", run text)
-
-    [<TestMethod>]
-    member _.WontRun() =
-        let text =
-            """
-            if true > 0 : print(100) else: print(false)
-            """
-        match run text with
-            | Error [| msg |] ->
-                Assert.IsTrue(
-                    msg.Contains(
-                        "Operator '>' cannot be applied to operands of type 'bool' and 'int'"))
-            | _ -> Assert.Fail()
+        Assert.AreEqual<_>(Ok "720", run text)
