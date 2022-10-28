@@ -45,69 +45,69 @@ module private Syntax =
 
 module Compiler =
 
-    let private compileNumber num (env : env) =
+    let private compileNumber (env : env) num =
         let node =
             Syntax.numericLiteral num
                 :> Syntax.ExpressionSyntax
         Ok (node, env)
 
-    let private compileBool flag (env : env) =
+    let private compileBool (env : env) flag =
         let node =
             Syntax.boolLiteral flag
                 :> Syntax.ExpressionSyntax
         Ok (node, env)
 
-    let private compileIdentifier ident env =
+    let private compileIdentifier env ident =
         Env.tryFind ident env
             |> Result.map (fun node -> node, env)
 
     module private rec Expr =
 
-        let compile expr env : CompilerResult<_> =
+        let compile env expr : CompilerResult<_> =
             match expr with
                 | LetExpr def ->
-                    compileLet def.Bindings def.Expr env
+                    compileLet env def.Bindings def.Expr
                 | Prim1Expr def ->
-                    compilePrim1 def.Operator def.Expr env
+                    compilePrim1 env def.Operator def.Expr
                 | Prim2Expr def ->
-                    compilePrim2 def.Operator def.Left def.Right env
+                    compilePrim2 env def.Operator def.Left def.Right
                 | IfExpr def ->
-                    compileIf def.Condition def.TrueBranch def.FalseBranch env
+                    compileIf env def.Condition def.TrueBranch def.FalseBranch
                 | NumberExpr def ->
-                    compileNumber def.Number env
+                    compileNumber env def.Number
                 | IdentifierExpr def ->
-                    compileIdentifier def.Name env
+                    compileIdentifier env def.Name
                 | BoolExpr def ->
-                    compileBool def.Flag env
+                    compileBool env def.Flag
                 | ApplicationExpr def ->
-                    compileApplication def.Identifier def.Arguments env
+                    compileApplication env def.Identifier def.Arguments
 
-        let private compileLet bindings expr env =
+        let private compileLet env bindings expr =
 
-            let rec loop (bindings : List<Binding<_>>) env=
+            let rec loop env bindings =
                 match bindings with
-                    | binding :: tail ->
+                    | (binding : Binding<_>) :: tail ->
                         result {
                             let! node, env' =
-                                compile binding.Expr env
+                                compile env binding.Expr
                             let! env'' =
                                 env'
                                     |> Env.tryAdd
                                         binding.Identifier.Name
                                         node
-                            return! loop tail env''
+                            return! loop env'' tail
                         }
                     | [] -> Ok env
 
             result {
-                let! env' = loop bindings env
-                return! compile expr env'
+                let! env' = loop env bindings
+                return! compile env' expr
             }
 
-        let private compilePrim1 op expr env =
+        let private compilePrim1 env op expr =
 
             result {
-                let! node, _ = compile expr env
+                let! node, _ = compile env expr
 
                 let prim1Node =
                     match op with
@@ -127,7 +127,7 @@ module Compiler =
                 return prim1Node, env
             }
 
-        let private compilePrim2 op left right env =
+        let private compilePrim2 env op left right =
             let kind =
                 match op with
                     | Plus -> SyntaxKind.AddExpression
@@ -141,8 +141,8 @@ module Compiler =
                     | LessEq -> SyntaxKind.LessThanOrEqualExpression
                     | Eq -> SyntaxKind.EqualsExpression
             result {
-                let! leftNode, _ = compile left env
-                let! rightNode, _ = compile right env
+                let! leftNode, _ = compile env left
+                let! rightNode, _ = compile env right
                 let node =
                     BinaryExpression(
                         kind,
@@ -151,12 +151,12 @@ module Compiler =
                 return node, env
             }
 
-        let private compileIf cond trueBranch falseBranch env =
+        let private compileIf env cond trueBranch falseBranch =
             result {
 
-                let! condNode, _ = compile cond env
-                let! trueNode, _ = compile trueBranch env
-                let! falseNode, _ = compile falseBranch env
+                let! condNode, _ = compile env cond
+                let! trueNode, _ = compile env trueBranch
+                let! falseNode, _ = compile env falseBranch
 
                 let node =
                     ConditionalExpression(
@@ -165,13 +165,13 @@ module Compiler =
                 return node, env
             }
 
-        let private compileApplication ident args env =
+        let private compileApplication env ident args =
             result {
 
                 let! argsNode =
                     args
                         |> List.map (fun expr ->
-                            compile expr env
+                            compile env expr
                                 |> Result.map (fst >> Argument))
                         |> Result.List.sequence
                         |> Result.map SeparatedList
@@ -186,9 +186,10 @@ module Compiler =
 
     module private Decl =
 
-        let compile decl env =
+        let compile env decl =
             result {
-                let! bodyNode, _ = Expr.compile decl.Body env
+
+                let! bodyNode, _ = Expr.compile env decl.Body
 
                 return MethodDeclaration(
                     returnType =
@@ -201,15 +202,14 @@ module Compiler =
 
     module private Program =
 
-        let compile program env =
+        let compile env program =
             result {
                 let! declNodes =
                     program.Declarations
-                        |> List.map (fun decl ->
-                            Decl.compile decl env)
+                        |> List.map (Decl.compile env)
                         |> Result.List.sequence
                         |> Result.map Seq.toArray
-                let! mainNode, _ = Expr.compile program.Main Env.empty
+                let! mainNode, _ = Expr.compile Env.empty program.Main
                 return mainNode, declNodes
             }
 
@@ -217,6 +217,10 @@ module Compiler =
         result {
             let! program = Parser.parse text
             let! mainNode, declNodes =
-                Program.compile program Env.empty
-            do! Compiler.compileWithMembers assemblyName mainNode declNodes
+                Program.compile Env.empty program
+            do!
+                Compiler.compileWithMembers
+                    assemblyName
+                    mainNode
+                    declNodes
         }

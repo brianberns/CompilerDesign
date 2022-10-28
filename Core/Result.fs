@@ -20,11 +20,6 @@ module Result =
 
     module List =
 
-        let private empty<'t, 'err> : Result<List<'t>, 'err> =
-            result {
-                return List.empty
-            }
-
         let traverse f items = 
             let folder head tail =
                 result {
@@ -32,6 +27,7 @@ module Result =
                     let! t = tail
                     return h :: t
                 }
+            let empty = result { return List.empty }
             List.foldBack folder items empty
 
         let sequence items =
