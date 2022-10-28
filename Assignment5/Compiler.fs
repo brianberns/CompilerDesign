@@ -84,28 +84,26 @@ module Compiler =
 
         let private compileLet env bindings expr =
 
-            let rec loop env bindings =
-                match bindings with
-                    | (binding : Binding<_>) :: tail ->
-                        result {
-                            let! node, env' =
-                                compile env binding.Expr
-                            let! env'' =
-                                env'
-                                    |> Env.tryAdd
-                                        binding.Identifier.Name
-                                        node
-                            return! loop env'' tail
-                        }
-                    | [] -> Ok env
+            let rec updateEnv env = function
+                | (binding : Binding<_>) :: tail ->
+                    result {
+                        let! node, env' =
+                            compile env binding.Expr
+                        let! env'' =
+                            env'
+                                |> Env.tryAdd
+                                    binding.Identifier.Name
+                                    node
+                        return! updateEnv env'' tail
+                    }
+                | [] -> Ok env
 
             result {
-                let! env' = loop env bindings
+                let! env' = updateEnv env bindings
                 return! compile env' expr
             }
 
         let private compilePrim1 env op expr =
-
             result {
                 let! node, _ = compile env expr
 
@@ -186,18 +184,47 @@ module Compiler =
 
     module private Decl =
 
+        let private compileParameter _env parm =
+            result {
+                return Parameter(
+                    Identifier(parm.Name))
+                    .WithType(
+                        PredefinedType(
+                            Token(SyntaxKind.IntKeyword)))   // ugh
+            }
+
         let compile env decl =
+
+            let rec updateEnv env = function
+                | parm :: tail ->
+                    result {
+                        let node = IdentifierName(parm.Name)
+                        let! env' =
+                            env |> Env.tryAdd parm.Name node
+                        return! updateEnv env' tail
+                    }
+                | [] -> Ok env
+
             result {
 
-                let! bodyNode, _ = Expr.compile env decl.Body
+                let! env' = updateEnv env decl.Parameters
+                let! parmNodes =
+                    decl.Parameters
+                        |> List.map (compileParameter env)
+                        |> Result.List.sequence
+                let! bodyNode, _ = Expr.compile env' decl.Body
 
                 return MethodDeclaration(
                     returnType =
                         PredefinedType(
                             Token(SyntaxKind.IntKeyword)),
                     identifier = decl.Identifier.Name)
-                    .WithBody(Block(ReturnStatement(bodyNode)))
-                        :> Syntax.MemberDeclarationSyntax
+                    .AddModifiers(
+                        Token(SyntaxKind.StaticKeyword))
+                    .WithParameterList(
+                        ParameterList(SeparatedList(parmNodes)))
+                    .WithBody(
+                        Block(ReturnStatement(bodyNode)))
             }
 
     module private Program =
@@ -216,11 +243,15 @@ module Compiler =
     let compile assemblyName text =
         result {
             let! program = Parser.parse text
-            let! mainNode, declNodes =
+            let! mainNode, methodNodes =
                 Program.compile Env.empty program
+            let memberNodes =
+                methodNodes
+                    |> Array.map (fun node ->
+                        node :> Syntax.MemberDeclarationSyntax)
             do!
                 Compiler.compileWithMembers
                     assemblyName
                     mainNode
-                    declNodes
+                    memberNodes
         }
