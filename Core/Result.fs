@@ -15,11 +15,11 @@ module ResultBuilder =
     /// Monadic result builder.
     let result = ResultBuilder()
 
-// https://stackoverflow.com/a/53029378/344223
 module Result =
 
     module List =
 
+        // https://stackoverflow.com/a/53029378/344223
         let traverse f items = 
             let folder head tail =
                 result {
@@ -32,6 +32,19 @@ module Result =
 
         let sequence items =
             traverse id items
+
+        // https://hoogle.haskell.org/?hoogle=foldM
+        let foldM f state items =
+
+            let rec loop state = function
+                | item :: tail ->
+                    result {
+                        let! state' = f state item
+                        return! loop state' tail
+                    }
+                | [] -> Ok state
+
+            loop state items
 
 /// Standard return type for compiler results. (This is
 /// preferable to throwing exceptions.)

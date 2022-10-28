@@ -84,22 +84,18 @@ module Compiler =
 
         let private compileLet env bindings expr =
 
-            let rec updateEnv env = function
-                | (binding : Binding<_>) :: tail ->
-                    result {
-                        let! node, env' =
-                            compile env binding.Expr
-                        let! env'' =
-                            env'
-                                |> Env.tryAdd
-                                    binding.Identifier.Name
-                                    node
-                        return! updateEnv env'' tail
-                    }
-                | [] -> Ok env
+            let folder env (binding : Binding<_>) =
+                result {
+                    let! node, env' =
+                        compile env binding.Expr
+                    return! env'
+                        |> Env.tryAdd
+                            binding.Identifier.Name
+                            node
+                }
 
             result {
-                let! env' = updateEnv env bindings
+                let! env' = Result.List.foldM folder env bindings
                 return! compile env' expr
             }
 
@@ -195,19 +191,17 @@ module Compiler =
 
         let compile env decl =
 
-            let rec updateEnv env = function
-                | parm :: tail ->
-                    result {
-                        let node = IdentifierName(parm.Name)
-                        let! env' =
-                            env |> Env.tryAdd parm.Name node
-                        return! updateEnv env' tail
-                    }
-                | [] -> Ok env
+            let folder env parm =
+                result {
+                    let node = IdentifierName(parm.Name)
+                    return! env
+                        |> Env.tryAdd parm.Name node
+                }
 
             result {
 
-                let! env' = updateEnv env decl.Parameters
+                let! env' =
+                    Result.List.foldM folder env decl.Parameters
                 let! parmNodes =
                     decl.Parameters
                         |> List.map (compileParameter env)
