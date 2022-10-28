@@ -40,20 +40,16 @@ module Compiler =
 
     and private compileLet bindings expr env =
 
-        let rec loop (bindings : List<Binding<_>>) env=
-            match bindings with
-                | binding :: tail ->
-                    result {
-                        let! node, env' =
-                            compileExpr binding.Expr env
-                        let! env'' =
-                            env' |> Env.tryAdd binding.Identifier node
-                        return! loop tail env''
-                    }
-                | [] -> Ok env
+        let folder env (binding : Binding<_>) =
+            result {
+                let! node, env' =
+                    compileExpr binding.Expr env
+                return! env'
+                    |> Env.tryAdd binding.Identifier node
+            }
 
         result {
-            let! env' = loop bindings env
+            let! env' = Result.List.foldM folder env bindings
             return! compileExpr expr env'
         }
 
