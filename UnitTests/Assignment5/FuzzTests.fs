@@ -58,7 +58,7 @@ type FuzzTests() =
             Tag = ()
         }
 
-    let rec untag = function
+    let rec untagExpr = function
         | LetExpr def->
             LetExpr {
                 Bindings =
@@ -66,29 +66,29 @@ type FuzzTests() =
                         |> List.map (fun binding ->
                             {
                                 Identifier = untagIdent binding.Identifier
-                                Expr = untag binding.Expr
+                                Expr = untagExpr binding.Expr
                             })
-                Expr = untag def.Expr
+                Expr = untagExpr def.Expr
                 Tag = ()
             }
         | Prim1Expr def ->
             Prim1Expr {
                 Operator = def.Operator
-                Expr = untag def.Expr
+                Expr = untagExpr def.Expr
                 Tag = ()
             }
         | Prim2Expr def ->
             Prim2Expr {
                 Operator = def.Operator
-                Left = untag def.Left
-                Right = untag def.Right
+                Left = untagExpr def.Left
+                Right = untagExpr def.Right
                 Tag = ()
             }
         | IfExpr def ->
             IfExpr {
-                Condition = untag def.Condition
-                TrueBranch = untag def.TrueBranch
-                FalseBranch = untag def.FalseBranch
+                Condition = untagExpr def.Condition
+                TrueBranch = untagExpr def.TrueBranch
+                FalseBranch = untagExpr def.FalseBranch
                 Tag = ()
             }
         | NumberExpr def ->
@@ -109,8 +109,29 @@ type FuzzTests() =
         | ApplicationExpr def ->
             ApplicationExpr {
                 Identifier = untagIdent def.Identifier
-                Arguments = List.map untag def.Arguments
+                Arguments = List.map untagExpr def.Arguments
             }
+
+    let untagDecl (decl : Decl<_>) =
+        {
+            Identifier =
+                {
+                    Name = decl.Identifier.Name
+                    Tag = ()
+                }
+            Parameters =
+                decl.Parameters
+                    |> List.map untagIdent
+            Body = untagExpr decl.Body
+        }
+
+    let untagProgram program =
+        {
+            Declarations =
+                program.Declarations
+                    |> List.map untagDecl
+            Main = untagExpr program.Main
+        }
 
     let config =
         { Config.QuickThrowOnFailure with
@@ -121,12 +142,12 @@ type FuzzTests() =
     [<TestMethod>]
     member _.ParseUnparseIsOriginal() =
 
-        let parseUnparseIsOriginal expr =
-            let unparsed = Expr.unparse expr
+        let parseUnparseIsOriginal program =
+            let unparsed = Program.unparse program
             let reparsed =
                 Parser.parse unparsed
-                    |> Result.map untag
+                    |> Result.map untagProgram
             let msg = sprintf "Text: %s\nResult: %A" unparsed reparsed
-            reparsed = Ok expr |@ msg
+            reparsed = Ok program |@ msg
 
         Check.One(config, parseUnparseIsOriginal)
