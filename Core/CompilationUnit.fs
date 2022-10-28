@@ -68,18 +68,17 @@ module private CompilationUnit =
                     ReturnStatement(node)))
 
     (*
-        static int Main()
+        static void Main()
         {
             var result = our_code_starts_here();
             System.Console.Write(result);
-            return 0;
         }
     *)
     let private mainMethod =
         MethodDeclaration(
             returnType =
                 PredefinedType(
-                    Token(SyntaxKind.IntKeyword)),
+                    Token(SyntaxKind.VoidKeyword)),
             identifier = "Main")
             .AddModifiers(
                 Token(SyntaxKind.StaticKeyword))
@@ -115,11 +114,7 @@ module private CompilationUnit =
                                 ArgumentList(
                                     SingletonSeparatedList(
                                         Argument(
-                                            IdentifierName("result")))))),
-                    ReturnStatement(
-                        LiteralExpression(
-                            SyntaxKind.NumericLiteralExpression,
-                            Literal(0)))))
+                                            IdentifierName("result"))))))))
 
     let create assemblyName memberNodes mainNode =
         let classNode =
