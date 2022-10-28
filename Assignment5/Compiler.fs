@@ -80,8 +80,7 @@ module Compiler =
                 | BoolExpr def ->
                     compileBool def.Flag env
                 | ApplicationExpr def ->
-                    // compileApplication def.Identifier def.Arguments
-                    failwith "boom"
+                    compileApplication def.Identifier def.Arguments env
 
         let private compileLet bindings expr env =
 
@@ -92,7 +91,10 @@ module Compiler =
                             let! node, env' =
                                 compile binding.Expr env
                             let! env'' =
-                                env' |> Env.tryAdd binding.Identifier.Name node
+                                env'
+                                    |> Env.tryAdd
+                                        binding.Identifier.Name
+                                        node
                             return! loop tail env''
                         }
                     | [] -> Ok env
@@ -163,25 +165,48 @@ module Compiler =
                 return node, env
             }
 
+        let private compileApplication ident args env =
+            result {
+
+                let! argsNode =
+                    args
+                        |> List.map (fun expr ->
+                            compile expr env
+                                |> Result.map (fst >> Argument))
+                        |> Result.List.sequence
+                        |> Result.map SeparatedList
+
+                let node =
+                    InvocationExpression(
+                        IdentifierName(ident.Name))
+                        .WithArgumentList(ArgumentList(argsNode))
+
+                return node, env
+            }
+
     module private Decl =
 
-        let compile decl =
+        let compile decl env =
             result {
+                let! bodyNode, _ = Expr.compile decl.Body env
+
                 return MethodDeclaration(
                     returnType =
                         PredefinedType(
                             Token(SyntaxKind.IntKeyword)),
                     identifier = decl.Identifier.Name)
+                    .WithBody(Block(ReturnStatement(bodyNode)))
                         :> Syntax.MemberDeclarationSyntax
             }
 
     module private Program =
 
-        let compile program =
+        let compile program env =
             result {
                 let! declNodes =
                     program.Declarations
-                        |> List.map Decl.compile
+                        |> List.map (fun decl ->
+                            Decl.compile decl env)
                         |> Result.List.sequence
                         |> Result.map Seq.toArray
                 let! mainNode, _ = Expr.compile program.Main Env.empty
@@ -191,6 +216,7 @@ module Compiler =
     let compile assemblyName text =
         result {
             let! program = Parser.parse text
-            let! mainNode, declNodes = Program.compile program
+            let! mainNode, declNodes =
+                Program.compile program Env.empty
             do! Compiler.compileWithMembers assemblyName mainNode declNodes
         }
