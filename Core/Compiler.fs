@@ -51,6 +51,6 @@ module Compiler =
         }
 
     /// Helper function corresponding to compile_prog in Lecture 3.
-    /// https://course.ccs.neu.edu/cs4410sp22/lec_let-and-stack_notes.html
+    /// https://course.ccs.neu.edu/cs4410sp21/lec_let-and-stack_notes.html
     let compile_prog assemblyName mainNode =
         compileWithMembers assemblyName mainNode Array.empty
