@@ -20,6 +20,7 @@
     <Compile Include="Assignment5\DiamondbackTests.fs" />
     <Compile Include="Assignment5\FuzzTests.fs" />
     <Compile Include="Assignment6\TaipanTests.fs" />
+    <Compile Include="Assignment6\FuzzTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

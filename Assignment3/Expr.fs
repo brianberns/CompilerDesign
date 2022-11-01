@@ -16,7 +16,6 @@ type Expr<'tag> =
     | IfExpr of IfDef<'tag>
     | NumberExpr of NumberDef<'tag>
     | IdentifierExpr of IdentifierDef<'tag>
-
     with
     
     member expr.Tag' =   // F# uses the name "Tag" internally :(

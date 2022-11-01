@@ -47,7 +47,6 @@ type Expr<'tag> =
     | IdentifierExpr of IdentifierDef<'tag>
     | BoolExpr of BoolDef<'tag>       // Boolean literal
     | ApplicationExpr of ApplicationDef<'tag>
-
     with
     
     member expr.Tag' =   // F# uses the name "Tag" internally :(
@@ -59,7 +58,7 @@ type Expr<'tag> =
             | NumberExpr def -> def.Tag
             | IdentifierExpr def -> def.Tag
             | BoolExpr def -> def.Tag
-            | ApplicationExpr def -> def.Identifier.Tag
+            | ApplicationExpr def -> def.Tag
 
 and LetDef<'tag> =
     {

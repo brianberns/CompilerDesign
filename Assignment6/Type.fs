@@ -14,9 +14,6 @@ type Type<'tag> =
     /// Function type. E.g. "('a, Bool) -> Int".
     | TypeArrow of TypeArrowDef<'tag>
 
-    /// Type application. E.g. "List<Int>".
-    | TypeApplication of TypeApplicationDef<'tag>
-
 and TypeArrowDef<'tag> =
     {
         InputTypes : List<Type<'tag>>
@@ -24,9 +21,15 @@ and TypeArrowDef<'tag> =
         Tag : 'tag
     }
 
-and TypeApplicationDef<'tag> =
-    {
-        Type : Type<'tag>
-        TypeArguments : List<Type<'tag>>
-        Tag : 'tag
-    }
+module Type =
+
+    let rec unparse = function
+        | TypeBlank _ -> "_"
+        | TypeConstant (name, _) -> name
+        | TypeVariable (name, _) -> name
+        | TypeArrow def ->
+            let inputs =
+                def.InputTypes
+                    |> Seq.map unparse
+                    |> String.concat ", "
+            $"({inputs}) -> {unparse def.OutputType}"
