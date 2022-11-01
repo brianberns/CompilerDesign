@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <None Include="Readme.md" />
+    <Compile Include="Type.fs" />
     <Compile Include="Expr.fs" />
     <Compile Include="Decl.fs" />
     <Compile Include="Parser.fs" />
