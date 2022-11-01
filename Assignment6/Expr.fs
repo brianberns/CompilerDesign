@@ -105,7 +105,7 @@ and ApplicationDef<'tag> =
         Identifier : IdentifierDef<'tag>
         TypeArguments : Option<List<Type<'tag>>>
         Arguments : List<Expr<'tag>>
-        // Tag : 'tag
+        Tag : 'tag
     }
 
 module Expr =

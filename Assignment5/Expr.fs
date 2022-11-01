@@ -102,6 +102,7 @@ and ApplicationDef<'tag> =
         /// Name of function being called.
         Identifier : IdentifierDef<'tag>
         Arguments : List<Expr<'tag>>
+        Tag : 'tag
     }
 
 module Expr =

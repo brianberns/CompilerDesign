@@ -154,12 +154,16 @@ module Parser =
                 let! ident = parseIdentifierDef
                 // no spaces allowed here!
                 let! args = parseParens parseArguments
-                return ApplicationExpr {
-                    Identifier = ident
-                    TypeArguments = None
-                    Arguments = args
-                }
-            } |> attempt          // rollback if needed
+                return ident, args
+            }
+                |> parsePos (fun (ident, args) tag ->
+                    ApplicationExpr {
+                        Identifier = ident
+                        TypeArguments = None
+                        Arguments = args
+                        Tag = tag
+                    })
+                |> attempt          // rollback if needed
 
         let private parseSimpleExpr =
             choice [

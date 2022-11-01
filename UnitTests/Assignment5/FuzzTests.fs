@@ -110,6 +110,7 @@ type FuzzTests() =
             ApplicationExpr {
                 Identifier = untagIdent def.Identifier
                 Arguments = List.map untagExpr def.Arguments
+                Tag = ()
             }
 
     let untagDecl (decl : Decl<_>) =
