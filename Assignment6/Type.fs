@@ -32,7 +32,7 @@ module Type =
     let rec unparse = function
         | TypeBlank _ -> "_"
         | TypeConstant def -> def.Name
-        | TypeVariable def -> def.Name
+        | TypeVariable def -> $"'{def.Name}"   // apostrophe is implicit
         | TypeArrow def ->
             let inputs =
                 def.InputTypes

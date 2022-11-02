@@ -66,15 +66,9 @@ module Parser =
             parseIdentifierDef |>> TypeConstant
 
         let private parseVariable =
-            parse {
-                do! skipChar '\''
-                return! parseIdentifierDef
-            }
-                |> parsePos (fun ident tag ->
-                    TypeVariable {
-                        Name = $"'{ident.Name}"
-                        Tag = tag
-                    })
+            skipChar '\''
+                >>. parseIdentifierDef
+                |>> TypeVariable   // don't store apostrophe
 
         let private parseFunction =
             parse {
