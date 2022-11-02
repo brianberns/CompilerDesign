@@ -47,6 +47,61 @@ module Parser =
             return value
         }
 
+    let private parseCsv parser =
+        sepBy
+            (parser .>> spaces)
+            (skipChar ',' .>> spaces)
+
+    let private parseCsv1 parser =
+        sepBy1
+            (parser .>> spaces)
+            (skipChar ',' .>> spaces)
+
+    module private Type =
+
+        let private parseType, parseTypeRef =
+            createParserForwardedToRef ()
+
+        let private parseConstant =
+            parseIdentifierDef |>> TypeConstant
+
+        let private parseVariable =
+            parse {
+                do! skipChar '\''
+                return! parseIdentifierDef
+            }
+                |> parsePos (fun ident tag ->
+                    TypeVariable {
+                        Name = $"'{ident.Name}"
+                        Tag = tag
+                    })
+
+        let private parseFunction =
+            parse {
+                let! inputs = parseCsv1 parseType
+                do! spaces >>. skipString "->" >>. spaces
+                let! output = parseType
+                return inputs, output
+            }
+                |> parseParens
+                |> parsePos (fun (inputs, output) tag ->
+                    TypeArrow {
+                        InputTypes = inputs
+                        OutputType = output
+                        Tag = tag
+                    })
+
+        let private parseTypeImpl =
+            choice [
+                parseConstant
+                parseVariable
+                parseFunction
+            ]
+
+        let parse = parseType
+
+        do parseTypeRef.Value <- parseTypeImpl
+
     module private Expr =
 
         let private parseExpr, parseExprRef =
@@ -126,9 +181,7 @@ module Parser =
             }
 
         let private parseBindings =
-            sepBy1
-                (parseBinding .>> spaces)
-                (skipChar ',' .>> spaces)
+            parseCsv1 parseBinding
 
         let private parseLet =
             parse {
@@ -145,9 +198,7 @@ module Parser =
                 })
 
         let private parseArguments =
-            sepBy
-                (parseExpr .>> spaces)
-                (skipChar ',' >>. spaces)
+            parseCsv parseExpr
 
         let private parseApplication =
             parse {
@@ -165,6 +216,21 @@ module Parser =
                     })
                 |> attempt          // rollback if needed
 
+        let private parseAnnotation =
+            parse {
+                let! expr = parseExpr
+                do! spaces >>. skipChar ':'
+                let! typ = Type.parse
+                return expr, typ
+            }
+                |> parseParens
+                |> parsePos (fun (expr, typ) tag ->
+                    AnnotationExpr {
+                        Expr = expr
+                        Type = typ
+                        Tag = tag
+                    })
+
         let private parseSimpleExpr =
             choice [
                 parseNumber
@@ -175,6 +241,7 @@ module Parser =
                 parseApplication
                 parseIdentifier   // must come after other parsers
                 parseParens parseExpr
+                parseAnnotation
             ]
 
         let private parseExprImpl =
@@ -210,9 +277,7 @@ module Parser =
     module private Decl =
 
         let private parseParameters =
-            sepBy
-                (parseIdentifierDef .>> spaces)
-                (skipChar ',' >>. spaces)
+            parseCsv parseIdentifierDef
 
         let parse =
             parse {
