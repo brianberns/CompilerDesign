@@ -18,9 +18,9 @@ type TaipanTests() =
         let text =
             """
             def whatever(x):
-              let (y : Int) = x + 5 in # type-annotations on let-bindings do not need parens
+              let y : Int = x + 5 in # type-annotations on let-bindings do not need parens
               (x : Int) + y # type-annotated variables must be surrounded by parens
 
-            0
+            whatever(2)
             """
-        Assert.AreEqual<_>(Ok "1", run text)
+        Assert.AreEqual<_>(Ok "9", run text)

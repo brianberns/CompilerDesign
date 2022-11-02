@@ -94,6 +94,7 @@ type FuzzTests() =
                         |> List.map (fun binding ->
                             {
                                 Identifier = untagIdent binding.Identifier
+                                Type = untagType binding.Type
                                 Expr = untagExpr binding.Expr
                             })
                 Expr = untagExpr def.Expr

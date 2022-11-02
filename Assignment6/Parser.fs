@@ -194,19 +194,26 @@ module Parser =
                 })
 
         let private parseBindingType =
-            skipChar ':'
-                >>. spaces
-                >>. Type.parse
-                |> opt
-                |>> (fun typeOpt -> typeOpt |> Option.defaultValue TypeBlank)
+            let parseType =
+                skipChar ':'
+                    >>. spaces
+                    >>. Type.parse
+            let skipBlank =
+                getPosition
+                    .>>. getPosition
+                    |>> TypeBlank
+            parseType <|> skipBlank
 
         let private parseBinding =
             parse {
                 let! ident = parseIdentifierDef
+                do! spaces
+                let! typ = parseBindingType
                 do! spaces >>. skipChar '=' >>. spaces
                 let! expr = parseExpr
                 return {
                     Identifier = ident
+                    Type = typ
                     Expr = expr
                 }
             }

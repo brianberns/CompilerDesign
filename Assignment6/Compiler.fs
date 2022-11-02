@@ -81,6 +81,8 @@ module Compiler =
                     compileBool env def.Flag
                 | ApplicationExpr def ->
                     compileApplication env def.Identifier def.Arguments
+                | AnnotationExpr def ->
+                    compile env def.Expr
 
         let private compileLet env bindings expr =
 
