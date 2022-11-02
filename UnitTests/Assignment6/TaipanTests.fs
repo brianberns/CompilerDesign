@@ -14,19 +14,13 @@ type TaipanTests() =
         }
 
     [<TestMethod>]
-    member _.Comment() =
-        let text = "1 # comment"
-        Assert.AreEqual<_>(Ok "1", run text)
-
-    [<TestMethod>]
-    member _.Factorial() =
+    member _.Def() =
         let text =
             """
-            # recursive factorial function
-            def factorial(n):
-                if n <= 0: 1
-                else: n * factorial(n-1)
+            def whatever(x):
+              let (y : Int) = x + 5 in # type-annotations on let-bindings do not need parens
+              (x : Int) + y # type-annotated variables must be surrounded by parens
 
-            factorial(6)
+            0
             """
-        Assert.AreEqual<_>(Ok "720", run text)
+        Assert.AreEqual<_>(Ok "1", run text)

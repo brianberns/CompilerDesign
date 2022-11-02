@@ -66,6 +66,7 @@ and LetDef<'tag> =
 and Binding<'tag> =
     {
         Identifier : IdentifierDef<'tag>
+        Type : Type<'tag>
         Expr : Expr<'tag>
     }
 

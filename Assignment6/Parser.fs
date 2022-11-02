@@ -193,6 +193,13 @@ module Parser =
                     Tag = tag
                 })
 
+        let private parseBindingType =
+            skipChar ':'
+                >>. spaces
+                >>. Type.parse
+                |> opt
+                |>> (fun typeOpt -> typeOpt |> Option.defaultValue TypeBlank)
+
         let private parseBinding =
             parse {
                 let! ident = parseIdentifierDef

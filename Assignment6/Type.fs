@@ -39,3 +39,11 @@ module Type =
                     |> Seq.map unparse
                     |> String.concat ", "
             $"({inputs} -> {unparse def.OutputType})"
+
+/// E.g. const has scheme: ∀ab.a → b → a
+type Scheme<'tag> =
+    {
+        Identifiers : List<IdentifierDef<'tag>>
+        Type : Type<'tag>
+        Tag : 'tag
+    }

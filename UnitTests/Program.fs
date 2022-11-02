@@ -1,6 +1,6 @@
 open CompilerDesign.Assignment6
 
-let text = "isbool<y>(0)"
+let text = "let x : Int = y in z"
 let parsed = Parser.parse text
 printfn "%A" parsed
 match parsed with
