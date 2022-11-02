@@ -167,11 +167,11 @@ module Parser =
                 let! typeArgs = parseTypeArgs
                 do! spaces
                 let! expr = parseParens parseExpr
-                return op, expr
-            } |> parsePos (fun (op, expr) tag ->
+                return op, typeArgs, expr
+            } |> parsePos (fun (op, typeArgs, expr) tag ->
                 Prim1Expr {
                     Operator = op
-                    TypeArguments = []
+                    TypeArguments = typeArgs
                     Expr = expr
                     Tag = tag
                 })
@@ -228,13 +228,15 @@ module Parser =
             parse {
                 let! ident = parseIdentifierDef
                 // no spaces allowed here!
+                let! typeArgs = parseTypeArgs
+                // no spaces allowed here!
                 let! args = parseParens parseArguments
-                return ident, args
+                return ident, typeArgs, args
             }
-                |> parsePos (fun (ident, args) tag ->
+                |> parsePos (fun (ident, typeArgs, args) tag ->
                     ApplicationExpr {
                         Identifier = ident
-                        TypeArguments = []
+                        TypeArguments = typeArgs
                         Arguments = args
                         Tag = tag
                     })

@@ -163,6 +163,6 @@ module Expr =
                 def.Arguments
                     |> Seq.map unparse
                     |> String.concat ", "
-            $"{def.Identifier.Name}({args})"
+            $"{def.Identifier.Name}{unparseTypeArgs def.TypeArguments}({args})"
         | AnnotationExpr def ->
             $"({unparse def.Expr} : {Type.unparse def.Type})"
