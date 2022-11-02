@@ -216,10 +216,15 @@ module Parser =
                     })
                 |> attempt          // rollback if needed
 
+        let private parseParenExpr =
+            parseExpr
+                |> parseParens
+                |> attempt          // rollback if needed
+
         let private parseAnnotation =
             parse {
                 let! expr = parseExpr
-                do! spaces >>. skipChar ':'
+                do! spaces >>. skipChar ':' >>. spaces
                 let! typ = Type.parse
                 return expr, typ
             }
@@ -240,7 +245,7 @@ module Parser =
                 parseLet
                 parseApplication
                 parseIdentifier   // must come after other parsers
-                parseParens parseExpr
+                parseParenExpr
                 parseAnnotation
             ]
 
