@@ -113,7 +113,7 @@ and AnnotationDef<'tag> =
 
 module Expr =
 
-    let unparseTypeArgs typeArgs =
+    let private unparseTypeArgs typeArgs =
         if typeArgs |> List.isEmpty then ""
         else
             let str =
@@ -126,8 +126,7 @@ module Expr =
         | LetExpr def ->
             let bindings =
                 def.Bindings
-                    |> Seq.map (fun binding ->
-                        $"{binding.Identifier.Name} = {unparse binding.Expr}")
+                    |> Seq.map unparseBinding
                     |> String.concat ", "
             $"(let {bindings} in {unparse def.Expr})"
         | Prim1Expr def ->
@@ -147,7 +146,9 @@ module Expr =
                 | Less -> "<"
                 | LessEq -> "<="
                 | Eq -> "=="
-            $"({unparse def.Left} {op def.Operator}{unparseTypeArgs def.TypeArguments} {unparse def.Right})"
+            $"({unparse def.Left} \
+                {op def.Operator}{unparseTypeArgs def.TypeArguments} \
+                {unparse def.Right})"
         | IfExpr def ->
             $"(if {unparse def.Condition} : \
                 {unparse def.TrueBranch} \
@@ -167,3 +168,12 @@ module Expr =
             $"{def.Identifier.Name}{unparseTypeArgs def.TypeArguments}({args})"
         | AnnotationExpr def ->
             $"({unparse def.Expr} : {Type.unparse def.Type})"
+
+    and private unparseBinding (binding : Binding<_>) =
+        let ident = binding.Identifier.Name
+        let expr = unparse binding.Expr
+        let typ =
+            match binding.Type with
+                | TypeBlank _ -> ""
+                | t -> $" : {Type.unparse t}"
+        $"{ident}{typ} = {expr}"
