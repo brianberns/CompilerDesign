@@ -277,27 +277,36 @@ module Parser =
             ]
 
         let private parseExprImpl =
-            let create op left right =
-                Prim2Expr {
-                    Operator = op
-                    TypeArguments = []
-                    Left = left
-                    Right = right
-                    Tag = fst left.Tag', snd right.Tag'
-                }
-            let parseOp =
-                choiceF [
-                    "+", create Plus
-                    "-", create Minus
-                    "*", create Times
-                    "&&", create And
-                    "||", create Or
-                    ">=", create GreaterEq   // must come before ">"
-                    ">", create Greater
-                    "<=", create LessEq      // must come before "<"
-                    "<", create Less
-                    "==", create Eq
+
+            let create (str, prim2) : Parser<Expr<_> -> Expr<_> -> Expr<_>, _> =
+                skipString str
+                    >>. spaces
+                    >>. parseTypeArgs
+                    |>> (fun typeArgs left right ->
+                        Prim2Expr {
+                            Operator = prim2
+                            TypeArguments = typeArgs
+                            Left = left
+                            Right = right
+                            Tag = fst left.Tag', snd right.Tag'
+                        })
+
+            let parseOp : Parser<Expr<_> -> Expr<_> -> Expr<_>, _> =
+                [
+                    "+", Plus
+                    "-", Minus
+                    "*", Times
+                    "&&", And
+                    "||", Or
+                    ">=", GreaterEq   // must come before ">"
+                    ">", Greater
+                    "<=", LessEq      // must come before "<"
+                    "<", Less
+                    "==", Eq
                 ]
+                    |> List.map create
+                    |> choice
+
             chainl1
                 (parseSimpleExpr .>> spaces)
                 (parseOp .>> spaces)

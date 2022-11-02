@@ -112,6 +112,15 @@ and AnnotationDef<'tag> =
 
 module Expr =
 
+    let unparseTypeArgs typeArgs =
+        if typeArgs |> List.isEmpty then ""
+        else
+            let str =
+                typeArgs
+                    |> List.map Type.unparse
+                    |> String.concat ", "
+            $"<{str}>"
+
     let rec unparse = function
         | LetExpr def ->
             let bindings =
@@ -124,7 +133,7 @@ module Expr =
             let op = function
                 | Not -> "!"
                 | prim1 -> (string prim1).ToLower()
-            $"{op def.Operator}({unparse def.Expr})"
+            $"{op def.Operator}{unparseTypeArgs def.TypeArguments}({unparse def.Expr})"
         | Prim2Expr def ->
             let op = function
                 | Plus -> "+"
@@ -137,7 +146,7 @@ module Expr =
                 | Less -> "<"
                 | LessEq -> "<="
                 | Eq -> "=="
-            $"({unparse def.Left} {op def.Operator} {unparse def.Right})"
+            $"({unparse def.Left} {op def.Operator}{unparseTypeArgs def.TypeArguments} {unparse def.Right})"
         | IfExpr def ->
             $"(if {unparse def.Condition} : \
                 {unparse def.TrueBranch} \
