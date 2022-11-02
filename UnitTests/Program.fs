@@ -1,4 +1,4 @@
-open CompilerDesign.Assignment5
+open CompilerDesign.Assignment6
 
 let text = "(1 : int)"
 let parsed = Parser.parse text

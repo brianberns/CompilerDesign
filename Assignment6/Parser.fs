@@ -6,6 +6,16 @@ open CompilerDesign.Core
 
 module Parser =
 
+#if DEBUG
+    let (<!>) (p: Parser<_,_>) label : Parser<_,_> =
+        fun stream ->
+            printfn "%A: Entering %s" stream.Position label
+            let reply = p stream
+            let safeResult = string reply.Result
+            printfn "%A: Leaving %s (%A): %A" stream.Position label reply.Status safeResult
+            reply
+#endif
+
     let private skipComment =
         skipChar '#'
             >>. skipManyTill
@@ -223,6 +233,9 @@ module Parser =
                 |> parseParens
                 |> attempt          // rollback if needed
 
+        /// Allow any expression to be annotated. This syntax
+        /// is a little different from what the assignment
+        /// specifies, but is simpler and more powerful.
         let private parseAnnotation =
             parse {
                 let! expr = parseExpr
