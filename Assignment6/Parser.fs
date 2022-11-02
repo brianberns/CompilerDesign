@@ -62,6 +62,13 @@ module Parser =
         let private parseType, parseTypeRef =
             createParserForwardedToRef ()
 
+        /// Allow "_" to indicate a blank type. This isn't specified in
+        /// the assignment, but is useful for inputs like (x : _).
+        let private parseBlank =
+            skipChar '_'
+                |> parsePos (fun () tag ->
+                    TypeBlank tag)
+
         let private parseConstant =
             parseIdentifierDef |>> TypeConstant
 
@@ -87,6 +94,7 @@ module Parser =
 
         let private parseTypeImpl =
             choice [
+                parseBlank
                 parseConstant
                 parseVariable
                 parseFunction
