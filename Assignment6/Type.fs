@@ -38,4 +38,4 @@ module Type =
                 def.InputTypes
                     |> Seq.map unparse
                     |> String.concat ", "
-            $"({inputs}) -> {unparse def.OutputType}"
+            $"({inputs} -> {unparse def.OutputType})"
