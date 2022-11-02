@@ -142,6 +142,16 @@ module Parser =
                         Tag = tag
                     })
 
+        let private parseTypeArgs =
+            parse {
+                do! skipChar '<' >>. spaces
+                let! typeArgs = parseCsv1 Type.parse
+                do! spaces >>. skipChar '>'
+                return typeArgs
+            }
+                |> opt
+                |>> Option.defaultValue List.empty
+
         let private parsePrim1 =
             parse {
                 let! op = 
@@ -153,6 +163,8 @@ module Parser =
                         "isnum", IsNum
                         "!", Not
                     ]
+                do! spaces
+                let! typeArgs = parseTypeArgs
                 do! spaces
                 let! expr = parseParens parseExpr
                 return op, expr
