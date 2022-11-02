@@ -147,7 +147,7 @@ module Parser =
             } |> parsePos (fun (op, expr) tag ->
                 Prim1Expr {
                     Operator = op
-                    TypeArguments = None
+                    TypeArguments = []
                     Expr = expr
                     Tag = tag
                 })
@@ -210,7 +210,7 @@ module Parser =
                 |> parsePos (fun (ident, args) tag ->
                     ApplicationExpr {
                         Identifier = ident
-                        TypeArguments = None
+                        TypeArguments = []
                         Arguments = args
                         Tag = tag
                     })
@@ -253,7 +253,7 @@ module Parser =
             let create op left right =
                 Prim2Expr {
                     Operator = op
-                    TypeArguments = None
+                    TypeArguments = []
                     Left = left
                     Right = right
                     Tag = fst left.Tag', snd right.Tag'

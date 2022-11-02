@@ -88,7 +88,7 @@ type FuzzTests() =
                 Operator = def.Operator
                 TypeArguments =
                     def.TypeArguments
-                        |> Option.map (List.map untagType)
+                        |> List.map untagType
                 Expr = untagExpr def.Expr
                 Tag = ()
             }
@@ -97,7 +97,7 @@ type FuzzTests() =
                 Operator = def.Operator
                 TypeArguments =
                     def.TypeArguments
-                        |> Option.map (List.map untagType)
+                        |> List.map untagType
                 Left = untagExpr def.Left
                 Right = untagExpr def.Right
                 Tag = ()
@@ -129,7 +129,7 @@ type FuzzTests() =
                 Identifier = untagIdent def.Identifier
                 TypeArguments =
                     def.TypeArguments
-                        |> Option.map (List.map untagType)
+                        |> List.map untagType
                 Arguments =
                     def.Arguments |> List.map untagExpr
                 Tag = ()

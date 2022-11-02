@@ -72,7 +72,7 @@ and Binding<'tag> =
 and Prim1Def<'tag> =
     {
         Operator : Prim1
-        TypeArguments : Option<List<Type<'tag>>>
+        TypeArguments : List<Type<'tag>>
         Expr : Expr<'tag>
         Tag : 'tag
     }
@@ -80,7 +80,7 @@ and Prim1Def<'tag> =
 and Prim2Def<'tag> =
     {
         Operator : Prim2
-        TypeArguments : Option<List<Type<'tag>>>
+        TypeArguments : List<Type<'tag>>
         Left : Expr<'tag>
         Right : Expr<'tag>
         Tag : 'tag
@@ -98,7 +98,7 @@ and ApplicationDef<'tag> =
     {
         /// Name of function being called.
         Identifier : IdentifierDef<'tag>
-        TypeArguments : Option<List<Type<'tag>>>
+        TypeArguments : List<Type<'tag>>
         Arguments : List<Expr<'tag>>
         Tag : 'tag
     }
