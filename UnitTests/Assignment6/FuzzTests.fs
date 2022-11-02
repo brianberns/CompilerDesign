@@ -52,10 +52,16 @@ type Arbitraries =
 [<TestClass>]
 type FuzzTests() =
 
+    let untagIdent (ident : IdentifierDef<_>) =
+        {
+            Name = ident.Name
+            Tag = ()
+        }
+
     let rec untagType = function
         | TypeBlank _ -> TypeBlank ()
-        | TypeConstant (name, _) -> TypeConstant (name, ())
-        | TypeVariable (name, _) -> TypeVariable (name, ())
+        | TypeConstant def -> TypeConstant (untagIdent def)
+        | TypeVariable def -> TypeVariable (untagIdent def)
         | TypeArrow def ->
             TypeArrow {
                 InputTypes =
@@ -63,12 +69,6 @@ type FuzzTests() =
                 OutputType = untagType def.OutputType
                 Tag = ()
             }
-
-    let untagIdent (ident : IdentifierDef<_>) =
-        {
-            Name = ident.Name
-            Tag = ()
-        }
 
     let rec untagExpr = function
         | LetExpr def->

@@ -20,12 +20,6 @@ type Prim2 =
     | LessEq
     | Eq
 
-type IdentifierDef<'tag> =
-    {
-        Name : string
-        Tag : 'tag
-    }
-
 type NumberDef<'tag> =
     {
         Number : int
