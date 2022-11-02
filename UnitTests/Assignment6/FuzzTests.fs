@@ -44,10 +44,26 @@ module NumberDef =
                 })
             |> Arb.fromGen
 
+module TypeArrowDef =
+
+    let arb =
+        gen {
+            let! inputs =
+                Generator.from<NonEmptyArray<_>>
+            let! output =
+                Generator.from<Type<_>>
+            return {
+                InputTypes = Seq.toList inputs.Get
+                OutputType = output
+                Tag = ()
+            }
+        } |> Arb.fromGen
+
 type Arbitraries =
     static member LetDef() = LetDef.arb
     static member NumberDef() = NumberDef.arb
     static member IdentifierDef() = IdentifierDef.arb
+    static member TypeArrowDef() = TypeArrowDef.arb
 
 [<TestClass>]
 type FuzzTests() =
