@@ -36,7 +36,7 @@ module Type =
         | TypeArrow def ->
             let inputs =
                 if def.InputTypes.IsEmpty then   // to-do: handle function with no inputs
-                    "unit"
+                    failwith "Not supported"
                 else
                     def.InputTypes
                         |> Seq.map unparse

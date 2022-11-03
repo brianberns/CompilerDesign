@@ -44,11 +44,23 @@ module NumberDef =
                 })
             |> Arb.fromGen
 
-module Decl =
+module Type =
 
-    let private isArrowType = function
-        | TypeArrow _ -> true
-        | _ -> false
+    let arb =
+        gen {
+            match! Gen.choose (0, 2) with
+                | 0 -> return TypeBlank ()
+                | 1 ->
+                    let! ident = Generator.from<IdentifierDef<_>>
+                    return TypeConstant ident
+                | 2 ->
+                    let! ident = Generator.from<IdentifierDef<_>>
+                    return TypeVariable ident
+                | _ -> return failwith "Unexpected"
+        }
+            |> Arb.fromGen
+
+module Decl =
 
     let arb =
         gen {
@@ -56,13 +68,8 @@ module Decl =
             let! tvIdents = Generator.from<List<IdentifierDef<_>>>
             let! parmPairs =
                 Generator.from<List<IdentifierDef<_> * Type<_>>>
-                    |> Gen.where (fun pairs ->
-                        pairs
-                            |> Seq.forall (
-                                snd >> isArrowType >> not))
             let! outType =
                 Generator.from<Type<_>>
-                    |> Gen.where (isArrowType >> not)
 
             let! body = Generator.from<Expr<_>>
 
@@ -90,6 +97,7 @@ type Arbitraries =
     static member LetDef() = LetDef.arb
     static member NumberDef() = NumberDef.arb
     static member IdentifierDef() = IdentifierDef.arb
+    static member Type() = Type.arb
     static member Decl() = Decl.arb
 
 [<TestClass>]
