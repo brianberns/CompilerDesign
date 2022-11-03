@@ -48,3 +48,14 @@ type TaipanTests() =
             identity(true)
             """
         Assert.AreEqual<_>(Ok "True", run text)
+
+    [<TestMethod>]
+    member _.TypeCheck() =
+        let text = "add1(true)"
+        let parsed = Parser.parse text
+        match parsed with
+            | Ok program ->
+                let actual = Expr.typeOf () program.Main
+                let expected = Error "moo"
+                Assert.AreEqual(expected, actual)
+            | _ -> Assert.Fail()

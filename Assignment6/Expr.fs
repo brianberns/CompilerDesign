@@ -1,5 +1,7 @@
 ﻿namespace CompilerDesign.Assignment6
 
+open CompilerDesign.Core
+
 type Prim1 =
     | Add1
     | Sub1
@@ -111,7 +113,7 @@ and AnnotationDef<'tag> =
         Tag : 'tag
     }
 
-module Expr =
+module private rec Unparse =
 
     let private unparseTypeArgs typeArgs =
         if typeArgs |> List.isEmpty then ""
@@ -122,18 +124,27 @@ module Expr =
                     |> String.concat ", "
             $"<{str}>"
 
-    let rec unparse = function
+    let private unparseBinding (binding : Binding<_>) =
+        let ident = binding.Identifier.Name
+        let expr = unparseExpr binding.Expr
+        let typ =
+            match binding.Type with
+                | TypeBlank _ -> ""
+                | t -> $" : {Type.unparse t}"
+        $"{ident}{typ} = {expr}"
+
+    let unparseExpr = function
         | LetExpr def ->
             let bindings =
                 def.Bindings
                     |> Seq.map unparseBinding
                     |> String.concat ", "
-            $"(let {bindings} in {unparse def.Expr})"
+            $"(let {bindings} in {unparseExpr def.Expr})"
         | Prim1Expr def ->
             let op = function
                 | Not -> "!"
                 | prim1 -> (string prim1).ToLower()
-            $"{op def.Operator}{unparseTypeArgs def.TypeArguments}({unparse def.Expr})"
+            $"{op def.Operator}{unparseTypeArgs def.TypeArguments}({unparseExpr def.Expr})"
         | Prim2Expr def ->
             let op = function
                 | Plus -> "+"
@@ -146,13 +157,13 @@ module Expr =
                 | Less -> "<"
                 | LessEq -> "<="
                 | Eq -> "=="
-            $"({unparse def.Left} \
+            $"({unparseExpr def.Left} \
                 {op def.Operator}{unparseTypeArgs def.TypeArguments} \
-                {unparse def.Right})"
+                {unparseExpr def.Right})"
         | IfExpr def ->
-            $"(if {unparse def.Condition} : \
-                {unparse def.TrueBranch} \
-                else: {unparse def.FalseBranch})"
+            $"(if {unparseExpr def.Condition} : \
+                {unparseExpr def.TrueBranch} \
+                else: {unparseExpr def.FalseBranch})"
         | NumberExpr def ->
             if def.Number < 0 then
                 $"({def.Number})"   // use parens to avoid ambiguity
@@ -163,17 +174,55 @@ module Expr =
         | ApplicationExpr def ->
             let args =
                 def.Arguments
-                    |> Seq.map unparse
+                    |> Seq.map unparseExpr
                     |> String.concat ", "
             $"{def.Identifier.Name}{unparseTypeArgs def.TypeArguments}({args})"
         | AnnotationExpr def ->
-            $"({unparse def.Expr} : {Type.unparse def.Type})"
+            $"({unparseExpr def.Expr} : {Type.unparse def.Type})"
 
-    and private unparseBinding (binding : Binding<_>) =
-        let ident = binding.Identifier.Name
-        let expr = unparse binding.Expr
-        let typ =
-            match binding.Type with
-                | TypeBlank _ -> ""
-                | t -> $" : {Type.unparse t}"
-        $"{ident}{typ} = {expr}"
+module private rec TypeCheck =
+
+    let private intName = "Int"
+    let private boolName = "Bool"
+
+    let typeOfExpr env : Expr<'tag> -> Result<Type<'tag>, _> = function
+        | LetExpr def -> typeOfLet env def
+        | Prim1Expr def -> typeOfPrim1 env def
+        | Prim2Expr def -> Ok (TypeBlank def.Tag)
+        | IfExpr def -> Ok (TypeBlank def.Tag)
+        | NumberExpr def ->
+            Ok (TypeConstant { Name = intName; Tag = def.Tag })
+        | IdentifierExpr def -> Ok (TypeBlank def.Tag)
+        | BoolExpr def ->
+            Ok (TypeConstant { Name = boolName; Tag = def.Tag })
+        | ApplicationExpr def -> Ok (TypeBlank def.Tag)
+        | AnnotationExpr def -> Ok (TypeBlank def.Tag)
+
+    let private typeOfLet env (def : LetDef<_>) =
+        typeOfExpr env def.Expr
+
+    let private typeOfPrim1 env def =
+
+        let check expected =
+            result {
+                let! actual = typeOfExpr env def.Expr
+                match actual with
+                    | TypeConstant ident
+                        when ident.Name = expected ->
+                            return actual
+                    | _ ->
+                        return! Error $"Expected: {expected}, Actual: {Type.unparse actual}"
+            }
+
+        match def.Operator with
+            | Add1 | Sub1 -> check intName
+            | Not -> check boolName
+            | Print
+            | IsBool
+            | IsNum -> typeOfExpr env def.Expr
+
+module Expr =
+
+    let unparse = Unparse.unparseExpr
+
+    let typeOf = TypeCheck.typeOfExpr
