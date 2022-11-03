@@ -38,7 +38,7 @@ module Decl =
                 | TypeBlank _ -> ""
                 | _ -> $" -> {Type.unparse outType}"
         let body = Expr.unparse decl.Body
-        $"def {ident}{tvIdents}({parms}){sOutType}:\n{body}"
+        $"def {ident}{tvIdents}({parms}){sOutType}:\n    {body}\n\n"
 
 type Program<'tag> =
     {
@@ -52,6 +52,6 @@ module Program =
         let decls =
             program.Declarations
                 |> List.map Decl.unparse
-                |> String.concat "\n"
+                |> String.concat ""
         let main = Expr.unparse program.Main
-        $"{decls}\n{main}"
+        $"{decls}{main}"
