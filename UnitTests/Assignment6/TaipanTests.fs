@@ -14,7 +14,7 @@ type TaipanTests() =
         }
 
     [<TestMethod>]
-    member _.Annotations() =
+    member _.Annotation1() =
         let text =
             """
             def whatever(x):
@@ -25,5 +25,16 @@ type TaipanTests() =
             def plus(x : Int, y : Int) -> Int: x + y
 
             plus(whatever(2), 3)
+            """
+        Assert.AreEqual<_>(Ok "12", run text)
+
+    [<TestMethod>]
+    member _.Annotation2() =
+        let text =
+            """
+            def whatever<'a>(anything : 'a) -> 'a:
+              print<'a>(anything)
+
+            (3 ==<Int> print<Int>(whatever<Int>(5)) : Bool)
             """
         Assert.AreEqual<_>(Ok "12", run text)
