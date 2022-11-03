@@ -378,13 +378,13 @@ module Parser =
                 do! spaces
                 let! tvIdents = parseTypeVariableIdentifiers
                 do! spaces
-                let! parmTuples, parmsTag = parseParameters
+                let! parmPairs, parmsTag = parseParameters
                 do! spaces
-                let! outputTyp = parseOutputType
+                let! outType = parseOutputType
                 do! skipChar ':' >>. spaces
                 let! body = Expr.parse
 
-                let parms, parmTypes = List.unzip parmTuples
+                let parms, parmTypes = List.unzip parmPairs
 
                 return {
                     Identifier = ident
@@ -395,7 +395,7 @@ module Parser =
                             Type =
                                 TypeArrow {
                                     InputTypes = parmTypes
-                                    OutputType = outputTyp
+                                    OutputType = outType
                                     Tag = parmsTag
                                 }
                             Tag = parmsTag

@@ -1,6 +1,6 @@
 open CompilerDesign.Assignment6
 
-let text = "let x : Int = y in z"
+let text = "def j(): z k"
 let parsed = Parser.parse text
 printfn "%A" parsed
 match parsed with
