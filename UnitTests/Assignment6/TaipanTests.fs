@@ -38,3 +38,13 @@ type TaipanTests() =
             (3 ==<Int> print<Int>(whatever<Int>(5)) : Bool)
             """
         Assert.AreEqual<_>(Ok "5\n5\nFalse", run text)
+
+    [<TestMethod>]
+    member _.Polymorphic() =
+        let text =
+            """
+            def identity(x): x
+
+            identity(true)
+            """
+        Assert.AreEqual<_>(Ok "True", run text)
