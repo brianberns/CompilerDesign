@@ -37,4 +37,4 @@ type TaipanTests() =
 
             (3 ==<Int> print<Int>(whatever<Int>(5)) : Bool)
             """
-        Assert.AreEqual<_>(Ok "12", run text)
+        Assert.AreEqual<_>(Ok "5\n5\nFalse", run text)

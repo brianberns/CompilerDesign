@@ -49,32 +49,15 @@ module private CompilationUnit =
                                             IdentifierName("t")))))),
                     ReturnStatement(
                         IdentifierName("t"))))
-    (*
-        static int our_code_starts_here()
-        {
-            return node;
-        }
-    *)
-    let private our_code_starts_here node =
-        MethodDeclaration(
-            returnType =
-                PredefinedType(
-                    Token(SyntaxKind.IntKeyword)),
-            identifier = "our_code_starts_here")
-            .AddModifiers(
-                Token(SyntaxKind.StaticKeyword))
-            .WithBody(
-                Block(
-                    ReturnStatement(node)))
 
     (*
         static void Main()
         {
-            var result = our_code_starts_here();
-            System.Console.Write(result);
+            System.Console.Write($node);
         }
     *)
-    let private mainMethod =
+    /// our_code_starts_here
+    let private mainMethod node =
         MethodDeclaration(
             returnType =
                 PredefinedType(
@@ -84,23 +67,6 @@ module private CompilationUnit =
                 Token(SyntaxKind.StaticKeyword))
             .WithBody(
                 Block(
-                    LocalDeclarationStatement(
-                        VariableDeclaration(
-                            IdentifierName(
-                                Identifier(
-                                    TriviaList(),
-                                    SyntaxKind.VarKeyword,
-                                    "var",
-                                    "var",
-                                    TriviaList())))
-                            .WithVariables(
-                                SingletonSeparatedList(
-                                    VariableDeclarator(
-                                        Identifier("result"))
-                                        .WithInitializer(
-                                            EqualsValueClause(
-                                                InvocationExpression(
-                                                    IdentifierName("our_code_starts_here"))))))),
                     ExpressionStatement(
                         InvocationExpression(
                             MemberAccessExpression(
@@ -113,8 +79,7 @@ module private CompilationUnit =
                             .WithArgumentList(
                                 ArgumentList(
                                     SingletonSeparatedList(
-                                        Argument(
-                                            IdentifierName("result"))))))))
+                                        Argument(node)))))))
 
     let create assemblyName memberNodes mainNode =
         let classNode =
@@ -124,8 +89,7 @@ module private CompilationUnit =
                 .AddMembers(memberNodes)
                 .AddMembers(
                     printMethod,
-                    our_code_starts_here mainNode,
-                    mainMethod)
+                    mainMethod mainNode)
         let namespaceNode =
             NamespaceDeclaration(
                 IdentifierName(assemblyName : string))
