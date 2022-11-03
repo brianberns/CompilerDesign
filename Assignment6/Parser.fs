@@ -49,13 +49,19 @@ module Parser =
                 skipString str >>% f)
             |> choice
 
-    let private parseParens parser =
+    let private parseBrackets cOpen cClose parser : Parser<_, _> =
         parse {
-            do! skipChar '(' >>. spaces
+            do! skipChar cOpen >>. spaces
             let! value = parser
-            do! spaces >>. skipChar ')'
+            do! spaces >>. skipChar cClose
             return value
         }
+
+    let private parseParens parser =
+        parseBrackets '(' ')' parser
+
+    let private parseAngles parser =
+        parseBrackets '<' '>' parser
 
     let private parseCsv parser =
         sepBy
@@ -69,7 +75,7 @@ module Parser =
 
     module private Type =
 
-        let private parseType, parseTypeRef =
+        let private parseType, private parseTypeRef =
             createParserForwardedToRef ()
 
         /// Allow "_" to indicate a blank type. This isn't specified in
@@ -82,10 +88,13 @@ module Parser =
         let private parseConstant =
             parseIdentifierDef |>> TypeConstant
 
-        let private parseVariable =
+        let parseVariableIdentifier =
             skipChar '\''
-                >>. parseIdentifierDef
-                |>> TypeVariable   // don't store apostrophe
+                >>. parseIdentifierDef   // don't include apostrophe
+
+        let private parseVariable =
+            parseVariableIdentifier
+                |>> TypeVariable
 
         let private parseFunction =
             parse {
@@ -110,13 +119,26 @@ module Parser =
                 parseFunction
             ]
 
+        let parseOrBlank parser =
+            let skipBlank =
+                getPosition
+                    .>>. getPosition
+                    |>> TypeBlank
+            parser <|> skipBlank
+
+        let parseTypeDecl =
+            skipChar ':'
+                >>. spaces
+                >>. parseType
+                |> parseOrBlank
+
         let parse = parseType
 
         do parseTypeRef.Value <- parseTypeImpl
 
     module private Expr =
 
-        let private parseExpr, parseExprRef =
+        let private parseExpr, private parseExprRef =
             createParserForwardedToRef ()
 
         let private parseNumber : Parser<_, unit> =
@@ -143,12 +165,8 @@ module Parser =
                     })
 
         let private parseTypeArgs =
-            parse {
-                do! skipChar '<' >>. spaces
-                let! typeArgs = parseCsv1 Type.parse
-                do! spaces >>. skipChar '>'
-                return typeArgs
-            }
+            parseCsv1 Type.parse
+                |> parseAngles
                 |> opt
                 |>> Option.defaultValue List.empty
 
@@ -193,22 +211,11 @@ module Parser =
                     Tag = tag
                 })
 
-        let private parseBindingType =
-            let parseType =
-                skipChar ':'
-                    >>. spaces
-                    >>. Type.parse
-            let skipBlank =
-                getPosition
-                    .>>. getPosition
-                    |>> TypeBlank
-            parseType <|> skipBlank
-
         let private parseBinding =
             parse {
                 let! ident = parseIdentifierDef
                 do! spaces
-                let! typ = parseBindingType
+                let! typ = Type.parseTypeDecl
                 do! spaces >>. skipChar '=' >>. spaces
                 let! expr = parseExpr
                 return {
@@ -333,20 +340,66 @@ module Parser =
 
     module private Decl =
 
-        let private parseParameters =
-            parseCsv parseIdentifierDef
+        let private parseTypeVariableIdentifiers =
+            parseCsv1 Type.parseVariableIdentifier
+                |> parseAngles
+                |> opt
+                |>> Option.defaultValue List.empty
 
+        let private parseParameter =
+            parse {
+                let! ident = parseIdentifierDef
+                do! spaces
+                let! typ = Type.parseTypeDecl
+                return ident, typ
+            }
+
+        let private parseParameters =
+            parseCsv parseParameter
+                |> parseParens
+                |> parsePos (fun pairs tag ->
+                    pairs, tag)
+
+        let private parseOutputType =
+            skipString "->"
+                >>. spaces
+                >>. Type.parse
+                |> Type.parseOrBlank
+
+        (*
+            def whatever<'a>(anything : 'a) -> 'a:
+              print<'a>(anything)
+        *)
         let parse =
             parse {
+
                 do! skipString "def" >>. spaces
                 let! ident = parseIdentifierDef
                 do! spaces
-                let! parms = parseParens parseParameters
-                do! spaces >>. skipChar ':' >>. spaces
+                let! tvIdents = parseTypeVariableIdentifiers
+                do! spaces
+                let! parmTuples, parmsTag = parseParameters
+                do! spaces
+                let! outputTyp = parseOutputType
+                do! skipChar ':' >>. spaces
                 let! body = Expr.parse
+
+                let parms, parmTypes = List.unzip parmTuples
+
                 return {
                     Identifier = ident
                     Parameters = parms
+                    Scheme =
+                        {
+                            Identifiers = tvIdents
+                            Type =
+                                TypeArrow {
+                                    InputTypes = parmTypes
+                                    OutputType = outputTyp
+                                    Tag = parmsTag
+                                }
+                            Tag = parmsTag
+                        }
                     Body = body
                 }
             }

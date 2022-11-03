@@ -5,6 +5,7 @@ type Decl<'tag> =
         /// Name of function begin declared.
         Identifier : IdentifierDef<'tag>
         Parameters : List<IdentifierDef<'tag>>
+        Scheme : Scheme<'tag>
         Body : Expr<'tag>
     }
 
