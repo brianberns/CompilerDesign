@@ -158,6 +158,15 @@ type FuzzTests() =
                 Tag = ()
             }
 
+    let untagScheme scheme =
+        {
+            Identifiers =
+                scheme.Identifiers
+                    |> List.map untagIdent
+            Type = untagType scheme.Type
+            Tag = ()
+        }
+
     let untagDecl (decl : Decl<_>) =
         {
             Identifier =
@@ -168,6 +177,7 @@ type FuzzTests() =
             Parameters =
                 decl.Parameters
                     |> List.map untagIdent
+            Scheme = untagScheme decl.Scheme
             Body = untagExpr decl.Body
         }
 
