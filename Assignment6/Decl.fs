@@ -22,7 +22,7 @@ module Decl =
             if decl.Scheme.Identifiers.IsEmpty then ""
             else
                 decl.Scheme.Identifiers
-                    |> Seq.map (fun ident -> ident.Name)
+                    |> Seq.map (fun ident -> $"'{ident.Name}")
                     |> String.concat ", "
                     |> sprintf "<%s>"
         let parmTypes, outType = getSchemeTypes decl

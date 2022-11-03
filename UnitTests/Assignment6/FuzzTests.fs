@@ -59,11 +59,37 @@ module TypeArrowDef =
             }
         } |> Arb.fromGen
 
+module Decl =
+
+    let arb =
+        gen {
+            let! ident = Generator.from<IdentifierDef<_>>
+            let! parms = Generator.from<List<IdentifierDef<_>>>
+            let! body = Generator.from<Expr<_>>
+
+            let! idents = Generator.from<List<IdentifierDef<_>>>
+            let! typeArrow = Generator.from<TypeArrowDef<_>>
+            let scheme =
+                {
+                    Identifiers = idents
+                    Type = TypeArrow typeArrow
+                    Tag = ()
+                }
+
+            return {
+                Identifier = ident
+                Parameters = parms
+                Scheme = scheme
+                Body = body
+            }
+        } |> Arb.fromGen
+
 type Arbitraries =
     static member LetDef() = LetDef.arb
     static member NumberDef() = NumberDef.arb
     static member IdentifierDef() = IdentifierDef.arb
     static member TypeArrowDef() = TypeArrowDef.arb
+    static member Decl() = Decl.arb
 
 [<TestClass>]
 type FuzzTests() =
