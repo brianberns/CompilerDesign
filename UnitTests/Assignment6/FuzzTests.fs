@@ -44,42 +44,32 @@ module NumberDef =
                 })
             |> Arb.fromGen
 
-module TypeArrowDef =
-
-    let arb =
-        gen {
-            let! inputs =
-                Generator.from<NonEmptyArray<_>>
-            let! output =
-                Generator.from<Type<_>>
-            return {
-                InputTypes = Seq.toList inputs.Get
-                OutputType = output
-                Tag = ()
-            }
-        } |> Arb.fromGen
-
 module Decl =
 
     let arb =
         gen {
             let! ident = Generator.from<IdentifierDef<_>>
-            let! parms = Generator.from<List<IdentifierDef<_>>>
+            let! tvIdents = Generator.from<List<IdentifierDef<_>>>
+            let! parmPairs = Generator.from<List<IdentifierDef<_> * Type<_>>>
+            let! outType = Generator.from<Type<_>>
             let! body = Generator.from<Expr<_>>
 
-            let! idents = Generator.from<List<IdentifierDef<_>>>
-            let! typeArrow = Generator.from<TypeArrowDef<_>>
-            let scheme =
-                {
-                    Identifiers = idents
-                    Type = TypeArrow typeArrow
-                    Tag = ()
-                }
+            let parms, parmTypes = List.unzip parmPairs
 
             return {
                 Identifier = ident
                 Parameters = parms
-                Scheme = scheme
+                Scheme =
+                    {
+                        Identifiers = tvIdents
+                        Type =
+                            TypeArrow {
+                                InputTypes = parmTypes
+                                OutputType = outType
+                                Tag = ()
+                            }
+                        Tag = ()
+                    }
                 Body = body
             }
         } |> Arb.fromGen
@@ -88,7 +78,6 @@ type Arbitraries =
     static member LetDef() = LetDef.arb
     static member NumberDef() = NumberDef.arb
     static member IdentifierDef() = IdentifierDef.arb
-    static member TypeArrowDef() = TypeArrowDef.arb
     static member Decl() = Decl.arb
 
 [<TestClass>]
