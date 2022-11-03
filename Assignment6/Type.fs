@@ -32,12 +32,15 @@ module Type =
     let rec unparse = function
         | TypeBlank _ -> "_"
         | TypeConstant def -> def.Name
-        | TypeVariable def -> $"'{def.Name}"   // apostrophe is implicit
+        | TypeVariable def -> $"'{def.Name}"     // apostrophe is implicit
         | TypeArrow def ->
             let inputs =
-                def.InputTypes
-                    |> Seq.map unparse
-                    |> String.concat ", "
+                if def.InputTypes.IsEmpty then   // to-do: handle function with no inputs
+                    "unit"
+                else
+                    def.InputTypes
+                        |> Seq.map unparse
+                        |> String.concat ", "
             $"({inputs} -> {unparse def.OutputType})"
 
 /// E.g. const has scheme: ∀ab.a → b → a

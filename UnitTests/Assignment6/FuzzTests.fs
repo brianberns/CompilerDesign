@@ -46,12 +46,24 @@ module NumberDef =
 
 module Decl =
 
+    let private isArrowType = function
+        | TypeArrow _ -> true
+        | _ -> false
+
     let arb =
         gen {
             let! ident = Generator.from<IdentifierDef<_>>
             let! tvIdents = Generator.from<List<IdentifierDef<_>>>
-            let! parmPairs = Generator.from<List<IdentifierDef<_> * Type<_>>>
-            let! outType = Generator.from<Type<_>>
+            let! parmPairs =
+                Generator.from<List<IdentifierDef<_> * Type<_>>>
+                    |> Gen.where (fun pairs ->
+                        pairs
+                            |> Seq.forall (
+                                snd >> isArrowType >> not))
+            let! outType =
+                Generator.from<Type<_>>
+                    |> Gen.where (isArrowType >> not)
+
             let! body = Generator.from<Expr<_>>
 
             let parms, parmTypes = List.unzip parmPairs
