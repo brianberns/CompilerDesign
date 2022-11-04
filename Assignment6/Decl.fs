@@ -58,19 +58,23 @@ module Decl =
 
     let typeCheck env (decl : Decl<_>) =
         result {
-            let! outputType =
+            let! arrowDef =
                 match decl.Scheme.Type with
                     | TypeArrow def ->
                         if def.OutputType = Type.blank then
                             Error "Output type unannotated"
                         else
-                            Ok def.OutputType
+                            Ok def
                     | _ -> Error "Invalid decl scheme"
 
-            let! bodyType = Expr.typeOf env decl.Body
+            let env' =
+                (env, decl.Parameters, arrowDef.InputTypes)
+                    |||> Seq.fold2 (fun acc ident typ ->
+                            acc |> Map.add ident.Name typ)
+            let! bodyType = Expr.typeOf env' decl.Body
 
-            if bodyType <> outputType then
-                return! Type.mismatch outputType bodyType
+            if bodyType <> arrowDef.OutputType then
+                return! Type.mismatch arrowDef.OutputType bodyType
             else
                 return Map.add
                     decl.Identifier.Name
