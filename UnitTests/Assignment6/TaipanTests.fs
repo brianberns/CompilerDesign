@@ -67,6 +67,7 @@ type TaipanTests() =
                 "if true >= false: true else: !(true)", Error "Expected: Int, Actual: Bool"
                 "(add1(0) : Int)", Ok Type.int
                 "def plus(x : Int, y : Int) -> Int: x + y plus(3, 4)", Ok Type.int
+                "def plus(x : Int, y : Int) -> Int: x + y plus(true, 4)", Ok Type.int
             ]
 
         for text, expected in pairs do

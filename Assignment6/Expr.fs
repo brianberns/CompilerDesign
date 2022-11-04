@@ -359,15 +359,13 @@ module Expr =
                         def.Arguments
                             |> List.map (typeOfExpr env)
                             |> Result.List.sequence
-                    do!
+                    let pairs =
                         List.zip
                             typeArrowDef.InputTypes
                             argTypes
-                            |> Result.List.foldM (fun () (expected, actual) ->
-                                if expected = actual then
-                                    Ok ()
-                                else
-                                    Type.mismatch expected actual) ()
+                    for (expected, actual) in pairs do
+                        if expected <> actual then
+                            return! Type.mismatch expected actual
                     return typeArrowDef.OutputType
                 else
                     return! Error "Arity mismatch"

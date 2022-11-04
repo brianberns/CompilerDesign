@@ -7,7 +7,37 @@ type ResultBuilder() =
     member _.ReturnFrom(res : Result<_, _>) = res
     member _.Bind(res, f) = Result.bind f res
     member _.Zero() = Ok ()
-    member _.Using(disposable : #IDisposable, f) = f disposable
+    member _.Combine(res, f) = Result.bind f res
+    member _.Delay(f : unit -> Result<_, _>) = f
+    member _.Run(f : unit -> Result<_, _>) = f ()
+
+    member this.While(guard, body) =
+        if not (guard())
+        then this.Zero()
+        else this.Bind(body (), fun () ->
+            this.While(guard, body))
+
+    member this.TryWith(body, handler) =
+        try this.ReturnFrom(body ())
+        with e -> handler e
+
+    member this.TryFinally(body, compensation) =
+        try this.ReturnFrom(body ())
+        finally compensation()
+
+    member this.Using(disposable : #IDisposable, body) =
+        let body' = fun () -> body disposable
+        this.TryFinally(body', fun () ->
+            match disposable with
+                | null -> ()
+                | disp -> disp.Dispose())
+
+    member this.For(sequence : seq<_>, body) =
+        this.Using(
+            sequence.GetEnumerator(),
+            fun enum ->
+                this.While(enum.MoveNext,
+                    this.Delay(fun () -> body enum.Current)))
 
 [<AutoOpen>]
 module ResultBuilder =
