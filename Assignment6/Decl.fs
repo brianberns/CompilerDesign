@@ -61,10 +61,10 @@ module Decl =
             let! arrowDef =
                 match decl.Scheme.Type with
                     | TypeArrow def ->
-                        if def.OutputType = Type.blank then
-                            Error "Output type unannotated"
-                        else
-                            Ok def
+                        result {
+                            do! Type.checkMissing def.OutputType
+                            return def
+                        }
                     | _ -> Error "Invalid decl scheme"
 
             let env' =

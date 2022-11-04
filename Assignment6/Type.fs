@@ -63,9 +63,13 @@ module Type =
                         |> String.concat ", "
             $"({inputs} -> {unparse def.OutputType})"
 
-    let blank = TypeBlank ()
     let int = TypeConstant { Name = "Int"; Tag = () }
     let bool = TypeConstant { Name = "Bool"; Tag = () }
+
+    let checkMissing typ =
+        if typ = TypeBlank () then
+            Error "Missing type"
+        else Ok ()
 
     let mismatch expected actual =
         Error

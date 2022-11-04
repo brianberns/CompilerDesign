@@ -273,10 +273,8 @@ module Expr =
                         | ApplicationExpr def -> typeOfApplication env def
                         | AnnotationExpr def -> typeOfAnnotation env def
 
-                if typ = Type.blank then
-                    return! Error "Untyped expression"
-                else
-                    return typ
+                do! Type.checkMissing typ
+                return typ
             }
 
         let private typeOfLet env def =
@@ -285,10 +283,9 @@ module Expr =
                     (env, def.Bindings)
                         ||> Result.List.foldM (fun acc binding ->
                             result {
+                                do! Type.checkMissing binding.Type
                                 let! typeExpr = typeOfExpr acc binding.Expr
-                                if binding.Type = Type.blank then
-                                    return! Error "Blank annotation"
-                                elif binding.Type = typeExpr then
+                                if binding.Type = typeExpr then
                                     return Map.add
                                         binding.Identifier.Name
                                         typeExpr
@@ -390,14 +387,12 @@ module Expr =
 
         let private typeOfAnnotation env def =
             result {
-                if def.Type = Type.blank then
-                    return! Error "Blank annotation"
+                do! Type.checkMissing def.Type
+                let! typeExpr = typeOfExpr env def.Expr
+                if typeExpr = def.Type then
+                    return typeExpr
                 else
-                    let! typeExpr = typeOfExpr env def.Expr
-                    if typeExpr = def.Type then
-                        return typeExpr
-                    else
-                        return! Type.mismatch def.Type typeExpr
+                    return! Type.mismatch def.Type typeExpr
             }
 
     let unparse = Unparse.unparseExpr
