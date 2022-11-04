@@ -102,127 +102,6 @@ type Arbitraries =
 [<TestClass>]
 type FuzzTests() =
 
-    let untagIdent (ident : IdentifierDef<_>) =
-        {
-            Name = ident.Name
-            Tag = ()
-        }
-
-    let rec untagType = function
-        | TypeBlank _ -> TypeBlank ()
-        | TypeConstant def -> TypeConstant (untagIdent def)
-        | TypeVariable def -> TypeVariable (untagIdent def)
-        | TypeArrow def ->
-            TypeArrow {
-                InputTypes =
-                    def.InputTypes |> List.map untagType
-                OutputType = untagType def.OutputType
-                Tag = ()
-            }
-
-    let rec untagExpr = function
-        | LetExpr def->
-            LetExpr {
-                Bindings =
-                    def.Bindings
-                        |> List.map (fun binding ->
-                            {
-                                Identifier = untagIdent binding.Identifier
-                                Type = untagType binding.Type
-                                Expr = untagExpr binding.Expr
-                            })
-                Expr = untagExpr def.Expr
-                Tag = ()
-            }
-        | Prim1Expr def ->
-            Prim1Expr {
-                Operator = def.Operator
-                TypeArguments =
-                    def.TypeArguments
-                        |> List.map untagType
-                Expr = untagExpr def.Expr
-                Tag = ()
-            }
-        | Prim2Expr def ->
-            Prim2Expr {
-                Operator = def.Operator
-                TypeArguments =
-                    def.TypeArguments
-                        |> List.map untagType
-                Left = untagExpr def.Left
-                Right = untagExpr def.Right
-                Tag = ()
-            }
-        | IfExpr def ->
-            IfExpr {
-                Condition = untagExpr def.Condition
-                TrueBranch = untagExpr def.TrueBranch
-                FalseBranch = untagExpr def.FalseBranch
-                Tag = ()
-            }
-        | NumberExpr def ->
-            NumberExpr {
-                Number = def.Number
-                Tag = ()
-            }
-        | IdentifierExpr def ->
-            IdentifierExpr {
-                Name = def.Name
-                Tag = ()
-            }
-        | BoolExpr def ->
-            BoolExpr {
-                Flag = def.Flag
-                Tag = ()
-            }
-        | ApplicationExpr def ->
-            ApplicationExpr {
-                Identifier = untagIdent def.Identifier
-                TypeArguments =
-                    def.TypeArguments
-                        |> List.map untagType
-                Arguments =
-                    def.Arguments |> List.map untagExpr
-                Tag = ()
-            }
-        | AnnotationExpr def ->
-            AnnotationExpr {
-                Expr = untagExpr def.Expr
-                Type = untagType def.Type
-                Tag = ()
-            }
-
-    let untagScheme scheme =
-        {
-            Identifiers =
-                scheme.Identifiers
-                    |> List.map untagIdent
-            Type = untagType scheme.Type
-            Tag = ()
-        }
-
-    let untagDecl (decl : Decl<_>) =
-        {
-            Identifier =
-                {
-                    Name = decl.Identifier.Name
-                    Tag = ()
-                }
-            Parameters =
-                decl.Parameters
-                    |> List.map untagIdent
-            Scheme = untagScheme decl.Scheme
-            Body = untagExpr decl.Body
-        }
-
-    let untagProgram program =
-        {
-            Declarations =
-                program.Declarations
-                    |> List.map untagDecl
-            Main = untagExpr program.Main
-        }
-
     let config =
         { Config.QuickThrowOnFailure with
             Arbitrary = [ typeof<Arbitraries> ]
@@ -236,7 +115,7 @@ type FuzzTests() =
             let unparsed = Program.unparse program
             let reparsed =
                 Parser.parse unparsed
-                    |> Result.map untagProgram
+                    |> Result.map Program.untag
             let msg = sprintf "Text: %s\nResult: %A" unparsed reparsed
             reparsed = Ok program |@ msg
 

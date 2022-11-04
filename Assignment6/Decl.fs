@@ -11,6 +11,20 @@ type Decl<'tag> =
 
 module Decl =
 
+    let untag decl =
+        {
+            Identifier =
+                {
+                    Name = decl.Identifier.Name
+                    Tag = ()
+                }
+            Parameters =
+                decl.Parameters
+                    |> List.map IdentifierDef.untag
+            Scheme = Scheme.untag decl.Scheme
+            Body = Expr.untag decl.Body
+        }
+
     let private getSchemeTypes decl =
         match decl.Scheme.Type with
             | TypeArrow def -> def.InputTypes, def.OutputType
@@ -47,6 +61,14 @@ type Program<'tag> =
     }
 
 module Program =
+
+    let untag program =
+        {
+            Declarations =
+                program.Declarations
+                    |> List.map Decl.untag
+            Main = Expr.untag program.Main
+        }
 
     let unparse program =
         let decls =

@@ -6,6 +6,14 @@ type IdentifierDef<'tag> =
         Tag : 'tag
     }
 
+module IdentifierDef =
+
+    let untag ident =
+        {
+            Name = ident.Name
+            Tag = ()
+        }
+
 type Type<'tag> =
 
     /// No type specified. Will be inferred later.
@@ -29,6 +37,18 @@ and TypeArrowDef<'tag> =
 
 module Type =
 
+    let rec untag = function
+        | TypeBlank _ -> TypeBlank ()
+        | TypeConstant def -> TypeConstant (IdentifierDef.untag def)
+        | TypeVariable def -> TypeVariable (IdentifierDef.untag def)
+        | TypeArrow def ->
+            TypeArrow {
+                InputTypes =
+                    def.InputTypes |> List.map untag
+                OutputType = untag def.OutputType
+                Tag = ()
+            }
+
     let rec unparse = function
         | TypeBlank _ -> "_"
         | TypeConstant def -> def.Name
@@ -50,3 +70,14 @@ type Scheme<'tag> =
         Type : Type<'tag>
         Tag : 'tag
     }
+
+module Scheme =
+
+    let untag scheme =
+        {
+            Identifiers =
+                scheme.Identifiers
+                    |> List.map IdentifierDef.untag
+            Type = Type.untag scheme.Type
+            Tag = ()
+        }

@@ -223,6 +223,78 @@ module private rec TypeCheck =
 
 module Expr =
 
+    let rec untag = function
+        | LetExpr def->
+            LetExpr {
+                Bindings =
+                    def.Bindings
+                        |> List.map (fun binding ->
+                            {
+                                Identifier = IdentifierDef.untag binding.Identifier
+                                Type = Type.untag binding.Type
+                                Expr = untag binding.Expr
+                            })
+                Expr = untag def.Expr
+                Tag = ()
+            }
+        | Prim1Expr def ->
+            Prim1Expr {
+                Operator = def.Operator
+                TypeArguments =
+                    def.TypeArguments
+                        |> List.map Type.untag
+                Expr = untag def.Expr
+                Tag = ()
+            }
+        | Prim2Expr def ->
+            Prim2Expr {
+                Operator = def.Operator
+                TypeArguments =
+                    def.TypeArguments
+                        |> List.map Type.untag
+                Left = untag def.Left
+                Right = untag def.Right
+                Tag = ()
+            }
+        | IfExpr def ->
+            IfExpr {
+                Condition = untag def.Condition
+                TrueBranch = untag def.TrueBranch
+                FalseBranch = untag def.FalseBranch
+                Tag = ()
+            }
+        | NumberExpr def ->
+            NumberExpr {
+                Number = def.Number
+                Tag = ()
+            }
+        | IdentifierExpr def ->
+            IdentifierExpr {
+                Name = def.Name
+                Tag = ()
+            }
+        | BoolExpr def ->
+            BoolExpr {
+                Flag = def.Flag
+                Tag = ()
+            }
+        | ApplicationExpr def ->
+            ApplicationExpr {
+                Identifier = IdentifierDef.untag def.Identifier
+                TypeArguments =
+                    def.TypeArguments
+                        |> List.map Type.untag
+                Arguments =
+                    def.Arguments |> List.map untag
+                Tag = ()
+            }
+        | AnnotationExpr def ->
+            AnnotationExpr {
+                Expr = untag def.Expr
+                Type = Type.untag def.Type
+                Tag = ()
+            }
+
     let unparse = Unparse.unparseExpr
 
     let typeOf = TypeCheck.typeOfExpr
