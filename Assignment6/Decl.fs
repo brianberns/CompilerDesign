@@ -58,19 +58,24 @@ module Decl =
 
     let typeCheck env (decl : Decl<_>) =
         result {
-
-            let outputType =
+            let! outputType =
                 match decl.Scheme.Type with
-                    | TypeArrow def -> def.OutputType
-                    | _ -> failwith "Unexpected"
-            if outputType = Type.blank then
-                return! Error "Output type unannotated"
+                    | TypeArrow def ->
+                        if def.OutputType = Type.blank then
+                            Error "Output type unannotated"
+                        else
+                            Ok def.OutputType
+                    | _ -> Error "Invalid decl scheme"
+
+            let! bodyType = Expr.typeOf env decl.Body
+
+            if bodyType <> outputType then
+                return! Type.mismatch outputType bodyType
             else
-                let! bodyType = Expr.typeOf env decl.Body
-                if bodyType <> outputType then
-                    return! Type.mismatch outputType bodyType
-                else
-                    return env
+                return Map.add
+                    decl.Identifier.Name
+                    decl.Scheme.Type
+                    env
         }
 
 type Program<'tag> =
