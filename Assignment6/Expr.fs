@@ -349,7 +349,28 @@ module Expr =
 
         let private typeOfApplication env (def : ApplicationDef<_>) =
             result {
-                return Type.blank
+                let! typeArrowDef =
+                    match Map.tryFind def.Identifier.Name env with
+                        | Some (TypeArrow def) -> Ok def
+                        | Some _ -> Error $"Not a function: {def.Identifier.Name}"
+                        | None -> Error $"Unbound identifier: {def.Identifier.Name}"
+                if typeArrowDef.InputTypes.Length = def.Arguments.Length then
+                    let! argTypes =
+                        def.Arguments
+                            |> List.map (typeOfExpr env)
+                            |> Result.List.sequence
+                    do!
+                        List.zip
+                            typeArrowDef.InputTypes
+                            argTypes
+                            |> Result.List.foldM (fun () (expected, actual) ->
+                                if expected = actual then
+                                    Ok ()
+                                else
+                                    Type.mismatch expected actual) ()
+                    return typeArrowDef.OutputType
+                else
+                    return! Error "Arity mismatch"
             }
 
         let private typeOfAnnotation env def =
