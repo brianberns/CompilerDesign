@@ -1,7 +1,9 @@
 namespace CompilerDesign.Assignment6
 
 open Microsoft.VisualStudio.TestTools.UnitTesting
+
 open CompilerDesign.Core
+open CompilerDesign.UnitTesting
 
 [<TestClass>]
 type TaipanTests() =
@@ -70,6 +72,6 @@ type TaipanTests() =
             match parsed with
                 | Ok program ->
                     let actual = Expr.typeOf () program.Main
-                    Assert.AreEqual(expected, actual)
+                    Assert.AreEqual(expected, actual, text)
                 | Error msg ->
                     Assert.Fail($"{text}\n{msg}")

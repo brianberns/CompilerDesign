@@ -1,7 +1,9 @@
 namespace CompilerDesign.Assignment3
 
 open Microsoft.VisualStudio.TestTools.UnitTesting
+
 open CompilerDesign.Core
+open CompilerDesign.UnitTesting
 
 [<TestClass>]
 type BoaTests() =
@@ -22,4 +24,4 @@ type BoaTests() =
                     if a : asq + bsq
                     else: add1(a)
             """
-        Assert.AreEqual<_>(Ok "25", run text)
+        Assert.AreEqual(Ok "25", run text)

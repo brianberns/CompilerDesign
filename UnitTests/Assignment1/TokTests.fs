@@ -1,6 +1,7 @@
 namespace CompilerDesign.Assignment1
 
 open Microsoft.VisualStudio.TestTools.UnitTesting
+open CompilerDesign.UnitTesting
 
 [<TestClass>]
 type TokTests() =

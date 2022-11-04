@@ -1,7 +1,9 @@
 namespace CompilerDesign.Assignment4
 
 open Microsoft.VisualStudio.TestTools.UnitTesting
+
 open CompilerDesign.Core
+open CompilerDesign.UnitTesting
 
 [<TestClass>]
 type CobraTests() =
@@ -22,7 +24,7 @@ type CobraTests() =
                     if a < b : asq + bsq
                     else: add1(a)
             """
-        Assert.AreEqual<_>(Ok "25", run text)
+        Assert.AreEqual(Ok "25", run text)
 
     [<TestMethod>]
     member _.Print() =

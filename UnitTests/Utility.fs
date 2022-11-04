@@ -1,19 +1,27 @@
-namespace Microsoft.VisualStudio.TestTools.UnitTesting
+namespace CompilerDesign.UnitTesting
 
+open Microsoft.VisualStudio.TestTools.UnitTesting
 open CompilerDesign.Core
 
-module Assert =
+type Assert private () =
 
     // Improves error message for F# types (e.g. discriminated unions).
-    let AreEqual<'t when 't : equality>(expected : 't, actual : 't) =
-        if expected <> actual then
-            let msg = sprintf "\nExpected: {%A}.\nActual:   {%A}" expected actual
-            Assert.Fail(msg)
+    static member AreEqual<'t when 't : equality>(expected : 't, actual : 't) =
+        if actual <> expected then
+            sprintf "\nExpected: %A.\nActual:   %A" expected actual
+                |> Assert.Fail
+
+    // Improves error message for F# types (e.g. discriminated unions).
+    static member AreEqual<'t when 't : equality>(expected : 't, actual : 't, msg) =
+        if actual <> expected then
+            sprintf "%s\nExpected: %A.\nActual:   %A" msg expected actual
+                |> Assert.Fail
 
     // Accepts any F# action.
-    let ThrowsException(action) =
-        Assert.ThrowsException(
-            fun () -> ignore (action ()))
+    static member ThrowsException(action) =
+        Microsoft.VisualStudio.TestTools.UnitTesting
+            .Assert.ThrowsException(
+                fun () -> ignore (action ()))
 
 module Process =
 

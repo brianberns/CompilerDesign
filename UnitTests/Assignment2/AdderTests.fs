@@ -1,7 +1,9 @@
 namespace CompilerDesign.Assignment2
 
 open Microsoft.VisualStudio.TestTools.UnitTesting
+
 open CompilerDesign.Core
+open CompilerDesign.UnitTesting
 
 [<TestClass>]
 type AdderTests() =
@@ -15,11 +17,11 @@ type AdderTests() =
 
     [<TestMethod>]
     member _.``5``() =
-        Assert.AreEqual<_>(Ok "5", run "5")
+        Assert.AreEqual(Ok "5", run "5")
 
     [<TestMethod>]
     member _.``(sub1 (add1 (sub1 5)))``() =
-        Assert.AreEqual<_>(
+        Assert.AreEqual(
             Ok "4",
             run "(sub1 (add1 (sub1 5)))")
 
@@ -30,7 +32,7 @@ type AdderTests() =
             (let ((x 5))
                 (add1 x))
             """
-        Assert.AreEqual<_>(Ok "6", run text)
+        Assert.AreEqual(Ok "6", run text)
 
     [<TestMethod>]
     member _.``(let ((x 5) (y (sub1 x))) (sub1 y))``() =
@@ -40,7 +42,7 @@ type AdderTests() =
                   (y (sub1 x)))
                 (sub1 y))
             """
-        Assert.AreEqual<_>(Ok "3", run text)
+        Assert.AreEqual(Ok "3", run text)
 
     [<TestMethod>]
     member _.DuplicateBinding() =
@@ -50,7 +52,7 @@ type AdderTests() =
                   (x (sub1 x)))
                 (sub1 x))
             """
-        Assert.AreEqual<_>(
+        Assert.AreEqual(
             Error "Variable already exists: x",
             run text)
 
@@ -61,6 +63,6 @@ type AdderTests() =
             (let ((x 5))
                 (add1 y))
             """
-        Assert.AreEqual<_>(
+        Assert.AreEqual(
             Error "Unbound identifier: y",
             run text)

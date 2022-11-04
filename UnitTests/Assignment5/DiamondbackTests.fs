@@ -1,7 +1,9 @@
 namespace CompilerDesign.Assignment5
 
 open Microsoft.VisualStudio.TestTools.UnitTesting
+
 open CompilerDesign.Core
+open CompilerDesign.UnitTesting
 
 [<TestClass>]
 type DiamondbackTests() =
@@ -16,7 +18,7 @@ type DiamondbackTests() =
     [<TestMethod>]
     member _.Comment() =
         let text = "1 # comment"
-        Assert.AreEqual<_>(Ok "1", run text)
+        Assert.AreEqual(Ok "1", run text)
 
     [<TestMethod>]
     member _.Factorial() =
@@ -29,4 +31,4 @@ type DiamondbackTests() =
 
             factorial(6)
             """
-        Assert.AreEqual<_>(Ok "720", run text)
+        Assert.AreEqual(Ok "720", run text)
