@@ -70,6 +70,7 @@ type TaipanTests() =
                 "def plus(x : Int, y : Int) -> Int: x + y plus(true, 4)", Error "Expected: Int, Actual: Bool"
                 "def plus(x : Bool, y : Int) -> Int: x + y plus(true, 4)", Error "Expected: Int, Actual: Bool"
                 "def plus(x, y): x + y plus(3, 4)", Error "Output type unannotated"
+                "let x : Int = 1, y : Int = 2 in (x + y : Int)", Ok Type.int
             ]
 
         for text, expected in pairs do

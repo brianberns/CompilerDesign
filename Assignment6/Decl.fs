@@ -69,7 +69,7 @@ module Decl =
 
             let env' =
                 (env, decl.Parameters, arrowDef.InputTypes)
-                    |||> Seq.fold2 (fun acc ident typ ->
+                    |||> List.fold2 (fun acc ident typ ->
                             acc |> Map.add ident.Name typ)
             let! bodyType = Expr.typeOf env' decl.Body
 
@@ -110,7 +110,7 @@ module Program =
         result {
             let program' = untag program
             let! env =
-                program'.Declarations
-                    |> Result.List.foldM Decl.typeCheck Map.empty
+                (Map.empty, program'.Declarations)
+                    ||> Result.List.foldM Decl.typeCheck
             return! Expr.typeOf env program'.Main
         }

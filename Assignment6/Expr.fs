@@ -279,8 +279,25 @@ module Expr =
                     return typ
             }
 
-        let private typeOfLet env (def : LetDef<_>) =
-            typeOfExpr env def.Expr
+        let private typeOfLet env def =
+            result {
+                let! env' =
+                    (env, def.Bindings)
+                        ||> Result.List.foldM (fun acc binding ->
+                            result {
+                                let! typeExpr = typeOfExpr acc binding.Expr
+                                if binding.Type = Type.blank then
+                                    return! Error "Blank annotation"
+                                elif binding.Type = typeExpr then
+                                    return Map.add
+                                        binding.Identifier.Name
+                                        typeExpr
+                                        acc
+                                else
+                                    return! Type.mismatch binding.Type typeExpr
+                            })
+                return! typeOfExpr env' def.Expr
+            }
 
         let private typeOfPrim1 env def =
             result {
