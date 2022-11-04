@@ -256,10 +256,18 @@ module Expr =
 
     module private rec TypeCheck =
 
+        let private mismatch expected actual =
+            Error
+                $"Expected: {Type.unparse expected}, \
+                Actual: {Type.unparse actual}"
+
+        let private untyped =
+            Error "Untyped expression"
+
         let typeOfExpr env = function
             | LetExpr def -> typeOfLet env def
             | Prim1Expr def -> typeOfPrim1 env def
-            | Prim2Expr def -> Ok (TypeBlank ())
+            | Prim2Expr def -> typeOfPrim2 env def
             | IfExpr def -> Ok (TypeBlank ())
             | NumberExpr def -> Ok Type.int
             | IdentifierExpr def -> Ok (TypeBlank ())
@@ -274,7 +282,7 @@ module Expr =
             result {
                 let! actual = typeOfExpr env def.Expr
                 if actual = Type.blank then
-                    return! Error "Untyped expression"
+                    return! untyped
                 else
 
                     let check expected =
@@ -282,9 +290,7 @@ module Expr =
                             if actual = expected then
                                 return actual
                             else
-                                return! Error
-                                    $"Expected: {Type.unparse expected}, \
-                                    Actual: {Type.unparse actual}"
+                                return! mismatch expected actual
                         }
 
                     match def.Operator with
@@ -298,19 +304,16 @@ module Expr =
                 let! typeLeft = typeOfExpr env def.Left
                 let! typeRight = typeOfExpr env def.Right
                 if typeLeft = Type.blank || typeRight = Type.blank then
-                    return! Error "Untyped expression"
+                    return! untyped
 
                 else
 
                     let check expected =
                         result {
-                            if typeLeft = expected && typeRight = expected then
-                                return expected
-                            else
-                                return! Error
-                                    $"Expected: {Type.unparse expected}, \
-                                    Actual: {Type.unparse typeLeft} and \
-                                    {Type.unparse typeRight}"
+                            match typeLeft = expected, typeRight = expected with
+                                | true, true -> return expected
+                                | false, _ -> return! mismatch expected typeLeft
+                                | _, false -> return! mismatch expected typeRight
                         }
 
                     match def.Operator with
@@ -322,8 +325,7 @@ module Expr =
                             if typeLeft = typeRight then
                                 return typeLeft
                             else
-                                return! Error $"{Type.unparse typeLeft} \
-                                    does not match {Type.unparse typeRight}"
+                                return! mismatch typeLeft typeRight
             }
 
     let unparse = Unparse.unparseExpr
