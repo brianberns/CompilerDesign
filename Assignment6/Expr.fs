@@ -266,15 +266,17 @@ module Expr =
 
                 let! typ =
                     match expr with
+
+                        | NumberExpr def -> Ok Type.int
+                        | BoolExpr def -> Ok Type.bool
+
                         | LetExpr def -> typeOfLet env def
                         | Prim1Expr def -> typeOfPrim1 env def
                         | Prim2Expr def -> typeOfPrim2 env def
                         | IfExpr def -> typeOfIf env def
-                        | NumberExpr def -> Ok Type.int
                         | IdentifierExpr def -> Ok (TypeBlank ())
-                        | BoolExpr def -> Ok Type.bool
                         | ApplicationExpr def -> Ok (TypeBlank ())
-                        | AnnotationExpr def -> Ok (TypeBlank ())
+                        | AnnotationExpr def -> typeOfAnnotation env def
 
                 if typ = Type.blank then
                     return! Error "Untyped expression"
@@ -343,6 +345,21 @@ module Expr =
                     return! mismatch Type.bool typeCond
             }
 
+        let private typeOfAnnotation env (def : AnnotationDef<_>) =
+            result {
+                if def.Type = Type.blank then
+                    return! Error "Blank annotation"
+                else
+                    let! typeExpr = typeOfExpr env def.Expr
+                    if typeExpr = def.Type then
+                        return typeExpr
+                    else
+                        return! mismatch def.Type typeExpr
+            }
+
     let unparse = Unparse.unparseExpr
 
-    let typeOf = TypeCheck.typeOfExpr
+    let typeOf expr =
+        expr
+            |> untag
+            |> TypeCheck.typeOfExpr ()

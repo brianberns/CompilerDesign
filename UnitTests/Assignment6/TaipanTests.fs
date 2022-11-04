@@ -65,13 +65,14 @@ type TaipanTests() =
                 "if 1 + 2: 3 + 4 else: 5 + 6", Error "Expected: Bool, Actual: Int"
                 "if true == false: true else: !(true)", Ok Type.bool
                 "if true >= false: true else: !(true)", Error "Expected: Int, Actual: Bool"
+                "(add1(0) : Int)", Ok Type.int
             ]
 
         for text, expected in pairs do
             let parsed = Parser.parse text
             match parsed with
                 | Ok program ->
-                    let actual = Expr.typeOf () program.Main
+                    let actual = Expr.typeOf program.Main
                     Assert.AreEqual(expected, actual, text)
                 | Error msg ->
                     Assert.Fail($"{text}\n{msg}")
