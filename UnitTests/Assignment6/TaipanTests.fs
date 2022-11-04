@@ -26,7 +26,7 @@ type TaipanTests() =
 
             plus(whatever(2), 3)
             """
-        Assert.AreEqual<_>(Ok "12", run text)
+        Assert.AreEqual(Ok "12", run text)
 
     [<TestMethod>]
     member _.BoolMainResult() =
@@ -37,7 +37,7 @@ type TaipanTests() =
 
             (3 ==<Int> print<Int>(whatever<Int>(5)) : Bool)
             """
-        Assert.AreEqual<_>(Ok "5\n5\nFalse", run text)
+        Assert.AreEqual(Ok "5\n5\nFalse", run text)
 
     [<TestMethod>]
     member _.Polymorphic() =
@@ -47,7 +47,7 @@ type TaipanTests() =
 
             identity(true)
             """
-        Assert.AreEqual<_>(Ok "True", run text)
+        Assert.AreEqual(Ok "True", run text)
 
     [<TestMethod>]
     member _.TypeCheckExpr() =
@@ -58,6 +58,11 @@ type TaipanTests() =
                 "add1(true)", Error "Expected: Int, Actual: Bool"
                 "3 + 4", Ok Type.int
                 "3 + a", Error "Untyped expression"
+                "if 1 == 2: 3 + 4 else: 5 + 6", Ok Type.int
+                "if 1 >= 2: 3 + 4 else: 5 + 6", Ok Type.int
+                "if 1 + 2: 3 + 4 else: 5 + 6", Error "Expected: Bool, Actual: Int"
+                "if true == false: true else: !(true)", Ok Type.bool
+                "if true >= false: true else: !(true)", Error "Expected: Int, Actual: Bool"
             ]
 
         for text, expected in pairs do
@@ -66,4 +71,10 @@ type TaipanTests() =
                 | Ok program ->
                     let actual = Expr.typeOf () program.Main
                     Assert.AreEqual(expected, actual)
-                | _ -> Assert.Fail()
+                | Error msgs ->
+                    let str =
+                        [
+                            yield text
+                            yield! msgs
+                        ] |> String.concat "\n"
+                    Assert.Fail(str)

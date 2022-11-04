@@ -261,19 +261,26 @@ module Expr =
                 $"Expected: {Type.unparse expected}, \
                 Actual: {Type.unparse actual}"
 
-        let private untyped =
-            Error "Untyped expression"
+        let typeOfExpr env expr =
+            result {
 
-        let typeOfExpr env = function
-            | LetExpr def -> typeOfLet env def
-            | Prim1Expr def -> typeOfPrim1 env def
-            | Prim2Expr def -> typeOfPrim2 env def
-            | IfExpr def -> Ok (TypeBlank ())
-            | NumberExpr def -> Ok Type.int
-            | IdentifierExpr def -> Ok (TypeBlank ())
-            | BoolExpr def -> Ok Type.bool
-            | ApplicationExpr def -> Ok (TypeBlank ())
-            | AnnotationExpr def -> Ok (TypeBlank ())
+                let! typ =
+                    match expr with
+                        | LetExpr def -> typeOfLet env def
+                        | Prim1Expr def -> typeOfPrim1 env def
+                        | Prim2Expr def -> typeOfPrim2 env def
+                        | IfExpr def -> typeOfIf env def
+                        | NumberExpr def -> Ok Type.int
+                        | IdentifierExpr def -> Ok (TypeBlank ())
+                        | BoolExpr def -> Ok Type.bool
+                        | ApplicationExpr def -> Ok (TypeBlank ())
+                        | AnnotationExpr def -> Ok (TypeBlank ())
+
+                if typ = Type.blank then
+                    return! Error "Untyped expression"
+                else
+                    return typ
+            }
 
         let private typeOfLet env (def : LetDef<_>) =
             typeOfExpr env def.Expr
@@ -281,51 +288,59 @@ module Expr =
         let private typeOfPrim1 env def =
             result {
                 let! actual = typeOfExpr env def.Expr
-                if actual = Type.blank then
-                    return! untyped
-                else
 
-                    let check expected =
-                        result {
-                            if actual = expected then
-                                return actual
-                            else
-                                return! mismatch expected actual
-                        }
+                let check expected =
+                    result {
+                        if actual = expected then
+                            return actual
+                        else
+                            return! mismatch expected actual
+                    }
 
-                    match def.Operator with
-                        | Add1 | Sub1 -> return! check Type.int
-                        | Not -> return! check Type.bool
-                        | Print | IsBool | IsNum -> return actual
+                match def.Operator with
+                    | Add1 | Sub1 -> return! check Type.int
+                    | Not -> return! check Type.bool
+                    | Print | IsBool | IsNum -> return actual
             }
 
-        let private typeOfPrim2 env (def : Prim2Def<_>) =
+        let private typeOfPrim2 env def =
             result {
                 let! typeLeft = typeOfExpr env def.Left
                 let! typeRight = typeOfExpr env def.Right
-                if typeLeft = Type.blank || typeRight = Type.blank then
-                    return! untyped
 
+                let check expected final =
+                    result {
+                        match typeLeft = expected, typeRight = expected with
+                            | true, true -> return final
+                            | false, _ -> return! mismatch expected typeLeft
+                            | _, false -> return! mismatch expected typeRight
+                    }
+
+                match def.Operator with
+                    | Plus | Minus | Times -> return! check Type.int Type.int
+                    | And | Or -> return! check Type.bool Type.bool
+                    | Greater | GreaterEq
+                    | Less | LessEq -> return! check Type.int Type.bool
+                    | Eq ->
+                        if typeLeft = typeRight then
+                            return Type.bool
+                        else
+                            return! mismatch typeLeft typeRight
+            }
+
+        let private typeOfIf env def =
+            result {
+                let! typeCond = typeOfExpr env def.Condition
+                let! typeTrue = typeOfExpr env def.TrueBranch
+                let! typeFalse = typeOfExpr env def.FalseBranch
+
+                if typeCond = Type.bool then
+                    if typeTrue = typeFalse then
+                        return typeTrue
+                    else
+                        return! mismatch typeTrue typeFalse
                 else
-
-                    let check expected =
-                        result {
-                            match typeLeft = expected, typeRight = expected with
-                                | true, true -> return expected
-                                | false, _ -> return! mismatch expected typeLeft
-                                | _, false -> return! mismatch expected typeRight
-                        }
-
-                    match def.Operator with
-                        | Plus | Minus | Times
-                        | Greater | GreaterEq
-                        | Less | LessEq -> return! check Type.int
-                        | And | Or -> return! check Type.bool
-                        | Eq ->
-                            if typeLeft = typeRight then
-                                return typeLeft
-                            else
-                                return! mismatch typeLeft typeRight
+                    return! mismatch Type.bool typeCond
             }
 
     let unparse = Unparse.unparseExpr
