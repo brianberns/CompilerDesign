@@ -37,10 +37,6 @@ and TypeArrowDef<'tag> =
 
 module Type =
 
-    let blank = TypeBlank ()
-    let int = TypeConstant { Name = "Int"; Tag = () }
-    let bool = TypeConstant { Name = "Bool"; Tag = () }
-
     let rec untag = function
         | TypeBlank _ -> TypeBlank ()
         | TypeConstant def -> TypeConstant (IdentifierDef.untag def)
@@ -66,6 +62,15 @@ module Type =
                         |> Seq.map unparse
                         |> String.concat ", "
             $"({inputs} -> {unparse def.OutputType})"
+
+    let blank = TypeBlank ()
+    let int = TypeConstant { Name = "Int"; Tag = () }
+    let bool = TypeConstant { Name = "Bool"; Tag = () }
+
+    let mismatch expected actual =
+        Error
+            $"Expected: {unparse expected}, \
+            Actual: {unparse actual}"
 
 /// E.g. const has scheme: ∀ab.a → b → a
 type Scheme<'tag> =

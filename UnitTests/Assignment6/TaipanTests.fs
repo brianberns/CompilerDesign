@@ -72,7 +72,7 @@ type TaipanTests() =
             let parsed = Parser.parse text
             match parsed with
                 | Ok program ->
-                    let actual = Expr.typeOf program.Main
+                    let actual = Program.typeOf program
                     Assert.AreEqual(expected, actual, text)
                 | Error msg ->
                     Assert.Fail($"{text}\n{msg}")

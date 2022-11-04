@@ -256,11 +256,6 @@ module Expr =
 
     module private rec TypeCheck =
 
-        let private mismatch expected actual =
-            Error
-                $"Expected: {Type.unparse expected}, \
-                Actual: {Type.unparse actual}"
-
         let typeOfExpr env expr =
             result {
 
@@ -296,7 +291,7 @@ module Expr =
                         if actual = expected then
                             return actual
                         else
-                            return! mismatch expected actual
+                            return! Type.mismatch expected actual
                     }
 
                 match def.Operator with
@@ -314,8 +309,8 @@ module Expr =
                     result {
                         match typeLeft = expected, typeRight = expected with
                             | true, true -> return final
-                            | false, _ -> return! mismatch expected typeLeft
-                            | _, false -> return! mismatch expected typeRight
+                            | false, _ -> return! Type.mismatch expected typeLeft
+                            | _, false -> return! Type.mismatch expected typeRight
                     }
 
                 match def.Operator with
@@ -327,7 +322,7 @@ module Expr =
                         if typeLeft = typeRight then
                             return Type.bool
                         else
-                            return! mismatch typeLeft typeRight
+                            return! Type.mismatch typeLeft typeRight
             }
 
         let private typeOfIf env def =
@@ -340,14 +335,14 @@ module Expr =
                     if typeTrue = typeFalse then
                         return typeTrue
                     else
-                        return! mismatch typeTrue typeFalse
+                        return! Type.mismatch typeTrue typeFalse
                 else
-                    return! mismatch Type.bool typeCond
+                    return! Type.mismatch Type.bool typeCond
             }
 
-        let private typeOfIdentifier env (def : IdentifierDef<_>) =
+        let private typeOfIdentifier env def =
             result {
-                match env |> Map.tryFind def.Name with
+                match Map.tryFind def.Name env with
                     | Some typ -> return typ
                     | None -> return! Error $"Unbound identifier: {def.Name}"
             }
@@ -366,12 +361,12 @@ module Expr =
                     if typeExpr = def.Type then
                         return typeExpr
                     else
-                        return! mismatch def.Type typeExpr
+                        return! Type.mismatch def.Type typeExpr
             }
 
     let unparse = Unparse.unparseExpr
 
-    let typeOf expr =
+    let typeOf env expr =
         expr
             |> untag
-            |> TypeCheck.typeOfExpr Map.empty
+            |> TypeCheck.typeOfExpr env

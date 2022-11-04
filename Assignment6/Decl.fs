@@ -1,5 +1,7 @@
 ﻿namespace CompilerDesign.Assignment6
 
+open CompilerDesign.Core
+
 type Decl<'tag> =
     {
         /// Name of function begin declared.
@@ -54,6 +56,23 @@ module Decl =
         let body = Expr.unparse decl.Body
         $"def {ident}{tvIdents}({parms}){sOutType}:\n    {body}\n\n"
 
+    let typeCheck env (decl : Decl<_>) =
+        result {
+
+            let outputType =
+                match decl.Scheme.Type with
+                    | TypeArrow def -> def.OutputType
+                    | _ -> failwith "Unexpected"
+            if outputType = Type.blank then
+                return! Error "Output type unannotated"
+            else
+                let! bodyType = Expr.typeOf env decl.Body
+                if bodyType <> outputType then
+                    return! Type.mismatch outputType bodyType
+                else
+                    return env
+        }
+
 type Program<'tag> =
     {
         Declarations : List<Decl<'tag>>
@@ -77,3 +96,12 @@ module Program =
                 |> String.concat ""
         let main = Expr.unparse program.Main
         $"{decls}{main}"
+
+    let typeOf program =
+        result {
+            let program' = untag program
+            let! env =
+                program'.Declarations
+                    |> Result.List.foldM Decl.typeCheck Map.empty
+            return! Expr.typeOf env program'.Main
+        }
