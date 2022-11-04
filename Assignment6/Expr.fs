@@ -274,8 +274,8 @@ module Expr =
                         | Prim1Expr def -> typeOfPrim1 env def
                         | Prim2Expr def -> typeOfPrim2 env def
                         | IfExpr def -> typeOfIf env def
-                        | IdentifierExpr def -> Ok (TypeBlank ())
-                        | ApplicationExpr def -> Ok (TypeBlank ())
+                        | IdentifierExpr def -> typeOfIdentifier env def
+                        | ApplicationExpr def -> typeOfApplication env def
                         | AnnotationExpr def -> typeOfAnnotation env def
 
                 if typ = Type.blank then
@@ -345,7 +345,19 @@ module Expr =
                     return! mismatch Type.bool typeCond
             }
 
-        let private typeOfAnnotation env (def : AnnotationDef<_>) =
+        let private typeOfIdentifier env (def : IdentifierDef<_>) =
+            result {
+                match env |> Map.tryFind def.Name with
+                    | Some typ -> return typ
+                    | None -> return! Error $"Unbound identifier: {def.Name}"
+            }
+
+        let private typeOfApplication env (def : ApplicationDef<_>) =
+            result {
+                return Type.blank
+            }
+
+        let private typeOfAnnotation env def =
             result {
                 if def.Type = Type.blank then
                     return! Error "Blank annotation"
@@ -362,4 +374,4 @@ module Expr =
     let typeOf expr =
         expr
             |> untag
-            |> TypeCheck.typeOfExpr ()
+            |> TypeCheck.typeOfExpr Map.empty

@@ -59,7 +59,7 @@ type TaipanTests() =
                 "add1(0)", Ok Type.int
                 "add1(true)", Error "Expected: Int, Actual: Bool"
                 "3 + 4", Ok Type.int
-                "3 + a", Error "Untyped expression"
+                "3 + a", Error "Unbound identifier: a"
                 "if 1 == 2: 3 + 4 else: 5 + 6", Ok Type.int
                 "if 1 >= 2: 3 + 4 else: 5 + 6", Ok Type.int
                 "if 1 + 2: 3 + 4 else: 5 + 6", Error "Expected: Bool, Actual: Int"
