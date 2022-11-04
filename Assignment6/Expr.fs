@@ -113,114 +113,6 @@ and AnnotationDef<'tag> =
         Tag : 'tag
     }
 
-module private rec Unparse =
-
-    let private unparseTypeArgs typeArgs =
-        if typeArgs |> List.isEmpty then ""
-        else
-            let str =
-                typeArgs
-                    |> List.map Type.unparse
-                    |> String.concat ", "
-            $"<{str}>"
-
-    let private unparseBinding (binding : Binding<_>) =
-        let ident = binding.Identifier.Name
-        let expr = unparseExpr binding.Expr
-        let typ =
-            match binding.Type with
-                | TypeBlank _ -> ""
-                | t -> $" : {Type.unparse t}"
-        $"{ident}{typ} = {expr}"
-
-    let unparseExpr = function
-        | LetExpr def ->
-            let bindings =
-                def.Bindings
-                    |> Seq.map unparseBinding
-                    |> String.concat ", "
-            $"(let {bindings} in {unparseExpr def.Expr})"
-        | Prim1Expr def ->
-            let op = function
-                | Not -> "!"
-                | prim1 -> (string prim1).ToLower()
-            $"{op def.Operator}{unparseTypeArgs def.TypeArguments}({unparseExpr def.Expr})"
-        | Prim2Expr def ->
-            let op = function
-                | Plus -> "+"
-                | Minus -> "-"
-                | Times -> "*"
-                | And -> "&&"
-                | Or -> "||"
-                | Greater -> ">"
-                | GreaterEq -> ">="
-                | Less -> "<"
-                | LessEq -> "<="
-                | Eq -> "=="
-            $"({unparseExpr def.Left} \
-                {op def.Operator}{unparseTypeArgs def.TypeArguments} \
-                {unparseExpr def.Right})"
-        | IfExpr def ->
-            $"(if {unparseExpr def.Condition} : \
-                {unparseExpr def.TrueBranch} \
-                else: {unparseExpr def.FalseBranch})"
-        | NumberExpr def ->
-            if def.Number < 0 then
-                $"({def.Number})"   // use parens to avoid ambiguity
-            else
-                $"{def.Number}"
-        | IdentifierExpr def -> def.Name
-        | BoolExpr def -> (string def.Flag).ToLower()
-        | ApplicationExpr def ->
-            let args =
-                def.Arguments
-                    |> Seq.map unparseExpr
-                    |> String.concat ", "
-            $"{def.Identifier.Name}{unparseTypeArgs def.TypeArguments}({args})"
-        | AnnotationExpr def ->
-            $"({unparseExpr def.Expr} : {Type.unparse def.Type})"
-
-module private rec TypeCheck =
-
-    let private intName = "Int"
-    let private boolName = "Bool"
-
-    let typeOfExpr env : Expr<'tag> -> Result<Type<'tag>, _> = function
-        | LetExpr def -> typeOfLet env def
-        | Prim1Expr def -> typeOfPrim1 env def
-        | Prim2Expr def -> Ok (TypeBlank def.Tag)
-        | IfExpr def -> Ok (TypeBlank def.Tag)
-        | NumberExpr def ->
-            Ok (TypeConstant { Name = intName; Tag = def.Tag })
-        | IdentifierExpr def -> Ok (TypeBlank def.Tag)
-        | BoolExpr def ->
-            Ok (TypeConstant { Name = boolName; Tag = def.Tag })
-        | ApplicationExpr def -> Ok (TypeBlank def.Tag)
-        | AnnotationExpr def -> Ok (TypeBlank def.Tag)
-
-    let private typeOfLet env (def : LetDef<_>) =
-        typeOfExpr env def.Expr
-
-    let private typeOfPrim1 env def =
-
-        let check expected =
-            result {
-                let! actual = typeOfExpr env def.Expr
-                match actual with
-                    | TypeConstant ident
-                        when ident.Name = expected ->
-                            return actual
-                    | _ ->
-                        return! Error $"Expected: {expected}, Actual: {Type.unparse actual}"
-            }
-
-        match def.Operator with
-            | Add1 | Sub1 -> check intName
-            | Not -> check boolName
-            | Print
-            | IsBool
-            | IsNum -> typeOfExpr env def.Expr
-
 module Expr =
 
     let rec untag = function
@@ -294,6 +186,112 @@ module Expr =
                 Type = Type.untag def.Type
                 Tag = ()
             }
+
+    module private rec Unparse =
+
+        let private unparseTypeArgs typeArgs =
+            if typeArgs |> List.isEmpty then ""
+            else
+                let str =
+                    typeArgs
+                        |> List.map Type.unparse
+                        |> String.concat ", "
+                $"<{str}>"
+
+        let private unparseBinding (binding : Binding<_>) =
+            let ident = binding.Identifier.Name
+            let expr = unparseExpr binding.Expr
+            let typ =
+                match binding.Type with
+                    | TypeBlank _ -> ""
+                    | t -> $" : {Type.unparse t}"
+            $"{ident}{typ} = {expr}"
+
+        let unparseExpr = function
+            | LetExpr def ->
+                let bindings =
+                    def.Bindings
+                        |> Seq.map unparseBinding
+                        |> String.concat ", "
+                $"(let {bindings} in {unparseExpr def.Expr})"
+            | Prim1Expr def ->
+                let op = function
+                    | Not -> "!"
+                    | prim1 -> (string prim1).ToLower()
+                $"{op def.Operator}{unparseTypeArgs def.TypeArguments}({unparseExpr def.Expr})"
+            | Prim2Expr def ->
+                let op = function
+                    | Plus -> "+"
+                    | Minus -> "-"
+                    | Times -> "*"
+                    | And -> "&&"
+                    | Or -> "||"
+                    | Greater -> ">"
+                    | GreaterEq -> ">="
+                    | Less -> "<"
+                    | LessEq -> "<="
+                    | Eq -> "=="
+                $"({unparseExpr def.Left} \
+                    {op def.Operator}{unparseTypeArgs def.TypeArguments} \
+                    {unparseExpr def.Right})"
+            | IfExpr def ->
+                $"(if {unparseExpr def.Condition} : \
+                    {unparseExpr def.TrueBranch} \
+                    else: {unparseExpr def.FalseBranch})"
+            | NumberExpr def ->
+                if def.Number < 0 then
+                    $"({def.Number})"   // use parens to avoid ambiguity
+                else
+                    $"{def.Number}"
+            | IdentifierExpr def -> def.Name
+            | BoolExpr def -> (string def.Flag).ToLower()
+            | ApplicationExpr def ->
+                let args =
+                    def.Arguments
+                        |> Seq.map unparseExpr
+                        |> String.concat ", "
+                $"{def.Identifier.Name}{unparseTypeArgs def.TypeArguments}({args})"
+            | AnnotationExpr def ->
+                $"({unparseExpr def.Expr} : {Type.unparse def.Type})"
+
+    module private rec TypeCheck =
+
+        let private typeInt = TypeConstant { Name = "Int"; Tag = () }
+        let private typeBool = TypeConstant { Name = "Bool"; Tag = () }
+
+        let typeOfExpr env = function
+            | LetExpr def -> typeOfLet env def
+            | Prim1Expr def -> typeOfPrim1 env def
+            | Prim2Expr def -> Ok (TypeBlank ())
+            | IfExpr def -> Ok (TypeBlank ())
+            | NumberExpr def -> Ok typeInt
+            | IdentifierExpr def -> Ok (TypeBlank ())
+            | BoolExpr def -> Ok typeBool
+            | ApplicationExpr def -> Ok (TypeBlank ())
+            | AnnotationExpr def -> Ok (TypeBlank ())
+
+        let private typeOfLet env (def : LetDef<_>) =
+            typeOfExpr env def.Expr
+
+        let private typeOfPrim1 env def =
+
+            let check expected =
+                result {
+                    let! actual = typeOfExpr env def.Expr
+                    if actual = expected then
+                        return actual
+                    else
+                        return! Error
+                            $"Expected: {Type.unparse expected}, \
+                            Actual: {Type.unparse actual}"
+                }
+
+            match def.Operator with
+                | Add1 | Sub1 -> check typeInt
+                | Not -> check typeBool
+                | Print
+                | IsBool
+                | IsNum -> typeOfExpr env def.Expr
 
     let unparse = Unparse.unparseExpr
 

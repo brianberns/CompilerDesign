@@ -56,6 +56,6 @@ type TaipanTests() =
         match parsed with
             | Ok program ->
                 let actual = Expr.typeOf () program.Main
-                let expected = Error "moo"
+                let expected = Error "Expected: Int, Actual: Bool"
                 Assert.AreEqual(expected, actual)
             | _ -> Assert.Fail()
