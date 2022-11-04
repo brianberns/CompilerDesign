@@ -256,17 +256,14 @@ module Expr =
 
     module private rec TypeCheck =
 
-        let private typeInt = TypeConstant { Name = "Int"; Tag = () }
-        let private typeBool = TypeConstant { Name = "Bool"; Tag = () }
-
         let typeOfExpr env = function
             | LetExpr def -> typeOfLet env def
             | Prim1Expr def -> typeOfPrim1 env def
             | Prim2Expr def -> Ok (TypeBlank ())
             | IfExpr def -> Ok (TypeBlank ())
-            | NumberExpr def -> Ok typeInt
+            | NumberExpr def -> Ok Type.int
             | IdentifierExpr def -> Ok (TypeBlank ())
-            | BoolExpr def -> Ok typeBool
+            | BoolExpr def -> Ok Type.bool
             | ApplicationExpr def -> Ok (TypeBlank ())
             | AnnotationExpr def -> Ok (TypeBlank ())
 
@@ -274,24 +271,60 @@ module Expr =
             typeOfExpr env def.Expr
 
         let private typeOfPrim1 env def =
+            result {
+                let! actual = typeOfExpr env def.Expr
+                if actual = Type.blank then
+                    return! Error "Untyped expression"
+                else
 
-            let check expected =
-                result {
-                    let! actual = typeOfExpr env def.Expr
-                    if actual = expected then
-                        return actual
-                    else
-                        return! Error
-                            $"Expected: {Type.unparse expected}, \
-                            Actual: {Type.unparse actual}"
-                }
+                    let check expected =
+                        result {
+                            if actual = expected then
+                                return actual
+                            else
+                                return! Error
+                                    $"Expected: {Type.unparse expected}, \
+                                    Actual: {Type.unparse actual}"
+                        }
 
-            match def.Operator with
-                | Add1 | Sub1 -> check typeInt
-                | Not -> check typeBool
-                | Print
-                | IsBool
-                | IsNum -> typeOfExpr env def.Expr
+                    match def.Operator with
+                        | Add1 | Sub1 -> return! check Type.int
+                        | Not -> return! check Type.bool
+                        | Print | IsBool | IsNum -> return actual
+            }
+
+        let private typeOfPrim2 env (def : Prim2Def<_>) =
+            result {
+                let! typeLeft = typeOfExpr env def.Left
+                let! typeRight = typeOfExpr env def.Right
+                if typeLeft = Type.blank || typeRight = Type.blank then
+                    return! Error "Untyped expression"
+
+                else
+
+                    let check expected =
+                        result {
+                            if typeLeft = expected && typeRight = expected then
+                                return expected
+                            else
+                                return! Error
+                                    $"Expected: {Type.unparse expected}, \
+                                    Actual: {Type.unparse typeLeft} and \
+                                    {Type.unparse typeRight}"
+                        }
+
+                    match def.Operator with
+                        | Plus | Minus | Times
+                        | Greater | GreaterEq
+                        | Less | LessEq -> return! check Type.int
+                        | And | Or -> return! check Type.bool
+                        | Eq ->
+                            if typeLeft = typeRight then
+                                return typeLeft
+                            else
+                                return! Error $"{Type.unparse typeLeft} \
+                                    does not match {Type.unparse typeRight}"
+            }
 
     let unparse = Unparse.unparseExpr
 

@@ -50,12 +50,20 @@ type TaipanTests() =
         Assert.AreEqual<_>(Ok "True", run text)
 
     [<TestMethod>]
-    member _.TypeCheck() =
-        let text = "add1(true)"
-        let parsed = Parser.parse text
-        match parsed with
-            | Ok program ->
-                let actual = Expr.typeOf () program.Main
-                let expected = Error "Expected: Int, Actual: Bool"
-                Assert.AreEqual(expected, actual)
-            | _ -> Assert.Fail()
+    member _.TypeCheckExpr() =
+
+        let pairs =
+            [
+                "add1(0)", Ok Type.int
+                "add1(true)", Error "Expected: Int, Actual: Bool"
+                "3 + 4", Ok Type.int
+                "3 + a", Error "Untyped expression"
+            ]
+
+        for text, expected in pairs do
+            let parsed = Parser.parse text
+            match parsed with
+                | Ok program ->
+                    let actual = Expr.typeOf () program.Main
+                    Assert.AreEqual(expected, actual)
+                | _ -> Assert.Fail()
