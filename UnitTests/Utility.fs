@@ -33,4 +33,4 @@ module Process =
                     .ReadToEnd()
                     .Replace("\r", "")
             }
-        with exn -> error exn.Message
+        with exn -> Error exn.Message

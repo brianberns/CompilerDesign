@@ -46,8 +46,7 @@ module Compiler =
             else
                 return! emitResult.Diagnostics
                     |> Seq.map string
-                    |> Seq.toArray
-                    |> Error
+                    |> CompilerResult.ofErrors
         }
 
     /// Helper function corresponding to compile_prog in Lecture 3.

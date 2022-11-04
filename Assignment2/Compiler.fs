@@ -23,7 +23,7 @@ module Compiler =
         | Sym (name, pos) ->
             Ok (Id (name, pos))
 
-        | sexp -> error $"Invalid S-expression: {sexp}"
+        | sexp -> Error $"Invalid S-expression: {sexp}"
 
     and private makePrim op sexp pos =
         result {
@@ -42,7 +42,7 @@ module Compiler =
                         return (name, exp) :: bindings
                     }
                 | [] -> Ok []
-                | sexp :: _ -> error $"Unexpected binding: {sexp}"
+                | sexp :: _ -> Error $"Unexpected binding: {sexp}"
 
         result {
             let! bindings = makeBindings sexps
@@ -61,6 +61,6 @@ module Compiler =
                     do! Compiler.compile_prog assemblyName node
                 }
             | Ok sexps ->
-                error $"Too many S-expressions: ${sexps}"
+                Error $"Too many S-expressions: ${sexps}"
             | Error msg ->
-                error msg
+                Error msg

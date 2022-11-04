@@ -51,7 +51,7 @@ type AdderTests() =
                 (sub1 x))
             """
         Assert.AreEqual<_>(
-            Error [| "Variable already exists: x" |],
+            Error "Variable already exists: x",
             run text)
 
     [<TestMethod>]
@@ -62,5 +62,5 @@ type AdderTests() =
                 (add1 y))
             """
         Assert.AreEqual<_>(
-            Error [| "Unbound identifier: y" |],
+            Error "Unbound identifier: y",
             run text)

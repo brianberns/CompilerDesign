@@ -147,6 +147,6 @@ module Parser =
     let parse text =
         match runParserOnString parseText () "" text with
             | Success (result, _, _) -> Result.Ok result
-            | Failure (msg, _, _) -> CompilerResult.error msg
+            | Failure (msg, _, _) -> Result.Error msg
 
     do parseExprRef.Value <- parseExprImpl

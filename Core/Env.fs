@@ -12,7 +12,7 @@ module Env =
 
     let tryAdd name node (env : env) =
         if Map.containsKey name env then
-            error $"Variable already exists: {name}"
+            Error $"Variable already exists: {name}"
         else
             let env : env = Map.add name node env
             Ok env
@@ -20,4 +20,4 @@ module Env =
     let tryFind name (env : env) =
         match Map.tryFind name env with
             | Some node -> Ok node
-            | None -> error $"Unbound identifier: {name}"
+            | None -> Error $"Unbound identifier: {name}"

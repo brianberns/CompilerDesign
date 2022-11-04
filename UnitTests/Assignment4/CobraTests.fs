@@ -49,7 +49,7 @@ type CobraTests() =
             if true > 0 : print(100) else: print(false)
             """
         match run text with
-            | Error [| msg |] ->
+            | Error msg ->
                 Assert.IsTrue(
                     msg.Contains(
                         "Operator '>' cannot be applied to operands of type 'bool' and 'int'"))

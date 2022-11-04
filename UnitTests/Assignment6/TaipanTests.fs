@@ -71,10 +71,5 @@ type TaipanTests() =
                 | Ok program ->
                     let actual = Expr.typeOf () program.Main
                     Assert.AreEqual(expected, actual)
-                | Error msgs ->
-                    let str =
-                        [
-                            yield text
-                            yield! msgs
-                        ] |> String.concat "\n"
-                    Assert.Fail(str)
+                | Error msg ->
+                    Assert.Fail($"{text}\n{msg}")

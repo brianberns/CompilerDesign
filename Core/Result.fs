@@ -48,10 +48,12 @@ module Result =
 
 /// Standard return type for compiler results. (This is
 /// preferable to throwing exceptions.)
-type CompilerResult<'a> = Result<'a, string[]>
+type CompilerResult<'a> = Result<'a, string>
 
 [<AutoOpen>]
 module CompilerResult =
 
-    let error<'a> msg : CompilerResult<'a> =
-        Error [| msg |]
+    let ofErrors msgs =
+        msgs
+            |> String.concat "\n"
+            |> Error
