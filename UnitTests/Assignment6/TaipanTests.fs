@@ -52,7 +52,7 @@ type TaipanTests() =
         Assert.AreEqual(Ok "True", run text)
 
     [<TestMethod>]
-    member _.TypeCheckExpr() =
+    member _.TypeCheck() =
 
         let pairs =
             [
