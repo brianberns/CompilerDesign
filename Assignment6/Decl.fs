@@ -1,7 +1,5 @@
 ﻿namespace CompilerDesign.Assignment6
 
-open CompilerDesign.Core
-
 type Decl<'tag> =
     {
         /// Name of function begin declared.
@@ -56,32 +54,6 @@ module Decl =
         let body = Expr.unparse decl.Body
         $"def {ident}{tvIdents}({parms}){sOutType}:\n    {body}\n\n"
 
-    let typeCheck env decl =
-        result {
-            let! arrowDef =
-                match decl.Scheme.Type with
-                    | TypeArrow def ->
-                        result {
-                            do! Type.checkMissing def.OutputType
-                            return def
-                        }
-                    | _ -> Error "Invalid decl scheme"
-
-            let env' =
-                (env, decl.Parameters, arrowDef.InputTypes)
-                    |||> List.fold2 (fun acc ident typ ->
-                            acc |> Map.add ident.Name typ)
-            let! bodyType = Expr.typeOf env' decl.Body
-
-            if bodyType <> arrowDef.OutputType then
-                return! Type.mismatch arrowDef.OutputType bodyType
-            else
-                return Map.add
-                    decl.Identifier.Name
-                    decl.Scheme.Type
-                    env
-        }
-
 type Program<'tag> =
     {
         Declarations : List<Decl<'tag>>
@@ -105,12 +77,3 @@ module Program =
                 |> String.concat ""
         let main = Expr.unparse program.Main
         $"{decls}{main}"
-
-    let typeOf program =
-        result {
-            let program' = untag program
-            let! env =
-                (Map.empty, program'.Declarations)
-                    ||> Result.List.foldM Decl.typeCheck
-            return! Expr.typeOf env program'.Main
-        }

@@ -10,6 +10,7 @@
     <Compile Include="Expr.fs" />
     <Compile Include="Decl.fs" />
     <Compile Include="Parser.fs" />
+    <Compile Include="TypeCheck.fs" />
     <Compile Include="Compiler.fs" />
   </ItemGroup>
 
