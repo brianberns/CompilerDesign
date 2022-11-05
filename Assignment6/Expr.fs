@@ -258,13 +258,10 @@ module Expr =
 
         let typeOfExpr env expr =
             result {
-
                 let! typ =
                     match expr with
-
-                        | NumberExpr def -> Ok Type.int
-                        | BoolExpr def -> Ok Type.bool
-
+                        | NumberExpr _ -> Ok Type.int
+                        | BoolExpr _ -> Ok Type.bool
                         | LetExpr def -> typeOfLet env def
                         | Prim1Expr def -> typeOfPrim1 env def
                         | Prim2Expr def -> typeOfPrim2 env def
@@ -272,7 +269,6 @@ module Expr =
                         | IdentifierExpr def -> typeOfIdentifier env def
                         | ApplicationExpr def -> typeOfApplication env def
                         | AnnotationExpr def -> typeOfAnnotation env def
-
                 do! Type.checkMissing typ
                 return typ
             }
@@ -361,7 +357,7 @@ module Expr =
                     | None -> return! Error $"Unbound identifier: {def.Name}"
             }
 
-        let private typeOfApplication env (def : ApplicationDef<_>) =
+        let private typeOfApplication env def =
             result {
                 let! typeArrowDef =
                     match Map.tryFind def.Identifier.Name env with
