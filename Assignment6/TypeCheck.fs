@@ -16,6 +16,9 @@ module TypeCheck =
             $"Expected: {Type.unparse expected}, \
             Actual: {Type.unparse actual}"
 
+    let private unbound ident =
+        Error $"Unbound identifier: {ident.Name}"
+
     module private rec Expr =
 
         let typeOf (env : Environment) expr =
@@ -116,7 +119,7 @@ module TypeCheck =
             result {
                 match Map.tryFind def.Name env with
                     | Some typ -> return typ
-                    | None -> return! Error $"Unbound identifier: {def.Name}"
+                    | None -> return! unbound def
             }
 
         let private typeOfApplication env def =
@@ -125,7 +128,7 @@ module TypeCheck =
                     match Map.tryFind def.Identifier.Name env with
                         | Some (TypeArrow def) -> Ok def
                         | Some _ -> Error $"Not a function: {def.Identifier.Name}"
-                        | None -> Error $"Unbound identifier: {def.Identifier.Name}"
+                        | None -> unbound def.Identifier
                 if typeArrowDef.InputTypes.Length = def.Arguments.Length then
                     let! argTypes =
                         def.Arguments
