@@ -56,7 +56,7 @@ module Decl =
         let body = Expr.unparse decl.Body
         $"def {ident}{tvIdents}({parms}){sOutType}:\n    {body}\n\n"
 
-    let typeCheck env (decl : Decl<_>) =
+    let typeCheck env decl =
         result {
             let! arrowDef =
                 match decl.Scheme.Type with
