@@ -75,22 +75,3 @@ module Type =
         Error
             $"Expected: {unparse expected}, \
             Actual: {unparse actual}"
-
-/// E.g. const has scheme: ∀ab.a → b → a
-type Scheme<'tag> =
-    {
-        Identifiers : List<IdentifierDef<'tag>>
-        Type : Type<'tag>
-        Tag : 'tag
-    }
-
-module Scheme =
-
-    let untag scheme =
-        {
-            Identifiers =
-                scheme.Identifiers
-                    |> List.map IdentifierDef.untag
-            Type = Type.untag scheme.Type
-            Tag = ()
-        }
