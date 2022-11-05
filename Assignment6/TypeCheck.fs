@@ -4,7 +4,7 @@ open CompilerDesign.Core
 
 module TypeCheck =
 
-    type Environment = Map<string, Type<unit>>
+    type Environment = Map<IdentifierDef<unit>, Type<unit>>
 
     let private checkMissing typ =
         if typ = TypeBlank () then
@@ -48,7 +48,7 @@ module TypeCheck =
                                 let! typeExpr = typeOf acc binding.Expr
                                 if binding.Type = typeExpr then
                                     return Map.add
-                                        binding.Identifier.Name
+                                        binding.Identifier
                                         typeExpr
                                         acc
                                 else
@@ -117,7 +117,7 @@ module TypeCheck =
 
         let private typeOfIdentifier env def =
             result {
-                match Map.tryFind def.Name env with
+                match Map.tryFind def env with
                     | Some typ -> return typ
                     | None -> return! unbound def
             }
@@ -125,7 +125,7 @@ module TypeCheck =
         let private typeOfApplication env def =
             result {
                 let! typeArrowDef =
-                    match Map.tryFind def.Identifier.Name env with
+                    match Map.tryFind def.Identifier env with
                         | Some (TypeArrow def) -> Ok def
                         | Some _ -> Error $"Not a function: {def.Identifier.Name}"
                         | None -> unbound def.Identifier
@@ -172,14 +172,14 @@ module TypeCheck =
                 let env' =
                     (env, decl.Parameters, arrowDef.InputTypes)
                         |||> List.fold2 (fun acc ident typ ->
-                                acc |> Map.add ident.Name typ)
+                                acc |> Map.add ident typ)
                 let! bodyType = Expr.typeOf env' decl.Body
 
                 if bodyType <> arrowDef.OutputType then
                     return! Type.mismatch arrowDef.OutputType bodyType
                 else
                     return (Map.add
-                        decl.Identifier.Name
+                        decl.Identifier
                         decl.Scheme.Type
                         env : Environment)
             }
