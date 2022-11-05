@@ -4,6 +4,8 @@ open CompilerDesign.Core
 
 module TypeCheck =
 
+    type Environment = Map<string, Type<unit>>
+
     let checkMissing typ =
         if typ = TypeBlank () then
             Error "Missing type"
@@ -16,7 +18,7 @@ module TypeCheck =
 
     module private rec Expr =
 
-        let typeOf env expr =
+        let typeOf (env : Environment) expr =
             result {
                 let! typ =
                     match expr with
@@ -153,7 +155,7 @@ module TypeCheck =
 
     module private Decl =
 
-        let typeCheck env decl =
+        let typeCheck (env : Environment) decl =
             result {
                 let! arrowDef =
                     match decl.Scheme.Type with
@@ -173,10 +175,10 @@ module TypeCheck =
                 if bodyType <> arrowDef.OutputType then
                     return! Type.mismatch arrowDef.OutputType bodyType
                 else
-                    return Map.add
+                    return (Map.add
                         decl.Identifier.Name
                         decl.Scheme.Type
-                        env
+                        env : Environment)
             }
 
     let typeOf program =
