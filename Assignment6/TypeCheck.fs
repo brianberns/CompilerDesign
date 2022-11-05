@@ -6,12 +6,12 @@ module TypeCheck =
 
     type Environment = Map<string, Type<unit>>
 
-    let checkMissing typ =
+    let private checkMissing typ =
         if typ = TypeBlank () then
             Error "Missing type"
         else Ok ()
 
-    let mismatch expected actual =
+    let private mismatch expected actual =
         Error
             $"Expected: {Type.unparse expected}, \
             Actual: {Type.unparse actual}"
