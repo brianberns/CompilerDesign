@@ -27,6 +27,15 @@ module TypeInfer =
                 ||> List.fold (fun acc (fromIdent, toType) ->
                     substitute fromIdent toType acc)
 
+        let rec freeTypeVars = function
+            | TypeVariable ident -> Set.singleton ident
+            | TypeArrow def ->
+                List.fold (fun ftvs typ ->
+                    Set.union (freeTypeVars typ) ftvs)
+                    (freeTypeVars def.OutputType)
+                    def.InputTypes
+            | _ -> Set.empty
+
     module private Scheme =
 
         let substitute fromIdent toType scheme =
@@ -45,6 +54,11 @@ module TypeInfer =
             (scheme, subst)
                 ||> List.fold (fun acc (fromIdent, toType) ->
                     substitute fromIdent toType acc)
+
+        let rec freeTypeVars scheme =
+            Set.difference
+                (Type.freeTypeVars scheme.Type)
+                (set scheme.Identifiers)
 
     type private Substitution =
         List<IdentifierDef<unit> * Type<unit>>
