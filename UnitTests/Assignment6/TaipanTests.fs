@@ -122,6 +122,19 @@ type TaipanTests() =
                     Tag = ()
                 },
                 Error "Could not unify"
+
+                    // can't unify 'A -> 'A with Int -> Bool
+                TypeArrow {
+                    InputTypes = [TypeVariable { Name = "A"; Tag = () }]
+                    OutputType = TypeVariable { Name = "A"; Tag = () }
+                    Tag = ()
+                },
+                TypeArrow {
+                    InputTypes = [Type.int]
+                    OutputType = Type.bool
+                    Tag = ()
+                },
+                Error "Could not unify"
             ]
         for (typ1, typ2, expected) in tuples do
             let actual = TypeInfer.unify typ1 typ2
