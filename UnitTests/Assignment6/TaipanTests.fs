@@ -81,3 +81,26 @@ type TaipanTests() =
                     Assert.AreEqual(expected, actual, text)
                 | Error msg ->
                     Assert.Fail($"{text}\n{msg}")
+
+    [<TestMethod>]
+    member _.Unify() =
+        let tuples =
+            [
+                TypeArrow {
+                    InputTypes = [TypeVariable { Name = "X"; Tag = () }]
+                    OutputType = Type.int
+                    Tag = ()
+                },
+                TypeArrow {
+                    InputTypes = [Type.bool]
+                    OutputType = TypeVariable { Name = "Y"; Tag = () }
+                    Tag = ()
+                },
+                Ok [
+                    { Name = "X"; Tag = () }, TypeConstant { Name = "Bool"; Tag = () }
+                    { Name = "Y"; Tag = () }, TypeConstant { Name = "Int"; Tag = () }
+                ]
+            ]
+        for (typ1, typ2, expected) in tuples do
+            let actual = TypeInfer.unify typ1 typ2
+            Assert.AreEqual(expected, actual)

@@ -124,14 +124,13 @@ module TypeInfer =
 
                     | TypeArrow def1, TypeArrow def2
                         when def1.InputTypes.Length = def2.InputTypes.Length ->
-                        let pairs = List.zip def1.InputTypes def2.InputTypes
-                        let! subst =
-                            (Substitution.empty, pairs)
-                                ||> Result.List.foldM (fun acc (inpTyp1, inpTyp2) ->
-                                    result {
-                                        return acc
-                                    })
-                        return subst
+                        let! substs =
+                            let types1 = def1.InputTypes @ [def1.OutputType]
+                            let types2 = def2.InputTypes @ [def2.OutputType]
+                            (types1, types2)
+                                ||> List.map2 loop
+                                |> Result.List.sequence
+                        return List.reduce Substitution.compose substs
                     | _ ->
                         return! Error "Could not unify"
             }
