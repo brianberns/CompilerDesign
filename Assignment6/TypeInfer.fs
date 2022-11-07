@@ -129,13 +129,19 @@ module TypeInfer =
 
                     | TypeArrow def1, TypeArrow def2
                         when def1.InputTypes.Length = def2.InputTypes.Length ->
-                        let! substs =
+                        let pairs =
                             let types1 = def1.InputTypes @ [def1.OutputType]
                             let types2 = def2.InputTypes @ [def2.OutputType]
-                            (types1, types2)
-                                ||> List.map2 loop
-                                |> Result.List.sequence
-                        return List.reduce Substitution.compose substs
+                            List.zip types1 types2
+                        return! (Substitution.empty, pairs)
+                            ||> Result.List.foldM (fun subst (t1, t2) ->
+                                result {
+                                    let! subst' =
+                                        loop
+                                            (Type.apply subst t1)
+                                            (Type.apply subst t2)
+                                    return Substitution.compose subst subst'
+                                })
 
                     | _ -> return! err
             }
