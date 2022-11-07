@@ -4,7 +4,7 @@ open CompilerDesign.Core
 
 module TypeInfer =
 
-    module private Type =
+    module Type =
 
         let substitute fromIdent toType inType =
 
@@ -36,7 +36,7 @@ module TypeInfer =
                     def.InputTypes
             | _ -> Set.empty
 
-    module private Scheme =
+    module Scheme =
 
         let substitute fromIdent toType scheme =
             if List.contains fromIdent scheme.Identifiers then
@@ -60,7 +60,7 @@ module TypeInfer =
                 (Type.freeTypeVars scheme.Type)
                 (set scheme.Identifiers)
 
-    type private Substitution<'tag> =
+    type Substitution<'tag> =
         List<IdentifierDef<'tag> * Type<'tag>>
 
     module Substitution =

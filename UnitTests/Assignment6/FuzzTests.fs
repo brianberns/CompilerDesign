@@ -120,3 +120,16 @@ type FuzzTests() =
             reparsed = Ok program |@ msg
 
         Check.One(config, parseUnparseIsOriginal)
+
+    [<TestMethod>]
+    member _.Unify() =
+
+        let apply (typ1 : Type<unit>) (typ2 : Type<unit>) =
+            match TypeInfer.unify typ1 typ2 with
+                | Ok subst ->
+                    let typ1' = TypeInfer.Type.apply subst typ1
+                    let typ2' = TypeInfer.Type.apply subst typ2
+                    typ1' = typ2' |@ sprintf "\n%A" subst
+                | _ -> true |@ ""
+
+        Check.One(config, apply)
