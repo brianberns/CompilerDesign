@@ -120,6 +120,13 @@ type Arbitraries =
     static member Type() = Type.arb
     static member Decl() = Decl.arb
 
+module Substitution =
+
+    let toStrings (subst : TypeInfer.Substitution<_>) =
+        subst
+            |> List.map (fun (ident, typ) ->
+                $"{ident.Name} : {Type.unparse typ}")
+
 [<TestClass>]
 type FuzzTests() =
 
@@ -134,7 +141,13 @@ type FuzzTests() =
             | Ok subst ->
                 let typ1' = TypeInfer.Type.apply subst typ1
                 let typ2' = TypeInfer.Type.apply subst typ2
-                typ1' = typ2' |@ sprintf "\n%s\n%s" (Type.unparse typ1) (Type.unparse typ2)
+                let msg =
+                    sprintf "\n%s\n%s\n%s"
+                        (Type.unparse typ1)
+                        (Type.unparse typ2)
+                        (Substitution.toStrings subst
+                            |> String.concat "\n")
+                typ1' = typ2' |@ msg
             | _ -> true |@ ""
 
     [<TestMethod>]
