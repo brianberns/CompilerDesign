@@ -86,6 +86,7 @@ type TaipanTests() =
     member _.Unify() =
         let tuples =
             [
+                    // unify 'X -> Int and Bool -> 'Y under the substitution ['X = Bool, 'Y = Int]
                 TypeArrow {
                     InputTypes = [TypeVariable { Name = "X"; Tag = () }]
                     OutputType = Type.int
@@ -100,6 +101,27 @@ type TaipanTests() =
                     { Name = "X"; Tag = () }, TypeConstant { Name = "Bool"; Tag = () }
                     { Name = "Y"; Tag = () }, TypeConstant { Name = "Int"; Tag = () }
                 ]
+                    // no substitution that can unify Int -> 'X with Bool -> 'Y
+                TypeArrow {
+                    InputTypes = [Type.int]
+                    OutputType = TypeVariable { Name = "X"; Tag = () }
+                    Tag = ()
+                },
+                TypeArrow {
+                    InputTypes = [Type.bool]
+                    OutputType = TypeVariable { Name = "Y"; Tag = () }
+                    Tag = ()
+                },
+                Error "Could not unify"
+
+                    // cannot unify 'A with 'A -> 'B, because we would get the absurd substitution ['A = 'A -> 'B]
+                TypeVariable { Name = "A"; Tag = () },
+                TypeArrow {
+                    InputTypes = [TypeVariable { Name = "A"; Tag = () }]
+                    OutputType = TypeVariable { Name = "B"; Tag = () }
+                    Tag = ()
+                },
+                Error "Could not unify"
             ]
         for (typ1, typ2, expected) in tuples do
             let actual = TypeInfer.unify typ1 typ2
