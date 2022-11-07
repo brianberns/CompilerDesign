@@ -125,7 +125,7 @@ module Substitution =
     let toStrings (subst : TypeInfer.Substitution<_>) =
         subst
             |> List.map (fun (ident, typ) ->
-                $"{ident.Name} : {Type.unparse typ}")
+                $"'{ident.Name} : {Type.unparse typ}")
 
 [<TestClass>]
 type FuzzTests() =
@@ -174,6 +174,6 @@ type FuzzTests() =
         let unifyArrows (arrow1 : TypeArrowDef<unit>) (arrow2 : TypeArrowDef<unit>) =
             unify (TypeArrow arrow1) (TypeArrow arrow2)
 
-        let config = { config with MaxTest = 10000 }
+        let config = { config with MaxTest = 100000 }
         Check.One(config, unifyArrows)
             
