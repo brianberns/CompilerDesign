@@ -122,7 +122,7 @@ type Arbitraries =
 
 module Substitution =
 
-    let toStrings (subst : TypeInfer.Substitution<_>) =
+    let toStrings (subst : Substitution<_>) =
         subst
             |> List.map (fun (ident, typ) ->
                 $"'{ident.Name} : {Type.unparse typ}")
@@ -137,10 +137,10 @@ type FuzzTests() =
             Replay = Some (Random.StdGen (0, 0)) }
 
     let unify (typ1 : Type<unit>) (typ2 : Type<unit>) =
-        match TypeInfer.unify typ1 typ2 with
+        match Substitution.unify typ1 typ2 with
             | Ok subst ->
-                let typ1' = TypeInfer.Type.apply subst typ1
-                let typ2' = TypeInfer.Type.apply subst typ2
+                let typ1' = Substitution.Type.apply subst typ1
+                let typ2' = Substitution.Type.apply subst typ2
                 let msg =
                     sprintf "\nType 1: %s\nType 2: %s\nSubstitution:\n%s"
                         (Type.unparse typ1)

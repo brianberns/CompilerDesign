@@ -137,5 +137,5 @@ type TaipanTests() =
                 Error "Could not unify"
             ]
         for (typ1, typ2, expected) in tuples do
-            let actual = TypeInfer.unify typ1 typ2
+            let actual = Substitution.unify typ1 typ2
             Assert.AreEqual(expected, actual)

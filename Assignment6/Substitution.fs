@@ -2,7 +2,10 @@
 
 open CompilerDesign.Core
 
-module TypeInfer =
+type Substitution<'tag> =
+    List<IdentifierDef<'tag> * Type<'tag>>
+
+module Substitution =
 
     module Type =
 
@@ -60,22 +63,68 @@ module TypeInfer =
                 (Type.freeTypeVars scheme.Type)
                 (set scheme.Identifiers)
 
-    type Substitution<'tag> =
-        List<IdentifierDef<'tag> * Type<'tag>>
+    let empty : Substitution<_> = List.empty
 
-    module Substitution =
+    let apply (subst : Substitution<_>) (inSubst : Substitution<_>) =
+        (inSubst, subst)
+            ||> List.fold (fun acc (fromIdent, toType) ->
+                List.map (fun (ident, typ) ->
+                    let typ' = Type.substitute fromIdent toType typ
+                    ident, typ') acc)
 
-        let empty : Substitution<_> = List.empty
+    let compose subst1 subst2 =
+        subst1 @ apply subst1 subst2
 
-        let apply (subst : Substitution<_>) (inSubst : Substitution<_>) =
-            (inSubst, subst)
-                ||> List.fold (fun acc (fromIdent, toType) ->
-                    List.map (fun (ident, typ) ->
-                        let typ' = Type.substitute fromIdent toType typ
-                        ident, typ') acc)
+    let private occurs ident typ =
+        typ
+            |> Type.freeTypeVars
+            |> Set.contains ident
 
-        let compose subst1 subst2 =
-            subst1 @ apply subst1 subst2
+    let unify type1 type2 =
+
+        let err = Error "Could not unify"
+
+        let rec loop type1 type2 =
+            result {
+                match type1, type2 with
+
+                    | TypeBlank (), _
+                    | _, TypeBlank () -> return! err
+
+                    | TypeConstant ident1, TypeConstant ident2
+                        when ident1 = ident2 ->
+                        return empty
+
+                    | TypeVariable ident, _
+                        when type2 |> occurs ident |> not ->
+                        return [ ident, type2 ]
+
+                    | _, TypeVariable ident
+                        when type1 |> occurs ident |> not ->
+                        return [ ident, type1 ]
+
+                    | TypeArrow def1, TypeArrow def2
+                        when def1.InputTypes.Length = def2.InputTypes.Length ->
+                        let pairs =
+                            let types1 = def1.InputTypes @ [def1.OutputType]
+                            let types2 = def2.InputTypes @ [def2.OutputType]
+                            List.zip types1 types2
+                        return! (empty, pairs)
+                            ||> Result.List.foldM (fun subst (t1, t2) ->
+                                result {
+                                    let! subst' =
+                                        loop
+                                            (Type.apply subst t1)
+                                            (Type.apply subst t2)
+                                    return compose subst subst'
+                                })
+
+                    | _ -> return! err
+            }
+
+        loop
+            (Type.untag type1)
+            (Type.untag type2)
 
     type private TypeEnvironment =
         Map<IdentifierDef<unit>, Type<unit>>
@@ -98,54 +147,3 @@ module TypeInfer =
                 ||> List.fold (fun acc (fromIdent, toType) ->
                     Map.map (fun _ typ ->
                         Scheme.substitute fromIdent toType typ) acc)
-
-    let private occurs ident typ =
-        typ
-            |> Type.freeTypeVars
-            |> Set.contains ident
-
-    let unify type1 type2 =
-
-        let err = Error "Could not unify"
-
-        let rec loop type1 type2 =
-            result {
-                match type1, type2 with
-
-                    | TypeBlank (), _
-                    | _, TypeBlank () -> return! err
-
-                    | TypeConstant ident1, TypeConstant ident2
-                        when ident1 = ident2 ->
-                        return Substitution.empty
-
-                    | TypeVariable ident, _
-                        when type2 |> occurs ident |> not ->
-                        return [ ident, type2 ]
-
-                    | _, TypeVariable ident
-                        when type1 |> occurs ident |> not ->
-                        return [ ident, type1 ]
-
-                    | TypeArrow def1, TypeArrow def2
-                        when def1.InputTypes.Length = def2.InputTypes.Length ->
-                        let pairs =
-                            let types1 = def1.InputTypes @ [def1.OutputType]
-                            let types2 = def2.InputTypes @ [def2.OutputType]
-                            List.zip types1 types2
-                        return! (Substitution.empty, pairs)
-                            ||> Result.List.foldM (fun subst (t1, t2) ->
-                                result {
-                                    let! subst' =
-                                        loop
-                                            (Type.apply subst t1)
-                                            (Type.apply subst t2)
-                                    return Substitution.compose subst subst'
-                                })
-
-                    | _ -> return! err
-            }
-
-        loop
-            (Type.untag type1)
-            (Type.untag type2)
