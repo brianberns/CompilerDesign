@@ -135,6 +135,22 @@ type TaipanTests() =
                     Tag = ()
                 },
                 Error "Could not unify"
+
+                    // unify 'A -> 'A with Int -> 'B
+                TypeArrow {
+                    InputTypes = [TypeVariable { Name = "A"; Tag = () }]
+                    OutputType = TypeVariable { Name = "A"; Tag = () }
+                    Tag = ()
+                },
+                TypeArrow {
+                    InputTypes = [Type.int]
+                    OutputType = TypeVariable { Name = "B"; Tag = () }
+                    Tag = ()
+                },
+                Ok [
+                    { Name = "A"; Tag = () }, TypeConstant { Name = "Int"; Tag = () }
+                    { Name = "B"; Tag = () }, TypeConstant { Name = "Int"; Tag = () }
+                ]
             ]
         for (typ1, typ2, expected) in tuples do
             let actual = Substitution.unify typ1 typ2
