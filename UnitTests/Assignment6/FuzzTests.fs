@@ -142,7 +142,7 @@ type FuzzTests() =
                 let typ1' = TypeInfer.Type.apply subst typ1
                 let typ2' = TypeInfer.Type.apply subst typ2
                 let msg =
-                    sprintf "\n%s\n%s\n%s"
+                    sprintf "\nType 1: %s\nType 2: %s\nSubstitution:\n%s"
                         (Type.unparse typ1)
                         (Type.unparse typ2)
                         (Substitution.toStrings subst

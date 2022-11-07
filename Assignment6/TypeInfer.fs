@@ -106,9 +106,14 @@ module TypeInfer =
 
     let unify type1 type2 =
 
+        let err = Error "Could not unify"
+
         let rec loop type1 type2 =
             result {
                 match type1, type2 with
+
+                    | TypeBlank (), _
+                    | _, TypeBlank () -> return! err
 
                     | TypeConstant ident1, TypeConstant ident2
                         when ident1 = ident2 ->
@@ -131,8 +136,8 @@ module TypeInfer =
                                 ||> List.map2 loop
                                 |> Result.List.sequence
                         return List.reduce Substitution.compose substs
-                    | _ ->
-                        return! Error "Could not unify"
+
+                    | _ -> return! err
             }
 
         loop
