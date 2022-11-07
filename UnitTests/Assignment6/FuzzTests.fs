@@ -59,6 +59,26 @@ module TypeArrowDef =
             }
         } |> Arb.fromGen
 
+module Type =
+
+    let arb =
+        gen {
+            match! Gen.choose (1, 4) with
+                | 1 -> return TypeBlank ()
+                | 2 ->
+                    return! Gen.elements [
+                        Type.int
+                        Type.bool
+                    ]
+                | 3 ->
+                    let! ident = Generator.from<IdentifierDef<_>>
+                    return TypeVariable ident
+                | 4 ->
+                    let! def = Generator.from<TypeArrowDef<_>>
+                    return TypeArrow def
+                | _ -> return failwith "Unexpected"
+        } |> Arb.fromGen
+
 module Decl =
 
     let arb =
@@ -97,6 +117,7 @@ type Arbitraries =
     static member NumberDef() = NumberDef.arb
     static member IdentifierDef() = IdentifierDef.arb
     static member TypeArrowDef() = TypeArrowDef.arb
+    static member Type() = Type.arb
     static member Decl() = Decl.arb
 
 [<TestClass>]
@@ -107,6 +128,14 @@ type FuzzTests() =
             Arbitrary = [ typeof<Arbitraries> ]
             MaxTest = 1000
             Replay = Some (Random.StdGen (0, 0)) }
+
+    let unify (typ1 : Type<unit>) (typ2 : Type<unit>) =
+        match TypeInfer.unify typ1 typ2 with
+            | Ok subst ->
+                let typ1' = TypeInfer.Type.apply subst typ1
+                let typ2' = TypeInfer.Type.apply subst typ2
+                typ1' = typ2' |@ sprintf "\n%s\n%s" (Type.unparse typ1) (Type.unparse typ2)
+            | _ -> true |@ ""
 
     [<TestMethod>]
     member _.ParseUnparseIsOriginal() =
@@ -122,14 +151,16 @@ type FuzzTests() =
         Check.One(config, parseUnparseIsOriginal)
 
     [<TestMethod>]
-    member _.Unify() =
+    member _.UnifyTypes() =
+        let config = { config with MaxTest = 10000 }
+        Check.One(config, unify)
 
-        let apply (typ1 : Type<unit>) (typ2 : Type<unit>) =
-            match TypeInfer.unify typ1 typ2 with
-                | Ok subst ->
-                    let typ1' = TypeInfer.Type.apply subst typ1
-                    let typ2' = TypeInfer.Type.apply subst typ2
-                    typ1' = typ2' |@ sprintf "\n%A" subst
-                | _ -> true |@ ""
+    [<TestMethod>]
+    member _.UnifyTypeArrows() =
 
-        Check.One(config, apply)
+        let unifyArrows (arrow1 : TypeArrowDef<unit>) (arrow2 : TypeArrowDef<unit>) =
+            unify (TypeArrow arrow1) (TypeArrow arrow2)
+
+        let config = { config with MaxTest = 10000 }
+        Check.One(config, unifyArrows)
+            
