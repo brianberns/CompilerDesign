@@ -120,13 +120,6 @@ type Arbitraries =
     static member Type() = Type.arb
     static member Decl() = Decl.arb
 
-module Substitution =
-
-    let toStrings (subst : Substitution<_>) =
-        subst
-            |> List.map (fun (ident, typ) ->
-                $"'{ident.Name} : {Type.unparse typ}")
-
 [<TestClass>]
 type FuzzTests() =
 
@@ -142,11 +135,15 @@ type FuzzTests() =
                 let typ1' = Substitution.Type.apply subst typ1
                 let typ2' = Substitution.Type.apply subst typ2
                 let msg =
+                    let subs =
+                        subst
+                            |> Seq.map (fun (ident, typ) ->
+                                $"'{ident.Name} : {Type.unparse typ}")
+                            |> String.concat "\n"
                     sprintf "\nType 1: %s\nType 2: %s\nSubstitution:\n%s"
                         (Type.unparse typ1)
                         (Type.unparse typ2)
-                        (Substitution.toStrings subst
-                            |> String.concat "\n")
+                        subs
                 typ1' = typ2' |@ msg
             | _ -> true |@ ""
 
@@ -171,7 +168,7 @@ type FuzzTests() =
     [<TestMethod>]
     member _.UnifyTypeArrows() =
 
-        let unifyArrows (arrow1 : TypeArrowDef<unit>) (arrow2 : TypeArrowDef<unit>) =
+        let unifyArrows arrow1 arrow2 =
             unify (TypeArrow arrow1) (TypeArrow arrow2)
 
         let config = { config with MaxTest = 100000 }
