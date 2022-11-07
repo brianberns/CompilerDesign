@@ -129,22 +129,30 @@ type FuzzTests() =
             MaxTest = 1000
             Replay = Some (Random.StdGen (0, 0)) }
 
+    let toString (subst : Substitution<_>) =
+        subst
+            |> Seq.map (fun (ident, typ) ->
+                $"'{ident.Name} : {Type.unparse typ}")
+            |> String.concat "\n"
+
     let unify (typ1 : Type<unit>) (typ2 : Type<unit>) =
         match Substitution.unify typ1 typ2 with
             | Ok subst ->
-                let typ1' = Substitution.Type.apply subst typ1
-                let typ2' = Substitution.Type.apply subst typ2
-                let msg =
-                    let subs =
-                        subst
-                            |> Seq.map (fun (ident, typ) ->
-                                $"'{ident.Name} : {Type.unparse typ}")
-                            |> String.concat "\n"
-                    sprintf "\nType 1: %s\nType 2: %s\nSubstitution:\n%s"
-                        (Type.unparse typ1)
-                        (Type.unparse typ2)
-                        subs
-                typ1' = typ2' |@ msg
+                let nDistinct =
+                    subst
+                        |> Seq.distinctBy fst
+                        |> Seq.length
+                if nDistinct = Seq.length subst then
+                    let typ1' = Substitution.Type.apply subst typ1
+                    let typ2' = Substitution.Type.apply subst typ2
+                    let msg =
+                        sprintf "\nType 1: %s\nType 2: %s\nSubstitution:\n%s"
+                            (Type.unparse typ1)
+                            (Type.unparse typ2)
+                            (toString subst)
+                    typ1' = typ2' |@ msg
+                else
+                    false |@ toString subst
             | _ -> true |@ ""
 
     [<TestMethod>]
