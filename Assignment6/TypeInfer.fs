@@ -68,11 +68,17 @@ module SchemeEnvironment =
             |> Result.get
             |> Map
 
-    let tryFindPrim1 prim1 (env : SchemeEnvironment) =
+    let tryFind name (env : SchemeEnvironment) =
         env
-            |> Map.tryFind (Prim1.unparse prim1)
+            |> Map.tryFind name
             |> Option.map Result.Ok
-            |> Option.defaultValue (Result.Error "Operator not found")
+            |> Option.defaultValue (Result.Error $"Name not found: {name}")
+
+    let tryFindPrim1 prim1 =
+        tryFind (Prim1.unparse prim1)
+
+    let tryFindPrim2 prim2 =
+        tryFind (Prim2.unparse prim2)
 
 module TypeInfer =
 
@@ -101,9 +107,10 @@ module TypeInfer =
         | BoolExpr _ -> Ok (Substitution.empty, Type.bool)
         | IdentifierExpr ident -> inferIdentifier funenv env ident
         | Prim1Expr def -> inferTypePrim1 funenv env def
+        | Prim2Expr def -> inferTypePrim2 funenv env def
         | _ -> Error "Oops"
 
-    and private inferIdentifier funenv env ident =
+    and private inferIdentifier _funenv env ident =
         result {
             let! typ = TypeEnvironment.tryFind ident env
             return Substitution.empty, typ
@@ -138,6 +145,30 @@ module TypeInfer =
                 // e.g. ['x = Int; 'a_1 = Int; 'out_1 = Int], Int
             let! subst = unify schemeType arrowType
             let subst' = Substitution.compose argSubst subst
+            let outType' = Type.apply subst outType
+            return subst', outType'
+        }
+
+    and private inferTypePrim2 funenv env (def : Prim2Def<_>) =
+        result {
+            let! scheme =
+                SchemeEnvironment.tryFindPrim2 def.Operator funenv
+            let schemeType = Scheme.instantiate scheme
+            let! leftSubst, leftType = inferTypeExpr funenv env def.Left
+            let! rightSubst, rightType = inferTypeExpr funenv env def.Right
+            let argsSubst = Substitution.compose leftSubst rightSubst
+            let outType =
+                generateSymbol "out"
+                    |> IdentifierDef.create
+                    |> TypeVariable
+            let arrowType =
+                TypeArrow {
+                    InputTypes = [leftType; rightType]
+                    OutputType = outType
+                    Tag = ()
+                }
+            let! subst = unify schemeType arrowType
+            let subst' = Substitution.compose argsSubst subst
             let outType' = Type.apply subst outType
             return subst', outType'
         }

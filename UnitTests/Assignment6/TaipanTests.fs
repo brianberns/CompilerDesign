@@ -104,16 +104,16 @@ type TaipanTests() =
                     // no substitution that can unify Int -> 'X with Bool -> 'Y
                 parseType "(Int -> 'X)",
                 parseType "(Bool -> 'Y)",
-                Error "Could not unify"
+                Error "Could not unify Int and Bool"
 
                     // cannot unify 'A with 'A -> 'B, because we would get the absurd substitution ['A = 'A -> 'B]
                 parseType "'A",
                 parseType "('A -> 'B)",
-                Error "Could not unify"
+                Error "Could not unify 'A and ('A -> 'B)"
 
                 parseType "('A -> 'A)",
                 parseType "(Int -> Bool)",
-                Error "Could not unify"
+                Error "Could not unify Int and Bool"
 
                 parseType "('A -> 'A)",
                 parseType "(Int -> 'B)",

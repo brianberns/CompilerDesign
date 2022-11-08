@@ -58,9 +58,9 @@ module Substitution =
 
     let unify type1 type2 =
 
-        let err = Error "Could not unify"
-
         let rec loop type1 type2 =
+            let err =
+                Error $"Could not unify {Type.unparse type1} and {Type.unparse type2}"
             result {
                 match type1, type2 with
 
