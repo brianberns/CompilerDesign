@@ -122,18 +122,19 @@ module TypeInfer =
                     Tag = ()
                 }
 
-                // e.g. ['x = Int; 'a_1 = Int; 'out_1 = Int]
+                // e.g. ['x = Int; 'a_1 = Int; 'out_1 = Int], Int
             let! subst = unify schemeType arrowType
             let subst' = Substitution.compose argSubst subst
-            return subst', outType
+            let outType' = Type.apply subst outType
+            return subst', outType'
         }
 
     let inferType expr =
         result {
-            let! subst, typ =
+            let! _, typ =
                 inferTypeExpr
                     SchemeEnvironment.initial
                     Map.empty
                     expr
-            return Type.apply subst typ
+            return typ
         }
