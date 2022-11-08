@@ -1,4 +1,10 @@
 open CompilerDesign.Assignment6
 
-for (KeyValue(ident, scheme)) in SchemeEnvironment.initial do
-    printfn $"{ident.Name}: {Scheme.unparse scheme}"
+open CompilerDesign.Core
+
+let program =
+    "print(0)"
+        |> Parser.parse
+        |> Result.get
+TypeInfer.inferType program.Main
+    |> printfn "%A"

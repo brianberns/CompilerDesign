@@ -65,13 +65,13 @@ module SchemeEnvironment =
 
 module TypeInfer =
 
-    module Scheme =
+    let private generateSymbol =
+        let mutable count = 0
+        fun (str : string) ->
+            count <- count + 1
+            $"{str}_{count}"
 
-        let private generateSymbol =
-            let mutable count = 0
-            fun (str : string) ->
-                count <- count + 1
-                $"{str}_{count}"
+    module Scheme =
 
         let instantiate scheme =
             let subst =
@@ -87,10 +87,41 @@ module TypeInfer =
 
     let inferType expr =
 
-        let rec loop (funenv : SchemeEnvironment) (env : TypeEnvironment) = function
-            | NumberExpr _ -> Substitution.empty, Type.int
-            | BoolExpr _ -> Substitution.empty, Type.bool
-            | _ -> failwith "Oops"
+        let rec loop (funenv : SchemeEnvironment) (env : TypeEnvironment) expr =
+            result {
+                match expr with
 
-        loop Map.empty Map.empty expr
-            |> snd
+                    | NumberExpr _ ->
+                        return Substitution.empty, Type.int
+
+                    | BoolExpr _ ->
+                        return Substitution.empty, Type.bool
+
+                    | Prim1Expr def ->
+                        let scheme = funenv[Prim1.unparse def.Operator |> IdentifierDef.create]   // to-do: too ugly
+                        let schemeType = Scheme.instantiate scheme
+                        let! argSubst, argType = loop funenv env def.Expr
+                        let retType =
+                            generateSymbol "ret"
+                                |> IdentifierDef.create
+                                |> TypeVariable
+                        let arrowType =
+                            TypeArrow {
+                                InputTypes = [argType]
+                                OutputType = retType
+                                Tag = ()
+                            }
+                        let! subst = unify schemeType arrowType
+                        return subst, retType
+
+                    | _ -> return! Error "Oops"
+            }
+
+        result {
+            let! subst, typ =
+                loop
+                    SchemeEnvironment.initial
+                    Map.empty
+                    expr
+            return Type.apply subst typ
+        }
