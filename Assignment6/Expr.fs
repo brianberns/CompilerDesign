@@ -205,6 +205,22 @@ module Expr =
                     | t -> $" : {Type.unparse t}"
             $"{ident}{typ} = {expr}"
 
+        let unparsePrim1 = function
+            | Not -> "!"
+            | prim1 -> (string prim1).ToLower()
+
+        let unparsePrim2 = function
+            | Plus -> "+"
+            | Minus -> "-"
+            | Times -> "*"
+            | And -> "&&"
+            | Or -> "||"
+            | Greater -> ">"
+            | GreaterEq -> ">="
+            | Less -> "<"
+            | LessEq -> "<="
+            | Eq -> "=="
+
         let unparseExpr = function
             | LetExpr def ->
                 let bindings =
@@ -213,25 +229,16 @@ module Expr =
                         |> String.concat ", "
                 $"(let {bindings} in {unparseExpr def.Expr})"
             | Prim1Expr def ->
-                let op = function
-                    | Not -> "!"
-                    | prim1 -> (string prim1).ToLower()
-                $"{op def.Operator}{unparseTypeArgs def.TypeArguments}({unparseExpr def.Expr})"
+                let op = unparsePrim1 def.Operator
+                let typeArgs = unparseTypeArgs def.TypeArguments
+                let expr = unparseExpr def.Expr
+                $"{op}{typeArgs}({expr})"
             | Prim2Expr def ->
-                let op = function
-                    | Plus -> "+"
-                    | Minus -> "-"
-                    | Times -> "*"
-                    | And -> "&&"
-                    | Or -> "||"
-                    | Greater -> ">"
-                    | GreaterEq -> ">="
-                    | Less -> "<"
-                    | LessEq -> "<="
-                    | Eq -> "=="
-                $"({unparseExpr def.Left} \
-                    {op def.Operator}{unparseTypeArgs def.TypeArguments} \
-                    {unparseExpr def.Right})"
+                let left = unparseExpr def.Left
+                let op = unparsePrim2 def.Operator
+                let typeArgs = unparseTypeArgs def.TypeArguments
+                let right = unparseExpr def.Right
+                $"({left} {op}{typeArgs} {right})"
             | IfExpr def ->
                 $"(if {unparseExpr def.Condition} : \
                     {unparseExpr def.TrueBranch} \
