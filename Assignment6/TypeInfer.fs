@@ -96,24 +96,36 @@ module TypeInfer =
         | Prim1Expr def -> inferTypePrim1 funenv env def
         | _ -> Error "Oops"
 
+    /// E.g. print(add1(x)) -> Int
     and private inferTypePrim1 funenv env (def : Prim1Def<_>) =
         result {
+
+                // e.g. <'a>('a -> 'a)
             let! scheme =
                 SchemeEnvironment.tryFindPrim1 def.Operator funenv
+
+                // e.g. ('a_1 -> 'a_1)
             let schemeType = Scheme.instantiate scheme
+
+                // e.g. ['x = Int], Int
             let! argSubst, argType = inferTypeExpr funenv env def.Expr
-            let retType =
-                generateSymbol "ret"
+
+                // e.g. (Int -> out_1)
+            let outType =
+                generateSymbol "out"
                     |> IdentifierDef.create
                     |> TypeVariable
             let arrowType =
                 TypeArrow {
                     InputTypes = [argType]
-                    OutputType = retType
+                    OutputType = outType
                     Tag = ()
                 }
+
+                // e.g. ['x = Int; 'a_1 = Int; 'out_1 = Int]
             let! subst = unify schemeType arrowType
-            return subst, retType
+            let subst' = Substitution.compose argSubst subst
+            return subst', outType
         }
 
     let inferType expr =
