@@ -39,30 +39,6 @@ module Substitution =
                     def.InputTypes
             | _ -> Set.empty
 
-    module Scheme =
-
-        let substitute fromIdent toType scheme =
-            if List.contains fromIdent scheme.Identifiers then
-                scheme
-            else {
-                scheme with
-                    Type =
-                        Type.substitute
-                            fromIdent
-                            toType
-                            scheme.Type
-            }
-
-        let apply subst scheme =
-            (scheme, subst)
-                ||> List.fold (fun acc (fromIdent, toType) ->
-                    substitute fromIdent toType acc)
-
-        let rec freeTypeVars scheme =
-            Set.difference
-                (Type.freeTypeVars scheme.Type)
-                (set scheme.Identifiers)
-
     let empty : Substitution<_> = List.empty
 
     let apply (subst : Substitution<_>) (inSubst : Substitution<_>) =
@@ -126,24 +102,26 @@ module Substitution =
             (Type.untag type1)
             (Type.untag type2)
 
-    type private TypeEnvironment =
-        Map<IdentifierDef<unit>, Type<unit>>
+    module Scheme =
 
-    module TypeEnvironment =
+        let substitute fromIdent toType scheme =
+            if List.contains fromIdent scheme.Identifiers then
+                scheme
+            else {
+                scheme with
+                    Type =
+                        Type.substitute
+                            fromIdent
+                            toType
+                            scheme.Type
+            }
 
-        let apply (subst : Substitution<_>) (env : TypeEnvironment) =
-            (env, subst)
+        let apply subst scheme =
+            (scheme, subst)
                 ||> List.fold (fun acc (fromIdent, toType) ->
-                    Map.map (fun _ typ ->
-                        Type.substitute fromIdent toType typ) acc)
+                    substitute fromIdent toType acc)
 
-    type private SchemeEnvironment =
-        Map<IdentifierDef<unit>, Scheme<unit>>
-
-    module SchemeEnvironment =
-
-        let apply (subst : Substitution<_>) (env : SchemeEnvironment) =
-            (env, subst)
-                ||> List.fold (fun acc (fromIdent, toType) ->
-                    Map.map (fun _ typ ->
-                        Scheme.substitute fromIdent toType typ) acc)
+        let rec freeTypeVars scheme =
+            Set.difference
+                (Type.freeTypeVars scheme.Type)
+                (set scheme.Identifiers)

@@ -12,6 +12,7 @@
     <Compile Include="Parser.fs" />
     <Compile Include="TypeCheck.fs" />
     <Compile Include="Substitution.fs" />
+    <Compile Include="TypeInfer.fs" />
     <Compile Include="Compiler.fs" />
   </ItemGroup>
 
