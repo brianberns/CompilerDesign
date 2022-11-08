@@ -103,8 +103,8 @@ module TypeInfer =
             Type.apply subst scheme.Type
 
     let rec private inferTypeExpr funenv env = function
-        | NumberExpr _ -> Ok (Substitution.empty, Type.int)
-        | BoolExpr _ -> Ok (Substitution.empty, Type.bool)
+        | NumberExpr _ -> Ok (Substitution.empty, Type.int, env)
+        | BoolExpr _ -> Ok (Substitution.empty, Type.bool, env)
         | IdentifierExpr ident -> inferIdentifier funenv env ident
         | Prim1Expr def -> inferTypePrim1 funenv env def
         | Prim2Expr def -> inferTypePrim2 funenv env def
@@ -113,7 +113,7 @@ module TypeInfer =
     and private inferIdentifier _funenv env ident =
         result {
             let! typ = TypeEnvironment.tryFind ident env
-            return Substitution.empty, typ
+            return Substitution.empty, typ, env
         }
 
     /// E.g. print(add1(x)) -> Int
@@ -128,7 +128,7 @@ module TypeInfer =
             let schemeType = Scheme.instantiate scheme
 
                 // e.g. ['x = Int], Int
-            let! argSubst, argType = inferTypeExpr funenv env def.Expr
+            let! argSubst, argType, env' = inferTypeExpr funenv env def.Expr
 
                 // e.g. (Int -> out_1)
             let outType =
@@ -146,7 +146,7 @@ module TypeInfer =
             let! subst = unify schemeType arrowType
             let subst' = Substitution.compose argSubst subst
             let outType' = Type.apply subst outType
-            return subst', outType'
+            return subst', outType', env'
         }
 
     and private inferTypePrim2 funenv env (def : Prim2Def<_>) =
@@ -154,8 +154,8 @@ module TypeInfer =
             let! scheme =
                 SchemeEnvironment.tryFindPrim2 def.Operator funenv
             let schemeType = Scheme.instantiate scheme
-            let! leftSubst, leftType = inferTypeExpr funenv env def.Left
-            let! rightSubst, rightType = inferTypeExpr funenv env def.Right
+            let! leftSubst, leftType, env' = inferTypeExpr funenv env def.Left
+            let! rightSubst, rightType, env'' = inferTypeExpr funenv env' def.Right
             let argsSubst = Substitution.compose leftSubst rightSubst
             let outType =
                 generateSymbol "out"
@@ -170,13 +170,13 @@ module TypeInfer =
             let! subst = unify schemeType arrowType
             let subst' = Substitution.compose argsSubst subst
             let outType' = Type.apply subst outType
-            return subst', outType'
+            return subst', outType', env''
         }
 
     let inferType expr =
         result {
             let expr' = Expr.untag expr
-            let! _, typ =
+            let! _, typ, _ =
                 inferTypeExpr
                     SchemeEnvironment.initial
                     Map.empty
