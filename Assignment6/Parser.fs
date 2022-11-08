@@ -96,7 +96,7 @@ module Parser =
             parseVariableIdentifier
                 |>> TypeVariable
 
-        let private parseFunction =
+        let private parseArrow =
             parse {
                 let! inputs = parseCsv1 parseType
                 do! spaces >>. skipString "->" >>. spaces
@@ -110,13 +110,14 @@ module Parser =
                         OutputType = output
                         Tag = tag
                     })
+                |> attempt
 
         let private parseTypeImpl =
             choice [
                 parseBlank
+                parseArrow   // must come before simpler types
                 parseConstant
                 parseVariable
-                parseFunction
             ]
 
         let parseOrBlank parser =
@@ -391,7 +392,7 @@ module Parser =
                     Parameters = parms
                     Scheme =
                         {
-                            Identifiers = tvIdents
+                            TypeVariableIdents = tvIdents
                             Type =
                                 TypeArrow {
                                     InputTypes = parmTypes
@@ -423,3 +424,20 @@ module Parser =
         match runParserOnString Program.parse () "" text with
             | Success (result, _, _) -> Result.Ok result
             | Failure (msg, _, _) -> Result.Error msg
+
+    module Scheme =
+
+        let private parseTypeVarIdents =
+            skipChar '<'
+                >>. many Type.parseVariableIdentifier
+                .>> skipChar '>'
+
+        let parse =
+            (parseTypeVarIdents <|>% List.empty)
+                .>>. Type.parse
+                |> parsePos (fun (tvIdents, typ) tag ->
+                    {
+                        TypeVariableIdents = tvIdents
+                        Type = typ
+                        Tag = tag
+                    })

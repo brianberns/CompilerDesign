@@ -18,26 +18,29 @@ type private SchemeEnvironment =
 
 module SchemeEnvironment =
 
+    open FParsec
+
     let apply (subst : Substitution<_>) (env : SchemeEnvironment) =
         (env, subst)
             ||> List.fold (fun acc (fromIdent, toType) ->
                 Map.map (fun _ typ ->
                     Scheme.substitute fromIdent toType typ) acc)
 
+    let private parseScheme text =
+        let parser = Parser.Scheme.parse .>> eof
+        match runParserOnString parser () "" text with
+            | Success (result, _, _) -> Scheme.untag result
+            | Failure (msg, _, _) -> failwith msg
+
     let initial : SchemeEnvironment =
-        Map [
-            IdentifierDef.create (Prim1.unparse Add1),
-            {
-                Identifiers = []
-                Type =
-                    TypeArrow {
-                        InputTypes = []
-                        OutputType = TypeBlank ()
-                        Tag = ()
-                    }
-                Tag = ()
-            }
+        [
+            Prim1.unparse Add1, "(Int -> Int)"
+            Prim1.unparse Sub1, "(Int -> Int)"
+            Prim1.unparse Print, "<'a>('a -> Bool)"
         ]
+            |> Seq.map (fun (name, text) ->
+                IdentifierDef.create name, parseScheme text)
+            |> Map
 
 module TypeInfer =
 
@@ -51,7 +54,7 @@ module TypeInfer =
 
         let instantiate scheme =
             let subst =
-                scheme.Identifiers
+                scheme.TypeVariableIdents
                     |> List.map (fun ident ->
                         let tv =
                             TypeVariable {

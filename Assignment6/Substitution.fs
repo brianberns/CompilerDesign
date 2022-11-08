@@ -105,7 +105,7 @@ module Substitution =
     module Scheme =
 
         let substitute fromIdent toType scheme =
-            if List.contains fromIdent scheme.Identifiers then
+            if List.contains fromIdent scheme.TypeVariableIdents then
                 scheme
             else {
                 scheme with
@@ -124,4 +124,4 @@ module Substitution =
         let rec freeTypeVars scheme =
             Set.difference
                 (Type.freeTypeVars scheme.Type)
-                (set scheme.Identifiers)
+                (set scheme.TypeVariableIdents)

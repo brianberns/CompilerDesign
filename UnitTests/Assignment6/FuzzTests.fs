@@ -95,7 +95,7 @@ module Decl =
                 Parameters = parms
                 Scheme =
                     {
-                        Identifiers = tvIdents
+                        TypeVariableIdents = tvIdents
                         Type =
                             TypeArrow {
                                 InputTypes = parmTypes

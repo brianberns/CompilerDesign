@@ -1,9 +1,9 @@
 ﻿namespace CompilerDesign.Assignment6
 
-/// E.g. const has scheme: ∀ab.a → b → a
+/// E.g. isnum has scheme: <'a>('a -> Bool)
 type Scheme<'tag> =
     {
-        Identifiers : List<IdentifierDef<'tag>>
+        TypeVariableIdents : List<IdentifierDef<'tag>>
         Type : Type<'tag>
         Tag : 'tag
     }
@@ -12,12 +12,24 @@ module Scheme =
 
     let untag scheme =
         {
-            Identifiers =
-                scheme.Identifiers
+            TypeVariableIdents =
+                scheme.TypeVariableIdents
                     |> List.map IdentifierDef.untag
             Type = Type.untag scheme.Type
             Tag = ()
         }
+
+    let unparseTypeVariableIdents scheme =
+        if scheme.TypeVariableIdents.IsEmpty then ""
+        else
+            scheme.TypeVariableIdents
+                |> Seq.map (fun ident -> $"'{ident.Name}")
+                |> String.concat ", "
+                |> sprintf "<%s>"
+
+    let unparse scheme =
+        let typeVars = unparseTypeVariableIdents scheme
+        $"{typeVars}{Type.unparse scheme.Type}"
 
 type Decl<'tag> =
     {
@@ -48,13 +60,7 @@ module Decl =
 
     let unparse decl =
         let ident = decl.Identifier.Name
-        let tvIdents =
-            if decl.Scheme.Identifiers.IsEmpty then ""
-            else
-                decl.Scheme.Identifiers
-                    |> Seq.map (fun ident -> $"'{ident.Name}")
-                    |> String.concat ", "
-                    |> sprintf "<%s>"
+        let tvIdents = Scheme.unparseTypeVariableIdents decl.Scheme
         let parmTypes, outType = getSchemeTypes decl
         let parms =
             (decl.Parameters, parmTypes)
