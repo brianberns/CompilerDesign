@@ -14,6 +14,12 @@ module TypeEnvironment =
                 Map.map (fun _ typ ->
                     Type.substitute fromIdent toType typ) acc)
 
+    let tryFind ident (env : TypeEnvironment) =
+        env
+            |> Map.tryFind ident
+            |> Option.map Result.Ok
+            |> Option.defaultValue (Result.Error "Variable not found")
+
 type private SchemeEnvironment =
     Map<string, Scheme<unit>>
 
@@ -90,11 +96,18 @@ module TypeInfer =
                         ident, tv)
             Type.apply subst scheme.Type
 
-    let rec private inferTypeExpr funenv (env : TypeEnvironment) = function
+    let rec private inferTypeExpr funenv env = function
         | NumberExpr _ -> Ok (Substitution.empty, Type.int)
         | BoolExpr _ -> Ok (Substitution.empty, Type.bool)
+        | IdentifierExpr ident -> inferIdentifier funenv env ident
         | Prim1Expr def -> inferTypePrim1 funenv env def
         | _ -> Error "Oops"
+
+    and private inferIdentifier funenv env ident =
+        result {
+            let! typ = TypeEnvironment.tryFind ident env
+            return Substitution.empty, typ
+        }
 
     /// E.g. print(add1(x)) -> Int
     and private inferTypePrim1 funenv env (def : Prim1Def<_>) =
@@ -131,10 +144,11 @@ module TypeInfer =
 
     let inferType expr =
         result {
+            let expr' = Expr.untag expr
             let! _, typ =
                 inferTypeExpr
                     SchemeEnvironment.initial
                     Map.empty
-                    expr
+                    expr'
             return typ
         }
