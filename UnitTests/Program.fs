@@ -7,4 +7,5 @@ let program =
         |> Parser.parse
         |> Result.get
 TypeInfer.inferType program.Main
+    |> Result.map Type.unparse
     |> printfn "%A"

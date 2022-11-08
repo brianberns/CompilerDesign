@@ -15,7 +15,7 @@ module TypeEnvironment =
                     Type.substitute fromIdent toType typ) acc)
 
 type private SchemeEnvironment =
-    Map<IdentifierDef<unit>, Scheme<unit>>
+    Map<string, Scheme<unit>>
 
 module SchemeEnvironment =
 
@@ -55,13 +55,18 @@ module SchemeEnvironment =
         ]
             |> List.map (fun (name, text) ->
                 result {
-                    let ident = IdentifierDef.create name
                     let! scheme = parseScheme text
-                    return ident, Scheme.untag scheme
+                    return name, Scheme.untag scheme
                 })
             |> Result.List.sequence
             |> Result.get
             |> Map
+
+    let tryFindPrim1 prim1 (env : SchemeEnvironment) =
+        env
+            |> Map.tryFind (Prim1.unparse prim1)
+            |> Option.map Result.Ok
+            |> Option.defaultValue (Result.Error "Operator not found")
 
 module TypeInfer =
 
@@ -85,41 +90,36 @@ module TypeInfer =
                         ident, tv)
             Type.apply subst scheme.Type
 
+    let rec private inferTypeExpr funenv (env : TypeEnvironment) = function
+        | NumberExpr _ -> Ok (Substitution.empty, Type.int)
+        | BoolExpr _ -> Ok (Substitution.empty, Type.bool)
+        | Prim1Expr def -> inferTypePrim1 funenv env def
+        | _ -> Error "Oops"
+
+    and private inferTypePrim1 funenv env (def : Prim1Def<_>) =
+        result {
+            let! scheme =
+                SchemeEnvironment.tryFindPrim1 def.Operator funenv
+            let schemeType = Scheme.instantiate scheme
+            let! argSubst, argType = inferTypeExpr funenv env def.Expr
+            let retType =
+                generateSymbol "ret"
+                    |> IdentifierDef.create
+                    |> TypeVariable
+            let arrowType =
+                TypeArrow {
+                    InputTypes = [argType]
+                    OutputType = retType
+                    Tag = ()
+                }
+            let! subst = unify schemeType arrowType
+            return subst, retType
+        }
+
     let inferType expr =
-
-        let rec loop (funenv : SchemeEnvironment) (env : TypeEnvironment) expr =
-            result {
-                match expr with
-
-                    | NumberExpr _ ->
-                        return Substitution.empty, Type.int
-
-                    | BoolExpr _ ->
-                        return Substitution.empty, Type.bool
-
-                    | Prim1Expr def ->
-                        let scheme = funenv[Prim1.unparse def.Operator |> IdentifierDef.create]   // to-do: too ugly
-                        let schemeType = Scheme.instantiate scheme
-                        let! argSubst, argType = loop funenv env def.Expr
-                        let retType =
-                            generateSymbol "ret"
-                                |> IdentifierDef.create
-                                |> TypeVariable
-                        let arrowType =
-                            TypeArrow {
-                                InputTypes = [argType]
-                                OutputType = retType
-                                Tag = ()
-                            }
-                        let! subst = unify schemeType arrowType
-                        return subst, retType
-
-                    | _ -> return! Error "Oops"
-            }
-
         result {
             let! subst, typ =
-                loop
+                inferTypeExpr
                     SchemeEnvironment.initial
                     Map.empty
                     expr
