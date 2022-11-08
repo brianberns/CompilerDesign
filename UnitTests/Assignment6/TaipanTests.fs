@@ -88,45 +88,45 @@ type TaipanTests() =
             [
                     // unify 'X -> Int and Bool -> 'Y under the substitution ['X = Bool, 'Y = Int]
                 TypeArrow {
-                    InputTypes = [TypeVariable { Name = "X"; Tag = () }]
+                    InputTypes = [TypeVariable (IdentifierDef.create "X")]
                     OutputType = Type.int
                     Tag = ()
                 },
                 TypeArrow {
                     InputTypes = [Type.bool]
-                    OutputType = TypeVariable { Name = "Y"; Tag = () }
+                    OutputType = TypeVariable (IdentifierDef.create "Y")
                     Tag = ()
                 },
                 Ok [
-                    { Name = "X"; Tag = () }, TypeConstant { Name = "Bool"; Tag = () }
-                    { Name = "Y"; Tag = () }, TypeConstant { Name = "Int"; Tag = () }
+                    IdentifierDef.create "X", Type.bool
+                    IdentifierDef.create "Y", Type.int
                 ]
                     // no substitution that can unify Int -> 'X with Bool -> 'Y
                 TypeArrow {
                     InputTypes = [Type.int]
-                    OutputType = TypeVariable { Name = "X"; Tag = () }
+                    OutputType = TypeVariable (IdentifierDef.create "X")
                     Tag = ()
                 },
                 TypeArrow {
                     InputTypes = [Type.bool]
-                    OutputType = TypeVariable { Name = "Y"; Tag = () }
+                    OutputType = TypeVariable (IdentifierDef.create "Y")
                     Tag = ()
                 },
                 Error "Could not unify"
 
                     // cannot unify 'A with 'A -> 'B, because we would get the absurd substitution ['A = 'A -> 'B]
-                TypeVariable { Name = "A"; Tag = () },
+                TypeVariable (IdentifierDef.create "A"),
                 TypeArrow {
-                    InputTypes = [TypeVariable { Name = "A"; Tag = () }]
-                    OutputType = TypeVariable { Name = "B"; Tag = () }
+                    InputTypes = [TypeVariable (IdentifierDef.create "A")]
+                    OutputType = TypeVariable (IdentifierDef.create "B")
                     Tag = ()
                 },
                 Error "Could not unify"
 
                     // can't unify 'A -> 'A with Int -> Bool
                 TypeArrow {
-                    InputTypes = [TypeVariable { Name = "A"; Tag = () }]
-                    OutputType = TypeVariable { Name = "A"; Tag = () }
+                    InputTypes = [TypeVariable (IdentifierDef.create "A")]
+                    OutputType = TypeVariable (IdentifierDef.create "A")
                     Tag = ()
                 },
                 TypeArrow {
@@ -138,18 +138,18 @@ type TaipanTests() =
 
                     // unify 'A -> 'A with Int -> 'B
                 TypeArrow {
-                    InputTypes = [TypeVariable { Name = "A"; Tag = () }]
-                    OutputType = TypeVariable { Name = "A"; Tag = () }
+                    InputTypes = [TypeVariable (IdentifierDef.create "A")]
+                    OutputType = TypeVariable (IdentifierDef.create "A")
                     Tag = ()
                 },
                 TypeArrow {
                     InputTypes = [Type.int]
-                    OutputType = TypeVariable { Name = "B"; Tag = () }
+                    OutputType = TypeVariable (IdentifierDef.create "B")
                     Tag = ()
                 },
                 Ok [
-                    { Name = "A"; Tag = () }, TypeConstant { Name = "Int"; Tag = () }
-                    { Name = "B"; Tag = () }, TypeConstant { Name = "Int"; Tag = () }
+                    IdentifierDef.create "A", Type.int
+                    IdentifierDef.create "B", Type.int
                 ]
             ]
         for (typ1, typ2, expected) in tuples do

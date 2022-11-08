@@ -8,6 +8,12 @@ type Prim1 =
     | IsNum
     | Not
 
+module Prim1 =
+
+    let unparse = function
+        | Not -> "!"
+        | prim1 -> (string prim1).ToLower()
+
 type Prim2 =
     | Plus
     | Minus
@@ -19,6 +25,20 @@ type Prim2 =
     | Less
     | LessEq
     | Eq
+
+module Prim2 =
+
+    let unparse = function
+        | Plus -> "+"
+        | Minus -> "-"
+        | Times -> "*"
+        | And -> "&&"
+        | Or -> "||"
+        | Greater -> ">"
+        | GreaterEq -> ">="
+        | Less -> "<"
+        | LessEq -> "<="
+        | Eq -> "=="
 
 type NumberDef<'tag> =
     {
@@ -159,10 +179,8 @@ module Expr =
                 Tag = ()
             }
         | IdentifierExpr def ->
-            IdentifierExpr {
-                Name = def.Name
-                Tag = ()
-            }
+            IdentifierExpr (
+                IdentifierDef.create def.Name)
         | BoolExpr def ->
             BoolExpr {
                 Flag = def.Flag
@@ -205,22 +223,6 @@ module Expr =
                     | t -> $" : {Type.unparse t}"
             $"{ident}{typ} = {expr}"
 
-        let unparsePrim1 = function
-            | Not -> "!"
-            | prim1 -> (string prim1).ToLower()
-
-        let unparsePrim2 = function
-            | Plus -> "+"
-            | Minus -> "-"
-            | Times -> "*"
-            | And -> "&&"
-            | Or -> "||"
-            | Greater -> ">"
-            | GreaterEq -> ">="
-            | Less -> "<"
-            | LessEq -> "<="
-            | Eq -> "=="
-
         let unparseExpr = function
             | LetExpr def ->
                 let bindings =
@@ -229,13 +231,13 @@ module Expr =
                         |> String.concat ", "
                 $"(let {bindings} in {unparseExpr def.Expr})"
             | Prim1Expr def ->
-                let op = unparsePrim1 def.Operator
+                let op = Prim1.unparse def.Operator
                 let typeArgs = unparseTypeArgs def.TypeArguments
                 let expr = unparseExpr def.Expr
                 $"{op}{typeArgs}({expr})"
             | Prim2Expr def ->
                 let left = unparseExpr def.Left
-                let op = unparsePrim2 def.Operator
+                let op = Prim2.unparse def.Operator
                 let typeArgs = unparseTypeArgs def.TypeArguments
                 let right = unparseExpr def.Right
                 $"({left} {op}{typeArgs} {right})"

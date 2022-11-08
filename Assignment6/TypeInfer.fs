@@ -24,9 +24,19 @@ module SchemeEnvironment =
                 Map.map (fun _ typ ->
                     Scheme.substitute fromIdent toType typ) acc)
 
-    let initial =
-        [
-            
+    let initial : SchemeEnvironment =
+        Map [
+            IdentifierDef.create (Prim1.unparse Add1),
+            {
+                Identifiers = []
+                Type =
+                    TypeArrow {
+                        InputTypes = []
+                        OutputType = TypeBlank ()
+                        Tag = ()
+                    }
+                Tag = ()
+            }
         ]
 
 module TypeInfer =

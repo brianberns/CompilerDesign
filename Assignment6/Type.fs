@@ -8,11 +8,14 @@ type IdentifierDef<'tag> =
 
 module IdentifierDef =
 
-    let untag ident =
+    let create name =
         {
-            Name = ident.Name
+            Name = name
             Tag = ()
         }
+
+    let untag ident =
+        create ident.Name
 
 type Type<'tag> =
 
@@ -63,8 +66,8 @@ module Type =
                         |> String.concat ", "
             $"({inputs} -> {unparse def.OutputType})"
 
-    let int = TypeConstant { Name = "Int"; Tag = () }
-    let bool = TypeConstant { Name = "Bool"; Tag = () }
+    let int = TypeConstant (IdentifierDef.create "Int")
+    let bool = TypeConstant (IdentifierDef.create "Bool")
 
     let checkMissing typ =
         if typ = TypeBlank () then

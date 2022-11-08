@@ -33,10 +33,7 @@ module Decl =
     let untag decl =
         {
             Identifier =
-                {
-                    Name = decl.Identifier.Name
-                    Tag = ()
-                }
+                IdentifierDef.create decl.Identifier.Name
             Parameters =
                 decl.Parameters
                     |> List.map IdentifierDef.untag

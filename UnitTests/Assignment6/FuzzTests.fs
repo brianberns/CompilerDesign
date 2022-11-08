@@ -11,11 +11,7 @@ module IdentifierDef =
 
     let arb =
         Gen.elements ['a' .. 'z']
-            |> Gen.map (fun c ->
-                {
-                    Name = string c
-                    Tag = ()
-                })
+            |> Gen.map (string >> IdentifierDef.create)
             |> Arb.fromGen
 
 module LetDef =
