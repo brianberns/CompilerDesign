@@ -24,6 +24,11 @@ module SchemeEnvironment =
                 Map.map (fun _ typ ->
                     Scheme.substitute fromIdent toType typ) acc)
 
+    let initial =
+        [
+            
+        ]
+
 module TypeInfer =
 
     module Scheme =
@@ -39,8 +44,10 @@ module TypeInfer =
                 scheme.Identifiers
                     |> List.map (fun ident ->
                         let tv =
-                            let sym = generateSymbol ident.Name
-                            TypeVariable { Name = sym; Tag = () }
+                            TypeVariable {
+                                Name = generateSymbol ident.Name
+                                Tag = scheme.Tag
+                            }
                         ident, tv)
             Type.apply subst scheme.Type
 

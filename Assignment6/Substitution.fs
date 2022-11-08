@@ -25,7 +25,7 @@ module Substitution =
 
             loop inType
 
-        let apply subst typ =
+        let apply (subst : Substitution<_>) typ =
             (typ, subst)
                 ||> List.fold (fun acc (fromIdent, toType) ->
                     substitute fromIdent toType acc)
@@ -116,7 +116,7 @@ module Substitution =
                             scheme.Type
             }
 
-        let apply subst scheme =
+        let apply (subst : Substitution<_>) scheme =
             (scheme, subst)
                 ||> List.fold (fun acc (fromIdent, toType) ->
                     substitute fromIdent toType acc)
