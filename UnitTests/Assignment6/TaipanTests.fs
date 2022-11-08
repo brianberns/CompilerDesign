@@ -84,69 +84,39 @@ type TaipanTests() =
 
     [<TestMethod>]
     member _.Unify() =
+
+        let parseType text =
+            match SchemeEnvironment.parseScheme text with
+                | Ok scheme ->
+                    Assert.IsTrue(scheme.TypeVariableIdents.IsEmpty)
+                    scheme.Type
+                | Error msg -> failwith "msg"
+
         let tuples =
             [
                     // unify 'X -> Int and Bool -> 'Y under the substitution ['X = Bool, 'Y = Int]
-                TypeArrow {
-                    InputTypes = [TypeVariable (IdentifierDef.create "X")]
-                    OutputType = Type.int
-                    Tag = ()
-                },
-                TypeArrow {
-                    InputTypes = [Type.bool]
-                    OutputType = TypeVariable (IdentifierDef.create "Y")
-                    Tag = ()
-                },
+                parseType "('X -> Int)",
+                parseType "(Bool -> 'Y)",
                 Ok [
                     IdentifierDef.create "X", Type.bool
                     IdentifierDef.create "Y", Type.int
                 ]
                     // no substitution that can unify Int -> 'X with Bool -> 'Y
-                TypeArrow {
-                    InputTypes = [Type.int]
-                    OutputType = TypeVariable (IdentifierDef.create "X")
-                    Tag = ()
-                },
-                TypeArrow {
-                    InputTypes = [Type.bool]
-                    OutputType = TypeVariable (IdentifierDef.create "Y")
-                    Tag = ()
-                },
+                parseType "(Int -> 'X)",
+                parseType "(Bool -> 'Y)",
                 Error "Could not unify"
 
                     // cannot unify 'A with 'A -> 'B, because we would get the absurd substitution ['A = 'A -> 'B]
-                TypeVariable (IdentifierDef.create "A"),
-                TypeArrow {
-                    InputTypes = [TypeVariable (IdentifierDef.create "A")]
-                    OutputType = TypeVariable (IdentifierDef.create "B")
-                    Tag = ()
-                },
+                parseType "'A",
+                parseType "('A -> 'B)",
                 Error "Could not unify"
 
-                    // can't unify 'A -> 'A with Int -> Bool
-                TypeArrow {
-                    InputTypes = [TypeVariable (IdentifierDef.create "A")]
-                    OutputType = TypeVariable (IdentifierDef.create "A")
-                    Tag = ()
-                },
-                TypeArrow {
-                    InputTypes = [Type.int]
-                    OutputType = Type.bool
-                    Tag = ()
-                },
+                parseType "('A -> 'A)",
+                parseType "(Int -> Bool)",
                 Error "Could not unify"
 
-                    // unify 'A -> 'A with Int -> 'B
-                TypeArrow {
-                    InputTypes = [TypeVariable (IdentifierDef.create "A")]
-                    OutputType = TypeVariable (IdentifierDef.create "A")
-                    Tag = ()
-                },
-                TypeArrow {
-                    InputTypes = [Type.int]
-                    OutputType = TypeVariable (IdentifierDef.create "B")
-                    Tag = ()
-                },
+                parseType "('A -> 'A)",
+                parseType "(Int -> 'B)",
                 Ok [
                     IdentifierDef.create "A", Type.int
                     IdentifierDef.create "B", Type.int

@@ -1,5 +1,6 @@
 ﻿namespace CompilerDesign.Assignment6
 
+open CompilerDesign.Core
 open Substitution
 
 type private TypeEnvironment =
@@ -26,11 +27,11 @@ module SchemeEnvironment =
                 Map.map (fun _ typ ->
                     Scheme.substitute fromIdent toType typ) acc)
 
-    let private parseScheme text =
+    let parseScheme text =
         let parser = Parser.Scheme.parse .>> eof
         match runParserOnString parser () "" text with
-            | Success (result, _, _) -> Scheme.untag result
-            | Failure (msg, _, _) -> failwith msg
+            | Success (result, _, _) -> Result.Ok result
+            | Failure (msg, _, _) -> Result.Error msg
 
     let initial : SchemeEnvironment =
         [
@@ -38,8 +39,16 @@ module SchemeEnvironment =
             Prim1.unparse Sub1, "(Int -> Int)"
             Prim1.unparse Print, "<'a>('a -> Bool)"
         ]
-            |> Seq.map (fun (name, text) ->
-                IdentifierDef.create name, parseScheme text)
+            |> List.map (fun (name, text) ->
+                result {
+                    let ident = IdentifierDef.create name
+                    let! scheme = parseScheme text
+                    return ident, Scheme.untag scheme
+                })
+            |> Result.List.sequence
+            |> (function
+                | Result.Ok x -> x
+                | Result.Error msg -> failwith msg)
             |> Map
 
 module TypeInfer =

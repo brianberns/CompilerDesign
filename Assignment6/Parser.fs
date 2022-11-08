@@ -429,7 +429,7 @@ module Parser =
 
         let private parseTypeVarIdents =
             skipChar '<'
-                >>. many Type.parseVariableIdentifier
+                >>. many1 Type.parseVariableIdentifier
                 .>> skipChar '>'
 
         let parse =
