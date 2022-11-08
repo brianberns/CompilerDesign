@@ -47,6 +47,10 @@ module ResultBuilder =
 
 module Result =
 
+    let get = function
+        | Ok x -> x
+        | Error msg -> failwith msg
+
     module List =
 
         // https://stackoverflow.com/a/53029378/344223

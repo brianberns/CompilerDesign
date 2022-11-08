@@ -86,11 +86,11 @@ type TaipanTests() =
     member _.Unify() =
 
         let parseType text =
-            match SchemeEnvironment.parseScheme text with
-                | Ok scheme ->
+            SchemeEnvironment.parseScheme text
+                |> Result.get
+                |> (fun scheme ->
                     Assert.IsTrue(scheme.TypeVariableIdents.IsEmpty)
-                    scheme.Type
-                | Error msg -> failwith "msg"
+                    scheme.Type)
 
         let tuples =
             [

@@ -37,7 +37,21 @@ module SchemeEnvironment =
         [
             Prim1.unparse Add1, "(Int -> Int)"
             Prim1.unparse Sub1, "(Int -> Int)"
-            Prim1.unparse Print, "<'a>('a -> Bool)"
+            Prim1.unparse Print, "<'a>('a -> 'a)"
+            Prim1.unparse IsBool, "<'a>('a -> Bool)"
+            Prim1.unparse IsNum, "<'a>('a -> Bool)"
+            Prim1.unparse Not, "(Bool -> Bool)"
+
+            Prim2.unparse Plus, "(Int, Int -> Int)"
+            Prim2.unparse Minus, "(Int, Int -> Int)"
+            Prim2.unparse Times, "(Int, Int -> Int)"
+            Prim2.unparse And, "(Bool, Bool -> Bool)"
+            Prim2.unparse Or, "(Bool, Bool -> Bool)"
+            Prim2.unparse Greater, "(Int, Int -> Bool)"
+            Prim2.unparse GreaterEq, "(Int, Int -> Bool)"
+            Prim2.unparse Less, "(Int, Int -> Bool)"
+            Prim2.unparse LessEq, "(Int, Int -> Bool)"
+            Prim2.unparse Eq, "<'a>('a, 'a -> Bool)"
         ]
             |> List.map (fun (name, text) ->
                 result {
@@ -46,9 +60,7 @@ module SchemeEnvironment =
                     return ident, Scheme.untag scheme
                 })
             |> Result.List.sequence
-            |> (function
-                | Result.Ok x -> x
-                | Result.Error msg -> failwith msg)
+            |> Result.get
             |> Map
 
 module TypeInfer =
