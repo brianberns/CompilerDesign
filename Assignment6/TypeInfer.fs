@@ -95,15 +95,16 @@ module TypeInfer =
 
     let (++) = Substitution.compose
 
-    let rec private inferTypeExpr funenv env = function
+    let rec private inferExpr funenv env = function
         | NumberExpr _ -> Ok (Substitution.empty, Type.int)
         | BoolExpr _ -> Ok (Substitution.empty, Type.bool)
         | IdentifierExpr ident -> inferIdentifier funenv env ident
         | Prim1Expr def -> inferPrim1 funenv env def
         | Prim2Expr def -> inferPrim2 funenv env def
         | IfExpr def -> inferIf funenv env def
+        | LetExpr def -> inferLet funenv env def
         | ApplicationExpr def -> inferApplication funenv env def
-        | AnnotationExpr def -> inferTypeExpr funenv env def.Expr
+        | AnnotationExpr def -> inferExpr funenv env def.Expr
 
     and private inferIdentifier _funenv env ident =
         result {
@@ -117,7 +118,7 @@ module TypeInfer =
                 SchemeEnvironment.tryFindPrim1 def.Operator funenv
             let schemeType = Scheme.instantiate scheme
             let! argSubst, argType =
-                inferTypeExpr funenv env def.Expr
+                inferExpr funenv env def.Expr
             let outType = generateTypeVariable "out"
             let arrowType =
                 TypeArrow {
@@ -137,9 +138,9 @@ module TypeInfer =
                 SchemeEnvironment.tryFindPrim2 def.Operator funenv
             let schemeType = Scheme.instantiate scheme
             let! leftSubst, leftType =
-                inferTypeExpr funenv env def.Left
+                inferExpr funenv env def.Left
             let! rightSubst, rightType =
-                inferTypeExpr funenv env def.Right
+                inferExpr funenv env def.Right
             let outType = generateTypeVariable "out"
             let arrowType =
                 TypeArrow {
@@ -156,17 +157,34 @@ module TypeInfer =
     and private inferIf funenv env (def : IfDef<_>) =
         result {
             let! condSubst, condType =
-                inferTypeExpr funenv env def.Condition
+                inferExpr funenv env def.Condition
             let! trueSubst, trueType =
-                inferTypeExpr funenv env def.TrueBranch
+                inferExpr funenv env def.TrueBranch
             let! falseSubst, falseType =
-                inferTypeExpr funenv env def.Condition
+                inferExpr funenv env def.Condition
             let! boolSubst = unify condType Type.bool
             let! sameSubst = unify trueType falseType
             return
                 condSubst ++ trueSubst ++ falseSubst
                     ++ boolSubst ++ sameSubst,
                 Type.apply sameSubst trueType
+        }
+
+    and private inferLet funenv env (def : LetDef<_>) =
+        result {
+            let! env', bindingSubst =
+                ((env, Substitution.empty), def.Bindings)
+                    ||> Result.List.foldM (fun (accEnv, accSubst) binding ->
+                        result {
+                            let! subst, typ =
+                                inferExpr funenv accEnv binding.Expr
+                            let accEnv' = Map.add binding.Identifier typ accEnv
+                            return accEnv', accSubst ++ subst
+                        })
+            let! bodySubst, bodyType = inferExpr funenv env' def.Expr
+            return
+                bindingSubst ++ bodySubst,
+                Type.apply bodySubst bodyType
         }
 
     and private inferApplication funenv env (def : ApplicationDef<_>) =
@@ -177,7 +195,7 @@ module TypeInfer =
             let! argSubsts, argTypes =
                 def.Arguments
                     |> Result.List.traverse (
-                        inferTypeExpr funenv env)
+                        inferExpr funenv env)
                     |> Result.map List.unzip
             let outType = generateTypeVariable "out"
             let arrowType =
@@ -196,7 +214,7 @@ module TypeInfer =
         result {
             let expr' = Expr.untag expr
             let! _, typ =
-                inferTypeExpr
+                inferExpr
                     SchemeEnvironment.initial
                     Map.empty
                     expr'

@@ -6,7 +6,7 @@ type TypeEnvironment = Map<IdentifierDef<unit>, Type<unit>>
 
 module TypeEnvironment =
 
-    let tryFind ident env =
+    let tryFind ident (env : TypeEnvironment) =
         match Map.tryFind ident env with
             | Some typ -> Ok typ
             | None -> Error $"Unbound identifier: {ident.Name}"
