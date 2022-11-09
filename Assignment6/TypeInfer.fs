@@ -102,35 +102,30 @@ module TypeInfer =
                         ident, tv)
             Type.apply subst scheme.Type
 
+    let (++) = Substitution.compose
+
     let rec private inferTypeExpr funenv env = function
-        | NumberExpr _ -> Ok (Substitution.empty, Type.int, env)
-        | BoolExpr _ -> Ok (Substitution.empty, Type.bool, env)
+        | NumberExpr _ -> Ok (Substitution.empty, Type.int)
+        | BoolExpr _ -> Ok (Substitution.empty, Type.bool)
         | IdentifierExpr ident -> inferIdentifier funenv env ident
-        | Prim1Expr def -> inferTypePrim1 funenv env def
-        | Prim2Expr def -> inferTypePrim2 funenv env def
+        | Prim1Expr def -> inferPrim1 funenv env def
+        | Prim2Expr def -> inferPrim2 funenv env def
+        | IfExpr def -> inferIf funenv env def
         | _ -> Error "Oops"
 
     and private inferIdentifier _funenv env ident =
         result {
             let! typ = TypeEnvironment.tryFind ident env
-            return Substitution.empty, typ, env
+            return Substitution.empty, typ
         }
 
-    /// E.g. print(add1(x)) -> Int
-    and private inferTypePrim1 funenv env (def : Prim1Def<_>) =
+    and private inferPrim1 funenv env (def : Prim1Def<_>) =
         result {
-
-                // e.g. <'a>('a -> 'a)
             let! scheme =
                 SchemeEnvironment.tryFindPrim1 def.Operator funenv
-
-                // e.g. ('a_1 -> 'a_1)
             let schemeType = Scheme.instantiate scheme
-
-                // e.g. ['x = Int], Int
-            let! argSubst, argType, env' = inferTypeExpr funenv env def.Expr
-
-                // e.g. (Int -> out_1)
+            let! argSubst, argType =
+                inferTypeExpr funenv env def.Expr
             let outType =
                 generateSymbol "out"
                     |> IdentifierDef.create
@@ -141,23 +136,21 @@ module TypeInfer =
                     OutputType = outType
                     Tag = ()
                 }
-
-                // e.g. ['x = Int; 'a_1 = Int; 'out_1 = Int], Int
             let! subst = unify schemeType arrowType
-            let subst' = Substitution.compose argSubst subst
-            let outType' = Type.apply subst outType
-            let env'' = TypeEnvironment.apply subst' env'
-            return subst', outType', env''
+            return
+                argSubst ++ subst,
+                Type.apply subst outType
         }
 
-    and private inferTypePrim2 funenv env (def : Prim2Def<_>) =
+    and private inferPrim2 funenv env (def : Prim2Def<_>) =
         result {
             let! scheme =
                 SchemeEnvironment.tryFindPrim2 def.Operator funenv
             let schemeType = Scheme.instantiate scheme
-            let! leftSubst, leftType, env' = inferTypeExpr funenv env def.Left
-            let! rightSubst, rightType, env'' = inferTypeExpr funenv env' def.Right
-            let argsSubst = Substitution.compose leftSubst rightSubst
+            let! leftSubst, leftType =
+                inferTypeExpr funenv env def.Left
+            let! rightSubst, rightType =
+                inferTypeExpr funenv env def.Right
             let outType =
                 generateSymbol "out"
                     |> IdentifierDef.create
@@ -169,16 +162,27 @@ module TypeInfer =
                     Tag = ()
                 }
             let! subst = unify schemeType arrowType
-            let subst' = Substitution.compose argsSubst subst
-            let outType' = Type.apply subst outType
-            let env''' = TypeEnvironment.apply subst' env''
-            return subst', outType', env'''
+            return
+                leftSubst ++ rightSubst ++ subst,
+                Type.apply subst outType
+        }
+
+    and private inferIf funenv env (def : IfDef<_>) =
+        result {
+            let! condSubst, condType =
+                inferTypeExpr funenv env def.Condition
+            let! trueSubst, trueType =
+                inferTypeExpr funenv env def.TrueBranch
+            let! falseSubst, falseType =
+                inferTypeExpr funenv env def.Condition
+            let triSubst = condSubst ++ trueSubst ++ falseSubst
+            return failwith "moo"
         }
 
     let inferType expr =
         result {
             let expr' = Expr.untag expr
-            let! _, typ, _ =
+            let! _, typ =
                 inferTypeExpr
                     SchemeEnvironment.initial
                     Map.empty

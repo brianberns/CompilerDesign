@@ -48,7 +48,7 @@ module Substitution =
                     let typ' = Type.substitute fromIdent toType typ
                     ident, typ') acc)
 
-    let compose subst1 subst2 =
+    let compose (subst1 : Substitution<_>) subst2 : Substitution<_> =
         subst1 @ apply subst1 subst2
 
     let private occurs ident typ =
