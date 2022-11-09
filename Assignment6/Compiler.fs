@@ -88,11 +88,11 @@ module Compiler =
             result {
                 let! env' =
                     (env, bindings)
-                        ||> Result.List.foldM (fun env binding ->
+                        ||> Result.List.foldM (fun acc binding ->
                             result {
-                                let! node, env' =
-                                    compile env binding.Expr
-                                return! env'
+                                let! node, acc' =
+                                    compile acc binding.Expr
+                                return! acc'
                                     |> Env.tryAdd
                                         binding.Identifier.Name
                                         node
@@ -195,10 +195,10 @@ module Compiler =
 
                 let! env' =
                     (env, decl.Parameters)
-                        ||> Result.List.foldM (fun env parm ->
+                        ||> Result.List.foldM (fun acc parm ->
                             result {
                                 let node = IdentifierName(parm.Name)
-                                return! env
+                                return! acc
                                     |> Env.tryAdd parm.Name node
                             })
                 let! parmNodes =
