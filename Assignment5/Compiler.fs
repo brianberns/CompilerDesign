@@ -179,7 +179,7 @@ module Compiler =
 
     module private Decl =
 
-        let private compileParameter _env parm =
+        let private compileParameter parm =
             result {
                 return Parameter(
                     Identifier(parm.Name))
@@ -188,11 +188,11 @@ module Compiler =
                             Token(SyntaxKind.IntKeyword)))   // ugh
             }
 
-        let compile env decl =
+        let compile decl =
             result {
 
-                let! env' =
-                    (env, decl.Parameters)
+                let! env =
+                    (Env.empty, decl.Parameters)
                         ||> Result.List.foldM (fun acc parm ->
                             result {
                                 let node = IdentifierName(parm.Name)
@@ -201,9 +201,9 @@ module Compiler =
                             })
                 let! parmNodes =
                     decl.Parameters
-                        |> List.map (compileParameter env)
+                        |> List.map compileParameter
                         |> Result.List.sequence
-                let! bodyNode, _ = Expr.compile env' decl.Body
+                let! bodyNode, _ = Expr.compile env decl.Body
 
                 return MethodDeclaration(
                     returnType =
@@ -220,14 +220,15 @@ module Compiler =
 
     module private Program =
 
-        let compile env program =
+        let compile program =
             result {
                 let! declNodes =
                     program.Declarations
-                        |> List.map (Decl.compile env)
+                        |> List.map Decl.compile
                         |> Result.List.sequence
                         |> Result.map Seq.toArray
-                let! mainNode, _ = Expr.compile Env.empty program.Main
+                let! mainNode, _ =
+                    Expr.compile Env.empty program.Main
                 return mainNode, declNodes
             }
 
@@ -235,7 +236,7 @@ module Compiler =
         result {
             let! program = Parser.parse text
             let! mainNode, methodNodes =
-                Program.compile Env.empty program
+                Program.compile program
             let memberNodes =
                 methodNodes
                     |> Array.map (fun node ->
