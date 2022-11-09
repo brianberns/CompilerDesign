@@ -43,3 +43,17 @@ type DiamondbackTests() =
         Assert.AreEqual(
             Error "Arity mismatch: expected 2, actual 1",
             run text)
+
+    [<TestMethod>]
+    member _.UnboundFun() =
+        let text = "f(0)"
+        Assert.AreEqual(
+            Error "Function not found: f",
+            run text)
+
+    [<TestMethod>]
+    member _.UnboundId() =
+        let text = "a"
+        Assert.AreEqual(
+            Error "Unbound identifier: a",
+            run text)
