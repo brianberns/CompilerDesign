@@ -40,4 +40,6 @@ type DiamondbackTests() =
             def f(x, y): x + y
             f(0)
             """
-        Assert.AreEqual(Ok "720", run text)
+        Assert.AreEqual(
+            Error "Arity mismatch: expected 2, actual 1",
+            run text)

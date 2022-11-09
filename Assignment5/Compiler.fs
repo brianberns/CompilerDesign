@@ -43,6 +43,25 @@ module private Syntax =
             SyntaxKind.LogicalNotExpression,
             node)
 
+type private ArityEnvironment = Map<string, int>
+
+module ArityEnvironment =
+
+    let empty : ArityEnvironment =
+        Map.empty
+
+    let tryAdd name arity (aenv : ArityEnvironment) =
+        if Map.containsKey name aenv then
+            Error $"Function already exists: {name}"
+        else
+            let env : ArityEnvironment = Map.add name arity aenv
+            Ok env
+
+    let tryFind name (aenv : ArityEnvironment) =
+        match Map.tryFind name aenv with
+            | Some arity -> Ok arity
+            | None -> Error $"Function not found: {name}"
+
 module Compiler =
 
     let private compileNumber (env : env) num =
@@ -63,16 +82,16 @@ module Compiler =
 
     module private rec Expr =
 
-        let compile env expr : CompilerResult<_> =
+        let compile env aenv expr : CompilerResult<_> =
             match expr with
                 | LetExpr def ->
-                    compileLet env def.Bindings def.Expr
+                    compileLet env aenv def.Bindings def.Expr
                 | Prim1Expr def ->
-                    compilePrim1 env def.Operator def.Expr
+                    compilePrim1 env aenv def.Operator def.Expr
                 | Prim2Expr def ->
-                    compilePrim2 env def.Operator def.Left def.Right
+                    compilePrim2 env aenv def.Operator def.Left def.Right
                 | IfExpr def ->
-                    compileIf env def.Condition def.TrueBranch def.FalseBranch
+                    compileIf env aenv def.Condition def.TrueBranch def.FalseBranch
                 | NumberExpr def ->
                     compileNumber env def.Number
                 | IdentifierExpr def ->
@@ -80,27 +99,27 @@ module Compiler =
                 | BoolExpr def ->
                     compileBool env def.Flag
                 | ApplicationExpr def ->
-                    compileApplication env def.Identifier def.Arguments
+                    compileApplication env aenv def.Identifier def.Arguments
 
-        let private compileLet env bindings expr =
+        let private compileLet env aenv bindings expr =
             result {
                 let! env' =
                     (env, bindings)
                         ||> Result.List.foldM (fun acc binding ->
                             result {
                                 let! node, acc' =
-                                    compile acc binding.Expr
+                                    compile acc aenv binding.Expr
                                 return! acc'
                                     |> Env.tryAdd
                                         binding.Identifier.Name
                                         node
                             })
-                return! compile env' expr
+                return! compile env' aenv expr
             }
 
-        let private compilePrim1 env op expr =
+        let private compilePrim1 env aenv op expr =
             result {
-                let! node, _ = compile env expr
+                let! node, _ = compile env aenv expr
 
                 let prim1Node =
                     match op with
@@ -120,7 +139,7 @@ module Compiler =
                 return prim1Node, env
             }
 
-        let private compilePrim2 env op left right =
+        let private compilePrim2 env aenv op left right =
             let kind =
                 match op with
                     | Plus -> SyntaxKind.AddExpression
@@ -134,8 +153,8 @@ module Compiler =
                     | LessEq -> SyntaxKind.LessThanOrEqualExpression
                     | Eq -> SyntaxKind.EqualsExpression
             result {
-                let! leftNode, _ = compile env left
-                let! rightNode, _ = compile env right
+                let! leftNode, _ = compile env aenv left
+                let! rightNode, _ = compile env aenv right
                 let node =
                     BinaryExpression(
                         kind,
@@ -144,12 +163,12 @@ module Compiler =
                 return node, env
             }
 
-        let private compileIf env cond trueBranch falseBranch =
+        let private compileIf env aenv cond trueBranch falseBranch =
             result {
 
-                let! condNode, _ = compile env cond
-                let! trueNode, _ = compile env trueBranch
-                let! falseNode, _ = compile env falseBranch
+                let! condNode, _ = compile env aenv cond
+                let! trueNode, _ = compile env aenv trueBranch
+                let! falseNode, _ = compile env aenv falseBranch
 
                 let node =
                     ConditionalExpression(
@@ -158,13 +177,17 @@ module Compiler =
                 return node, env
             }
 
-        let private compileApplication env ident args =
+        let private compileApplication env aenv ident args =
             result {
+
+                let! arity = ArityEnvironment.tryFind ident.Name aenv
+                if arity <> args.Length then
+                    return! Error $"Arity mismatch: expected {arity}, actual {args.Length}"
 
                 let! argsNode =
                     args
                         |> List.map (fun expr ->
-                            compile env expr
+                            compile env aenv expr
                                 |> Result.map (fst >> Argument))
                         |> Result.List.sequence
                         |> Result.map SeparatedList
@@ -179,16 +202,7 @@ module Compiler =
 
     module private Decl =
 
-        let private compileParameter parm =
-            result {
-                return Parameter(
-                    Identifier(parm.Name))
-                    .WithType(
-                        PredefinedType(
-                            Token(SyntaxKind.IntKeyword)))   // ugh
-            }
-
-        let compile decl =
+        let compile aenv decl =
             result {
 
                 let! env =
@@ -199,48 +213,62 @@ module Compiler =
                                 return! acc
                                     |> Env.tryAdd parm.Name node
                             })
-                let! parmNodes =
-                    decl.Parameters
-                        |> List.map compileParameter
-                        |> Result.List.sequence
-                let! bodyNode, _ = Expr.compile env decl.Body
 
-                return MethodDeclaration(
-                    returnType =
-                        PredefinedType(
-                            Token(SyntaxKind.IntKeyword)),
-                    identifier = decl.Identifier.Name)
-                    .AddModifiers(
-                        Token(SyntaxKind.StaticKeyword))
-                    .WithParameterList(
-                        ParameterList(SeparatedList(parmNodes)))
-                    .WithBody(
-                        Block(ReturnStatement(bodyNode)))
+                let parmNodes =
+                    decl.Parameters
+                        |> List.map (fun parm ->
+                            Parameter(Identifier(parm.Name))
+                                .WithType(
+                                    PredefinedType(
+                                        Token(SyntaxKind.IntKeyword))))   // ugh
+
+                let! aenv' =
+                    ArityEnvironment.tryAdd
+                        decl.Identifier.Name
+                        decl.Parameters.Length
+                        aenv
+                let! bodyNode, _ = Expr.compile env aenv' decl.Body
+
+                let declNode =
+                    MethodDeclaration(
+                        returnType =
+                            PredefinedType(
+                                Token(SyntaxKind.IntKeyword)),
+                        identifier = decl.Identifier.Name)
+                        .AddModifiers(
+                            Token(SyntaxKind.StaticKeyword))
+                        .WithParameterList(
+                            ParameterList(SeparatedList(parmNodes)))
+                        .WithBody(
+                            Block(ReturnStatement(bodyNode)))
+
+                return declNode, aenv'
             }
 
     module private Program =
 
         let compile program =
             result {
-                let! declNodes =
-                    program.Declarations
-                        |> List.map Decl.compile
-                        |> Result.List.sequence
-                        |> Result.map Seq.toArray
+                let! declNodes, aenv =
+                    ((List.empty, ArityEnvironment.empty), program.Declarations)
+                        ||> Result.List.foldM (fun (declNodes, aenv) decl ->
+                            result {
+                                let! declNode, aenv' = Decl.compile aenv decl
+                                return declNode :: declNodes, aenv'
+                            })
                 let! mainNode, _ =
-                    Expr.compile Env.empty program.Main
-                return mainNode, declNodes
+                    Expr.compile Env.empty aenv program.Main
+                return mainNode, List.rev declNodes
             }
 
     let compile assemblyName text =
         result {
             let! program = Parser.parse text
-            let! mainNode, methodNodes =
-                Program.compile program
+            let! mainNode, methodNodes = Program.compile program
             let memberNodes =
                 methodNodes
-                    |> Array.map (fun node ->
-                        node :> Syntax.MemberDeclarationSyntax)
+                    |> Seq.cast<Syntax.MemberDeclarationSyntax>
+                    |> Seq.toArray
             do!
                 Compiler.compileWithMembers
                     assemblyName
