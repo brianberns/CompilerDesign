@@ -32,3 +32,12 @@ type DiamondbackTests() =
             factorial(6)
             """
         Assert.AreEqual(Ok "720", run text)
+
+    [<TestMethod>]
+    member _.Arity() =
+        let text =
+            """
+            def f(x, y): x + y
+            f(0)
+            """
+        Assert.AreEqual(Ok "720", run text)

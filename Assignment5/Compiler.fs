@@ -83,19 +83,18 @@ module Compiler =
                     compileApplication env def.Identifier def.Arguments
 
         let private compileLet env bindings expr =
-
-            let folder env (binding : Binding<_>) =
-                result {
-                    let! node, env' =
-                        compile env binding.Expr
-                    return! env'
-                        |> Env.tryAdd
-                            binding.Identifier.Name
-                            node
-                }
-
             result {
-                let! env' = Result.List.foldM folder env bindings
+                let! env' =
+                    (env, bindings)
+                        ||> Result.List.foldM (fun acc binding ->
+                            result {
+                                let! node, acc' =
+                                    compile acc binding.Expr
+                                return! acc'
+                                    |> Env.tryAdd
+                                        binding.Identifier.Name
+                                        node
+                            })
                 return! compile env' expr
             }
 
@@ -190,18 +189,16 @@ module Compiler =
             }
 
         let compile env decl =
-
-            let folder env parm =
-                result {
-                    let node = IdentifierName(parm.Name)
-                    return! env
-                        |> Env.tryAdd parm.Name node
-                }
-
             result {
 
                 let! env' =
-                    Result.List.foldM folder env decl.Parameters
+                    (env, decl.Parameters)
+                        ||> Result.List.foldM (fun acc parm ->
+                            result {
+                                let node = IdentifierName(parm.Name)
+                                return! acc
+                                    |> Env.tryAdd parm.Name node
+                            })
                 let! parmNodes =
                     decl.Parameters
                         |> List.map (compileParameter env)
