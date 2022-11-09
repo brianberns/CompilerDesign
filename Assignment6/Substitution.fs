@@ -30,15 +30,6 @@ module Substitution =
                 ||> List.fold (fun acc (fromIdent, toType) ->
                     substitute fromIdent toType acc)
 
-        let rec freeTypeVars = function
-            | TypeVariable ident -> Set.singleton ident
-            | TypeArrow def ->
-                List.fold (fun ftvs typ ->
-                    Set.union (freeTypeVars typ) ftvs)
-                    (freeTypeVars def.OutputType)
-                    def.InputTypes
-            | _ -> Set.empty
-
     let empty : Substitution<_> = List.empty
 
     let apply (subst : Substitution<_>) (inSubst : Substitution<_>) =

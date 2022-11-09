@@ -77,13 +77,20 @@ module TypeInfer =
             let subst =
                 scheme.TypeVariableIdents
                     |> List.map (fun ident ->
-                        let tv =
-                            TypeVariable {
-                                Name = generateSymbol ident.Name
-                                Tag = scheme.Tag
-                            }
-                        ident, tv)
+                        let typ = generateTypeVariable ident.Name
+                        ident, typ)
             Type.apply subst scheme.Type
+
+        let generalize env typ =
+            let tvIdents =
+                let typFtvs = Type.freeTypeVars typ
+                let envFtvs = TypeEnvironment.freeTypeVars env
+                List.ofSeq (typFtvs - envFtvs)
+            {
+                TypeVariableIdents = tvIdents
+                Type = typ
+                Tag = ()
+            }
 
     let (++) = Substitution.compose
 

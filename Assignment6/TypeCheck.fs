@@ -17,6 +17,12 @@ module TypeEnvironment =
             | Ok _ -> Error $"Not a function: {ident.Name}"
             | Error err -> Error err
 
+    let freeTypeVars (env : TypeEnvironment) =
+        env
+            |> Map.values
+            |> Seq.map Type.freeTypeVars
+            |> Set.unionMany
+
 module TypeCheck =
 
     let private checkMissing typ =

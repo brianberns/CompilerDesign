@@ -78,3 +78,12 @@ module Type =
         Error
             $"Expected: {unparse expected}, \
             Actual: {unparse actual}"
+
+    let rec freeTypeVars = function
+        | TypeVariable ident -> Set.singleton ident
+        | TypeArrow def ->
+            List.fold (fun ftvs typ ->
+                Set.union (freeTypeVars typ) ftvs)
+                (freeTypeVars def.OutputType)
+                def.InputTypes
+        | _ -> Set.empty
