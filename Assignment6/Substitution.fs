@@ -125,3 +125,11 @@ module Substitution =
             Set.difference
                 (Type.freeTypeVars scheme.Type)
                 (set scheme.TypeVariableIdents)
+
+    module TypeEnvironment =
+
+        let apply (subst : Substitution<_>) (env : TypeEnvironment) =
+            (env, subst)
+                ||> List.fold (fun acc (fromIdent, toType) ->
+                    Map.map (fun _ typ ->
+                        Type.substitute fromIdent toType typ) acc)

@@ -3,23 +3,6 @@
 open CompilerDesign.Core
 open Substitution
 
-type private TypeEnvironment =
-    Map<IdentifierDef<unit>, Type<unit>>
-
-module TypeEnvironment =
-
-    let apply (subst : Substitution<_>) (env : TypeEnvironment) =
-        (env, subst)
-            ||> List.fold (fun acc (fromIdent, toType) ->
-                Map.map (fun _ typ ->
-                    Type.substitute fromIdent toType typ) acc)
-
-    let tryFind ident (env : TypeEnvironment) =
-        env
-            |> Map.tryFind ident
-            |> Option.map Result.Ok
-            |> Option.defaultValue (Result.Error "Variable not found")
-
 type private SchemeEnvironment =
     Map<string, Scheme<unit>>
 
@@ -74,6 +57,9 @@ module SchemeEnvironment =
             |> Option.map Result.Ok
             |> Option.defaultValue (Result.Error $"Name not found: {name}")
 
+    let tryFindIdent ident =
+        tryFind ident.Name
+
     let tryFindPrim1 prim1 =
         tryFind (Prim1.unparse prim1)
 
@@ -87,6 +73,11 @@ module TypeInfer =
         fun (str : string) ->
             count <- count + 1
             $"{str}_{count}"
+
+    let private generateTypeVariable str =
+        generateSymbol str
+            |> IdentifierDef.create
+            |> TypeVariable
 
     module Scheme =
 
@@ -111,6 +102,7 @@ module TypeInfer =
         | Prim1Expr def -> inferPrim1 funenv env def
         | Prim2Expr def -> inferPrim2 funenv env def
         | IfExpr def -> inferIf funenv env def
+        | ApplicationExpr def -> inferApplication funenv env def
         | _ -> Error "Oops"
 
     and private inferIdentifier _funenv env ident =
@@ -126,10 +118,7 @@ module TypeInfer =
             let schemeType = Scheme.instantiate scheme
             let! argSubst, argType =
                 inferTypeExpr funenv env def.Expr
-            let outType =
-                generateSymbol "out"
-                    |> IdentifierDef.create
-                    |> TypeVariable
+            let outType = generateTypeVariable "out"
             let arrowType =
                 TypeArrow {
                     InputTypes = [argType]
@@ -151,10 +140,7 @@ module TypeInfer =
                 inferTypeExpr funenv env def.Left
             let! rightSubst, rightType =
                 inferTypeExpr funenv env def.Right
-            let outType =
-                generateSymbol "out"
-                    |> IdentifierDef.create
-                    |> TypeVariable
+            let outType = generateTypeVariable "out"
             let arrowType =
                 TypeArrow {
                     InputTypes = [leftType; rightType]
@@ -178,8 +164,32 @@ module TypeInfer =
             let! boolSubst = unify condType Type.bool
             let! sameSubst = unify trueType falseType
             return
-                condSubst ++ trueSubst ++ falseSubst ++ boolSubst ++ sameSubst,
+                condSubst ++ trueSubst ++ falseSubst
+                    ++ boolSubst ++ sameSubst,
                 Type.apply sameSubst trueType
+        }
+
+    and private inferApplication funenv env (def : ApplicationDef<_>) =
+        result {
+            let! scheme =
+                SchemeEnvironment.tryFindIdent def.Identifier funenv
+            let schemeType = Scheme.instantiate scheme
+            let! argSubsts, argTypes =
+                def.Arguments
+                    |> Result.List.traverse (
+                        inferTypeExpr funenv env)
+                    |> Result.map List.unzip
+            let outType = generateTypeVariable "out"
+            let arrowType =
+                TypeArrow {
+                    InputTypes = argTypes
+                    OutputType = outType
+                    Tag = ()
+                }
+            let! subst = unify schemeType arrowType
+            return
+                (List.reduce (++) argSubsts) ++ subst,
+                Type.apply subst outType
         }
 
     let inferType expr =

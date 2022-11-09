@@ -2,9 +2,22 @@
 
 open CompilerDesign.Core
 
-module TypeCheck =
+type TypeEnvironment = Map<IdentifierDef<unit>, Type<unit>>
 
-    type Environment = Map<IdentifierDef<unit>, Type<unit>>
+module TypeEnvironment =
+
+    let tryFind ident env =
+        match Map.tryFind ident env with
+            | Some typ -> Ok typ
+            | None -> Error $"Unbound identifier: {ident.Name}"
+
+    let tryFindFunc ident env =
+        match tryFind ident env with
+            | Ok (TypeArrow def) -> Ok def
+            | Ok _ -> Error $"Not a function: {ident.Name}"
+            | Error err -> Error err
+
+module TypeCheck =
 
     let private checkMissing typ =
         if typ = TypeBlank () then
@@ -16,12 +29,9 @@ module TypeCheck =
             $"Expected: {Type.unparse expected}, \
             Actual: {Type.unparse actual}"
 
-    let private unbound ident =
-        Error $"Unbound identifier: {ident.Name}"
-
     module private rec Expr =
 
-        let typeOf (env : Environment) expr =
+        let typeOf (env : TypeEnvironment) expr =
             result {
                 let! typ =
                     match expr with
@@ -31,7 +41,7 @@ module TypeCheck =
                         | Prim1Expr def -> typeOfPrim1 env def
                         | Prim2Expr def -> typeOfPrim2 env def
                         | IfExpr def -> typeOfIf env def
-                        | IdentifierExpr def -> typeOfIdentifier env def
+                        | IdentifierExpr def -> TypeEnvironment.tryFind def env
                         | ApplicationExpr def -> typeOfApplication env def
                         | AnnotationExpr def -> typeOfAnnotation env def
                 do! Type.checkMissing typ
@@ -115,20 +125,10 @@ module TypeCheck =
                     return! Type.mismatch Type.bool typeCond
             }
 
-        let private typeOfIdentifier env def =
-            result {
-                match Map.tryFind def env with
-                    | Some typ -> return typ
-                    | None -> return! unbound def
-            }
-
         let private typeOfApplication env def =
             result {
                 let! typeArrowDef =
-                    match Map.tryFind def.Identifier env with
-                        | Some (TypeArrow def) -> Ok def
-                        | Some _ -> Error $"Not a function: {def.Identifier.Name}"
-                        | None -> unbound def.Identifier
+                    TypeEnvironment.tryFindFunc def.Identifier env
                 if typeArrowDef.InputTypes.Length = def.Arguments.Length then
                     let! argTypes =
                         def.Arguments
@@ -158,7 +158,7 @@ module TypeCheck =
 
     module private Decl =
 
-        let typeCheck (env : Environment) decl =
+        let typeCheck (env : TypeEnvironment) decl =
             result {
                 let! arrowDef =
                     match decl.Scheme.Type with
@@ -181,7 +181,7 @@ module TypeCheck =
                     return (Map.add
                         decl.Identifier
                         decl.Scheme.Type
-                        env : Environment)
+                        env : TypeEnvironment)
             }
 
     let typeOf program =
