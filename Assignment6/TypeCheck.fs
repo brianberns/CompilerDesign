@@ -149,7 +149,9 @@ module TypeCheck =
                             return! Type.mismatch expected actual
                     return typeArrowDef.OutputType
                 else
-                    return! Error "Arity mismatch"
+                    return! Error $"Arity mismatch: \
+                        expected {typeArrowDef.InputTypes.Length}, \
+                        actual {def.Arguments.Length}"
             }
 
         let private typeOfAnnotation env def =

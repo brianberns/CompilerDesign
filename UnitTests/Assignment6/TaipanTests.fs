@@ -71,6 +71,7 @@ type TaipanTests() =
                 "def plus(x : Bool, y : Int) -> Int: x + y plus(true, 4)", Error "Expected: Int, Actual: Bool"
                 "def plus(x, y): x + y plus(3, 4)", Error "Missing type"
                 "let x : Int = 1, y : Int = x + 2 in (x + y : Int)", Ok Type.int
+                "def f(x : Int, y : Int) -> Int: x + y f(0)", Error "Arity mismatch: expected 2, actual 1"
             ]
 
         for text, expected in pairs do
