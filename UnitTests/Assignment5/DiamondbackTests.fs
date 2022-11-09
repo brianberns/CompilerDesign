@@ -57,3 +57,29 @@ type DiamondbackTests() =
         Assert.AreEqual(
             Error "Unbound identifier: a",
             run text)
+
+    [<TestMethod>]
+    member _.DuplicateIdLet() =
+        let text = "let x=0, x=true in x"
+        Assert.AreEqual(
+            Error "Variable already exists: x",
+            run text)
+
+    [<TestMethod>]
+    member _.DuplicateIdDecl() =
+        let text = "def f(x, x): x 0"
+        Assert.AreEqual(
+            Error "Variable already exists: x",
+            run text)
+
+    [<TestMethod>]
+    member _.DuplicateFun() =
+        let text =
+            """
+            def f(x): 0
+            def f(x): 1
+            f(0)
+            """
+        Assert.AreEqual(
+            Error "Function already exists: f",
+            run text)
