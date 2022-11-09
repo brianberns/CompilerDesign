@@ -146,7 +146,8 @@ module TypeInfer =
             let! subst = unify schemeType arrowType
             let subst' = Substitution.compose argSubst subst
             let outType' = Type.apply subst outType
-            return subst', outType', env'
+            let env'' = TypeEnvironment.apply subst' env'
+            return subst', outType', env''
         }
 
     and private inferTypePrim2 funenv env (def : Prim2Def<_>) =
@@ -170,7 +171,8 @@ module TypeInfer =
             let! subst = unify schemeType arrowType
             let subst' = Substitution.compose argsSubst subst
             let outType' = Type.apply subst outType
-            return subst', outType', env''
+            let env''' = TypeEnvironment.apply subst' env''
+            return subst', outType', env'''
         }
 
     let inferType expr =
