@@ -8,19 +8,11 @@ type private SchemeEnvironment =
 
 module SchemeEnvironment =
 
-    open FParsec
-
     let apply (subst : Substitution<_>) (env : SchemeEnvironment) =
         (env, subst)
             ||> List.fold (fun acc (fromIdent, toType) ->
                 Map.map (fun _ typ ->
                     Scheme.substitute fromIdent toType typ) acc)
-
-    let parseScheme text =
-        let parser = Parser.Scheme.parse .>> eof
-        match runParserOnString parser () "" text with
-            | Success (result, _, _) -> Result.Ok result
-            | Failure (msg, _, _) -> Result.Error msg
 
     let initial : SchemeEnvironment =
         [
@@ -44,7 +36,7 @@ module SchemeEnvironment =
         ]
             |> List.map (fun (name, text) ->
                 result {
-                    let! scheme = parseScheme text
+                    let! scheme = Parser.Scheme.parse text
                     return name, Scheme.untag scheme
                 })
             |> Result.List.sequence

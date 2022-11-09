@@ -413,17 +413,20 @@ module Parser =
                 let! decls =
                     many (Decl.parse .>> spaces)
                 let! main = Expr.parse .>> spaces
-                do! eof
                 return {
                     Declarations = decls
                     Main = main
                 }
             }
 
-    let parse text =
-        match runParserOnString Program.parse () "" text with
+    let run parser text =
+        let parser' = parser .>> eof
+        match runParserOnString parser' () "" text with
             | Success (result, _, _) -> Result.Ok result
             | Failure (msg, _, _) -> Result.Error msg
+
+    let parse text =
+        run Program.parse text
 
     module Scheme =
 
@@ -432,7 +435,7 @@ module Parser =
                 >>. many1 Type.parseVariableIdentifier
                 .>> skipChar '>'
 
-        let parse =
+        let private parseScheme =
             (parseTypeVarIdents <|>% List.empty)
                 .>>. Type.parse
                 |> parsePos (fun (tvIdents, typ) tag ->
@@ -441,3 +444,6 @@ module Parser =
                         Type = typ
                         Tag = tag
                     })
+
+        let parse text =
+            run parseScheme text

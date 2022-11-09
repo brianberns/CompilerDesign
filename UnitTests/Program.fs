@@ -3,7 +3,7 @@ open CompilerDesign.Assignment6
 open CompilerDesign.Core
 
 let program =
-    "print(0)"
+    "let x = false in print(x)"
         |> Parser.parse
         |> Result.get
 TypeInfer.inferType program.Main

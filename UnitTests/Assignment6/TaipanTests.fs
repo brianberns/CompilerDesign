@@ -86,7 +86,7 @@ type TaipanTests() =
     member _.Unify() =
 
         let parseType text =
-            SchemeEnvironment.parseScheme text
+            Parser.Scheme.parse text
                 |> Result.get
                 |> (fun scheme ->
                     Assert.IsTrue(scheme.TypeVariableIdents.IsEmpty)
