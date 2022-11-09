@@ -103,7 +103,7 @@ module TypeInfer =
         | Prim2Expr def -> inferPrim2 funenv env def
         | IfExpr def -> inferIf funenv env def
         | ApplicationExpr def -> inferApplication funenv env def
-        | _ -> Error "Oops"
+        | AnnotationExpr def -> inferTypeExpr funenv env def.Expr
 
     and private inferIdentifier _funenv env ident =
         result {
