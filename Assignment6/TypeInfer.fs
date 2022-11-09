@@ -175,8 +175,11 @@ module TypeInfer =
                 inferTypeExpr funenv env def.TrueBranch
             let! falseSubst, falseType =
                 inferTypeExpr funenv env def.Condition
-            let triSubst = condSubst ++ trueSubst ++ falseSubst
-            return failwith "moo"
+            let! boolSubst = unify condType Type.bool
+            let! sameSubst = unify trueType falseType
+            return
+                condSubst ++ trueSubst ++ falseSubst ++ boolSubst ++ sameSubst,
+                Type.apply sameSubst trueType
         }
 
     let inferType expr =
