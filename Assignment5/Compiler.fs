@@ -64,20 +64,20 @@ module ArityEnvironment =
 
 module Compiler =
 
-    let private compileNumber (env : env) num =
+    let private compileNumber (env : env) (def : NumberDef<_>) =
         let node =
-            Syntax.numericLiteral num
+            Syntax.numericLiteral def.Number
                 :> Syntax.ExpressionSyntax
         Ok (node, env)
 
-    let private compileBool (env : env) flag =
+    let private compileBool (env : env) (def : BoolDef<_>) =
         let node =
-            Syntax.boolLiteral flag
+            Syntax.boolLiteral def.Flag
                 :> Syntax.ExpressionSyntax
         Ok (node, env)
 
-    let private compileIdentifier env ident =
-        Env.tryFind ident env
+    let private compileIdentifier env (def : IdentifierDef<_>) =
+        Env.tryFind def.Name env
             |> Result.map (fun node -> node, env)
 
     module private rec Expr =
@@ -85,26 +85,26 @@ module Compiler =
         let compile env aenv expr : CompilerResult<_> =
             match expr with
                 | LetExpr def ->
-                    compileLet env aenv def.Bindings def.Expr
+                    compileLet env aenv def
                 | Prim1Expr def ->
-                    compilePrim1 env aenv def.Operator def.Expr
+                    compilePrim1 env aenv def
                 | Prim2Expr def ->
-                    compilePrim2 env aenv def.Operator def.Left def.Right
+                    compilePrim2 env aenv def
                 | IfExpr def ->
-                    compileIf env aenv def.Condition def.TrueBranch def.FalseBranch
+                    compileIf env aenv def
                 | NumberExpr def ->
-                    compileNumber env def.Number
+                    compileNumber env def
                 | IdentifierExpr def ->
-                    compileIdentifier env def.Name
+                    compileIdentifier env def
                 | BoolExpr def ->
-                    compileBool env def.Flag
+                    compileBool env def
                 | ApplicationExpr def ->
-                    compileApplication env aenv def.Identifier def.Arguments
+                    compileApplication env aenv def
 
-        let private compileLet env aenv bindings expr =
+        let private compileLet env aenv (def : LetDef<_>) =
             result {
                 let! env' =
-                    (env, bindings)
+                    (env, def.Bindings)
                         ||> Result.List.foldM (fun acc binding ->
                             result {
                                 let! node, acc' =
@@ -114,15 +114,15 @@ module Compiler =
                                         binding.Identifier.Name
                                         node
                             })
-                return! compile env' aenv expr
+                return! compile env' aenv def.Expr
             }
 
-        let private compilePrim1 env aenv op expr =
+        let private compilePrim1 env aenv (def : Prim1Def<_>) =
             result {
-                let! node, _ = compile env aenv expr
+                let! node, _ = compile env aenv def.Expr
 
                 let prim1Node =
-                    match op with
+                    match def.Operator with
                         | Add1 ->
                             Syntax.by1 node SyntaxKind.AddExpression
                                 :> Syntax.ExpressionSyntax
@@ -139,9 +139,9 @@ module Compiler =
                 return prim1Node, env
             }
 
-        let private compilePrim2 env aenv op left right =
+        let private compilePrim2 env aenv (def : Prim2Def<_>) =
             let kind =
-                match op with
+                match def.Operator with
                     | Plus -> SyntaxKind.AddExpression
                     | Minus -> SyntaxKind.SubtractExpression
                     | Times -> SyntaxKind.MultiplyExpression
@@ -153,8 +153,8 @@ module Compiler =
                     | LessEq -> SyntaxKind.LessThanOrEqualExpression
                     | Eq -> SyntaxKind.EqualsExpression
             result {
-                let! leftNode, _ = compile env aenv left
-                let! rightNode, _ = compile env aenv right
+                let! leftNode, _ = compile env aenv def.Left
+                let! rightNode, _ = compile env aenv def.Right
                 let node =
                     BinaryExpression(
                         kind,
@@ -163,12 +163,12 @@ module Compiler =
                 return node, env
             }
 
-        let private compileIf env aenv cond trueBranch falseBranch =
+        let private compileIf env aenv (def : IfDef<_>) =
             result {
 
-                let! condNode, _ = compile env aenv cond
-                let! trueNode, _ = compile env aenv trueBranch
-                let! falseNode, _ = compile env aenv falseBranch
+                let! condNode, _ = compile env aenv def.Condition
+                let! trueNode, _ = compile env aenv def.TrueBranch
+                let! falseNode, _ = compile env aenv def.FalseBranch
 
                 let node =
                     ConditionalExpression(
@@ -177,15 +177,18 @@ module Compiler =
                 return node, env
             }
 
-        let private compileApplication env aenv ident args =
+        let private compileApplication env aenv (def : ApplicationDef<_>) =
             result {
 
-                let! arity = ArityEnvironment.tryFind ident.Name aenv
-                if arity <> args.Length then
-                    return! Error $"Arity mismatch: expected {arity}, actual {args.Length}"
+                let! arity =
+                    ArityEnvironment.tryFind def.Identifier.Name aenv
+                if arity <> def.Arguments.Length then
+                    return! Error $"Arity mismatch: \
+                        expected {arity}, \
+                        actual {def.Arguments.Length}"
 
                 let! argsNode =
-                    args
+                    def.Arguments
                         |> List.map (fun expr ->
                             compile env aenv expr
                                 |> Result.map (fst >> Argument))
@@ -194,7 +197,7 @@ module Compiler =
 
                 let node =
                     InvocationExpression(
-                        IdentifierName(ident.Name))
+                        IdentifierName(def.Identifier.Name))
                         .WithArgumentList(ArgumentList(argsNode))
 
                 return node, env
