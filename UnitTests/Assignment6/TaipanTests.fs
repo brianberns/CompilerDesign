@@ -75,11 +75,13 @@ type TaipanTests() =
                 "f(0)", Error "Unbound identifier: f"
                 "let x : Int = 0, x : Bool = true in x", Error "Duplicate identifier: x"
                 "def f(x : Int, x : Int) -> Int: x 0", Error "Duplicate identifier: x"
+
                 """
                 def f(x : Int) -> Int: 0
                 def f(x : Int) -> Int: 1
                 f(0)
                 """, Error "Duplicate identifier: f"
+
                 """
                 def a() -> Int: b()
                 and def b() -> Int: a()

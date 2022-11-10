@@ -174,6 +174,12 @@ module TypeCheck =
 
     module private Decl =
 
+        let tryAdd env decl =
+            TypeEnvironment.tryAdd
+                decl.Identifier
+                decl.Scheme.Type
+                env
+
         let typeCheck env decl =
             result {
                 let! arrowDef =
@@ -194,18 +200,19 @@ module TypeCheck =
 
                 if bodyType <> arrowDef.OutputType then
                     return! Type.mismatch arrowDef.OutputType bodyType
-                else
-                    return! TypeEnvironment.tryAdd
-                        decl.Identifier
-                        decl.Scheme.Type
-                        env
             }
 
     module private DeclGroup =
 
         let typeCheck env group =
-            (env, group.Decls)
-                ||> Result.List.foldM Decl.typeCheck
+            result {
+                let! env' =
+                    (env, group.Decls)
+                        ||> Result.List.foldM Decl.tryAdd
+                for decl in group.Decls do
+                    do! Decl.typeCheck env' decl
+                return env'
+            }
 
     let typeOf program =
         result {
