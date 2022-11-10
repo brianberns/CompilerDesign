@@ -3,19 +3,24 @@ open CompilerDesign.Assignment6
 open CompilerDesign.Core
 
 let program =
+    // (int, int) -> int
     """
-    def f<'a>(x : 'a) -> 'a:
-      print(x)
-
-    and def ab_bool<'a, 'b>(a : 'a, b : 'b) -> Bool:
-      isnum(f(a)) && f(b)
-
-    ab_bool(3, true) && ab_bool(true, false)
+    def add(x, y) : x + y
+    0
     """
         |> Parser.parse
         |> Result.get
 
-Program.unparse program
-    |> printfn "%s"
-TypeCheck.typeOf program
-    |> printfn "%A"
+result {
+    let decl =
+        program.DeclGroups[0].Decls[0]
+            |> Decl.untag
+
+    let! _, typ =
+        TypeInfer.Decl.infer
+            SchemeEnvironment.initial
+            Map.empty
+            decl
+
+    return Type.unparse typ
+} |> printfn "%A"

@@ -234,16 +234,23 @@ module TypeInfer =
                 return typ
             }
 
-    (*
-    module private Decl =
+    module Decl =
 
         // def add(x, y) : x + y
         // def id(x) : x
         let infer funenv env (decl : Decl<_>) =
             result {
-                let outType = generateTypeVariable "out"
+                let! env' =
+                    (env, decl.Parameters)
+                        ||> Result.List.foldM (fun acc ident ->
+                            let typ = generateTypeVariable ident.Name
+                            acc |> TypeEnvironment.tryAdd ident typ)
+
+                let! outSubst, outType= Expr.infer funenv env' decl.Body
+                return outSubst, outType
             }
 
+    (*
     module private DeclGroup =
 
         let infer funenv env group =
