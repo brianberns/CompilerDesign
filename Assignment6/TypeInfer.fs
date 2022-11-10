@@ -102,128 +102,130 @@ module TypeInfer =
 
     let (++) = Substitution.compose
 
-    let rec private inferExpr funenv env = function
-        | NumberExpr _ -> Ok (Substitution.empty, Type.int)
-        | BoolExpr _ -> Ok (Substitution.empty, Type.bool)
-        | IdentifierExpr ident -> inferIdentifier funenv env ident
-        | Prim1Expr def -> inferPrim1 funenv env def
-        | Prim2Expr def -> inferPrim2 funenv env def
-        | IfExpr def -> inferIf funenv env def
-        | LetExpr def -> inferLet funenv env def
-        | ApplicationExpr def -> inferApplication funenv env def
-        | AnnotationExpr def -> inferExpr funenv env def.Expr
+    module rec Expr =
 
-    and private inferIdentifier _funenv env ident =
-        result {
-            let! typ = TypeEnvironment.tryFind ident env
-            return Substitution.empty, typ
-        }
+        let private inferExpr funenv env = function
+            | NumberExpr _ -> Ok (Substitution.empty, Type.int)
+            | BoolExpr _ -> Ok (Substitution.empty, Type.bool)
+            | IdentifierExpr ident -> inferIdentifier funenv env ident
+            | Prim1Expr def -> inferPrim1 funenv env def
+            | Prim2Expr def -> inferPrim2 funenv env def
+            | IfExpr def -> inferIf funenv env def
+            | LetExpr def -> inferLet funenv env def
+            | ApplicationExpr def -> inferApplication funenv env def
+            | AnnotationExpr def -> inferExpr funenv env def.Expr
 
-    and private inferPrim1 funenv env (def : Prim1Def<_>) =
-        result {
-            let! scheme =
-                SchemeEnvironment.tryFindPrim1 def.Operator funenv
-            let schemeType = Scheme.instantiate scheme
-            let! argSubst, argType =
-                inferExpr funenv env def.Expr
-            let outType = generateTypeVariable "out"
-            let arrowType =
-                TypeArrow {
-                    InputTypes = [argType]
-                    OutputType = outType
-                    Tag = ()
-                }
-            let! subst = unify schemeType arrowType
-            return
-                argSubst ++ subst,
-                Type.apply subst outType
-        }
+        let private inferIdentifier _funenv env ident =
+            result {
+                let! typ = TypeEnvironment.tryFind ident env
+                return Substitution.empty, typ
+            }
 
-    and private inferPrim2 funenv env (def : Prim2Def<_>) =
-        result {
-            let! scheme =
-                SchemeEnvironment.tryFindPrim2 def.Operator funenv
-            let schemeType = Scheme.instantiate scheme
-            let! leftSubst, leftType =
-                inferExpr funenv env def.Left
-            let! rightSubst, rightType =
-                inferExpr funenv env def.Right
-            let outType = generateTypeVariable "out"
-            let arrowType =
-                TypeArrow {
-                    InputTypes = [leftType; rightType]
-                    OutputType = outType
-                    Tag = ()
-                }
-            let! subst = unify schemeType arrowType
-            return
-                leftSubst ++ rightSubst ++ subst,
-                Type.apply subst outType
-        }
+        let private inferPrim1 funenv env (def : Prim1Def<_>) =
+            result {
+                let! scheme =
+                    SchemeEnvironment.tryFindPrim1 def.Operator funenv
+                let schemeType = Scheme.instantiate scheme
+                let! argSubst, argType =
+                    inferExpr funenv env def.Expr
+                let outType = generateTypeVariable "out"
+                let arrowType =
+                    TypeArrow {
+                        InputTypes = [argType]
+                        OutputType = outType
+                        Tag = ()
+                    }
+                let! subst = unify schemeType arrowType
+                return
+                    argSubst ++ subst,
+                    Type.apply subst outType
+            }
 
-    and private inferIf funenv env (def : IfDef<_>) =
-        result {
-            let! condSubst, condType =
-                inferExpr funenv env def.Condition
-            let! trueSubst, trueType =
-                inferExpr funenv env def.TrueBranch
-            let! falseSubst, falseType =
-                inferExpr funenv env def.Condition
-            let! boolSubst = unify condType Type.bool
-            let! sameSubst = unify trueType falseType
-            return
-                condSubst ++ trueSubst ++ falseSubst
-                    ++ boolSubst ++ sameSubst,
-                Type.apply sameSubst trueType
-        }
+        let private inferPrim2 funenv env (def : Prim2Def<_>) =
+            result {
+                let! scheme =
+                    SchemeEnvironment.tryFindPrim2 def.Operator funenv
+                let schemeType = Scheme.instantiate scheme
+                let! leftSubst, leftType =
+                    inferExpr funenv env def.Left
+                let! rightSubst, rightType =
+                    inferExpr funenv env def.Right
+                let outType = generateTypeVariable "out"
+                let arrowType =
+                    TypeArrow {
+                        InputTypes = [leftType; rightType]
+                        OutputType = outType
+                        Tag = ()
+                    }
+                let! subst = unify schemeType arrowType
+                return
+                    leftSubst ++ rightSubst ++ subst,
+                    Type.apply subst outType
+            }
 
-    and private inferLet funenv env (def : LetDef<_>) =
-        result {
-            let! env', bindingSubst =
-                ((env, Substitution.empty), def.Bindings)
-                    ||> Result.List.foldM (fun (accEnv, accSubst) binding ->
-                        result {
-                            let! subst, typ =
-                                inferExpr funenv accEnv binding.Expr
-                            let accEnv' = Map.add binding.Identifier typ accEnv
-                            return accEnv', accSubst ++ subst
-                        })
-            let! bodySubst, bodyType = inferExpr funenv env' def.Expr
-            return
-                bindingSubst ++ bodySubst,
-                Type.apply bodySubst bodyType
-        }
+        let private inferIf funenv env (def : IfDef<_>) =
+            result {
+                let! condSubst, condType =
+                    inferExpr funenv env def.Condition
+                let! trueSubst, trueType =
+                    inferExpr funenv env def.TrueBranch
+                let! falseSubst, falseType =
+                    inferExpr funenv env def.Condition
+                let! boolSubst = unify condType Type.bool
+                let! sameSubst = unify trueType falseType
+                return
+                    condSubst ++ trueSubst ++ falseSubst
+                        ++ boolSubst ++ sameSubst,
+                    Type.apply sameSubst trueType
+            }
 
-    and private inferApplication funenv env (def : ApplicationDef<_>) =
-        result {
-            let! scheme =
-                SchemeEnvironment.tryFindIdent def.Identifier funenv
-            let schemeType = Scheme.instantiate scheme
-            let! argSubsts, argTypes =
-                def.Arguments
-                    |> Result.List.traverse (
-                        inferExpr funenv env)
-                    |> Result.map List.unzip
-            let outType = generateTypeVariable "out"
-            let arrowType =
-                TypeArrow {
-                    InputTypes = argTypes
-                    OutputType = outType
-                    Tag = ()
-                }
-            let! subst = unify schemeType arrowType
-            return
-                (List.reduce (++) argSubsts) ++ subst,
-                Type.apply subst outType
-        }
+        let private inferLet funenv env (def : LetDef<_>) =
+            result {
+                let! env', bindingSubst =
+                    ((env, Substitution.empty), def.Bindings)
+                        ||> Result.List.foldM (fun (accEnv, accSubst) binding ->
+                            result {
+                                let! subst, typ =
+                                    inferExpr funenv accEnv binding.Expr
+                                let accEnv' = Map.add binding.Identifier typ accEnv
+                                return accEnv', accSubst ++ subst
+                            })
+                let! bodySubst, bodyType = inferExpr funenv env' def.Expr
+                return
+                    bindingSubst ++ bodySubst,
+                    Type.apply bodySubst bodyType
+            }
 
-    let inferType expr =
-        result {
-            let expr' = Expr.untag expr
-            let! _, typ =
-                inferExpr
-                    SchemeEnvironment.initial
-                    Map.empty
-                    expr'
-            return typ
-        }
+        let private inferApplication funenv env (def : ApplicationDef<_>) =
+            result {
+                let! scheme =
+                    SchemeEnvironment.tryFindIdent def.Identifier funenv
+                let schemeType = Scheme.instantiate scheme
+                let! argSubsts, argTypes =
+                    def.Arguments
+                        |> Result.List.traverse (
+                            inferExpr funenv env)
+                        |> Result.map List.unzip
+                let outType = generateTypeVariable "out"
+                let arrowType =
+                    TypeArrow {
+                        InputTypes = argTypes
+                        OutputType = outType
+                        Tag = ()
+                    }
+                let! subst = unify schemeType arrowType
+                return
+                    (List.reduce (++) argSubsts) ++ subst,
+                    Type.apply subst outType
+            }
+
+        let typeOf expr =
+            result {
+                let expr' = Expr.untag expr
+                let! _, typ =
+                    inferExpr
+                        SchemeEnvironment.initial
+                        Map.empty
+                        expr'
+                return typ
+            }

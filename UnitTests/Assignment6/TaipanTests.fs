@@ -42,16 +42,6 @@ type TaipanTests() =
         Assert.AreEqual(Ok "5\n5\nFalse", run text)
 
     [<TestMethod>]
-    member _.Polymorphic() =
-        let text =
-            """
-            def identity(x): x
-
-            identity(true)
-            """
-        Assert.AreEqual(Ok "True", run text)
-
-    [<TestMethod>]
     member _.TypeCheck() =
 
         let pairs =
@@ -141,3 +131,31 @@ type TaipanTests() =
         for (typ1, typ2, expected) in tuples do
             let actual = Substitution.unify typ1 typ2
             Assert.AreEqual(expected, actual)
+
+    [<TestMethod>]
+    member _.TypeInfer() =
+
+        let pairs =
+            [
+                "let x = 1, y = x + 2 in x + y", Ok Type.int
+                "let x = 0, x = true in x", Error "Duplicate identifier: x"
+            ]
+
+        for text, expected in pairs do
+            let parsed = Parser.parse text
+            match parsed with
+                | Ok program ->
+                    let actual = TypeInfer.Expr.typeOf program.Main
+                    Assert.AreEqual(expected, actual, text)
+                | Error msg ->
+                    Assert.Fail($"{text}\n{msg}")
+
+    [<TestMethod>]
+    member _.Polymorphic() =
+        let text =
+            """
+            def identity(x): x
+
+            identity(true)
+            """
+        Assert.AreEqual(Ok "True", run text)
