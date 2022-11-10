@@ -229,7 +229,7 @@ module TypeInfer =
                 let! subst = unify def.Type exprTyp
                 return
                     exprSubst ++ subst,
-                    Type.apply subst exprTyp
+                    exprTyp
             }
 
         let typeOf expr =
