@@ -187,7 +187,11 @@ module TypeInfer =
                             result {
                                 let! subst, typ =
                                     inferExpr funenv accEnv binding.Expr
-                                let accEnv' = Map.add binding.Identifier typ accEnv
+                                let! accEnv' =
+                                    TypeEnvironment.tryAdd
+                                        binding.Identifier
+                                        typ
+                                        accEnv
                                 return accEnv', accSubst ++ subst
                             })
                 let! bodySubst, bodyType = inferExpr funenv env' def.Expr
