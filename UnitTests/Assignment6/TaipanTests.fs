@@ -73,8 +73,11 @@ type TaipanTests() =
                 "let x : Int = 1, y : Int = x + 2 in (x + y : Int)", Ok Type.int
                 "def f(x : Int, y : Int) -> Int: x + y f(0)", Error "Arity mismatch: expected 2, actual 1"
                 "f(0)", Error "Unbound identifier: f"
-                "let x : Int = 0, x : Bool = true in x", Error "Variable already exists: x"
-                "def f(x : Int, x : Int) -> Int: x 0", Error "Variable already exists: x"
+                "let x : Int = 0, x : Bool = true in x", Error "Duplicate identifier: x"
+                "def f(x : Int, x : Int) -> Int: x 0", Error "Duplicate identifier: x"
+                "def f(x : Int) -> Int: 0 \
+                 def f(x : Int) -> Int: 1 \
+                 f(0)", Error "Duplicate identifier: f"
             ]
 
         for text, expected in pairs do

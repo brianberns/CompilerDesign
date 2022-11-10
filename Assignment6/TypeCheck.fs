@@ -8,7 +8,7 @@ module TypeEnvironment =
 
     let tryAdd ident node (env : TypeEnvironment) =
         if Map.containsKey ident env then
-            Error $"Variable already exists: {ident.Name}"
+            Error $"Duplicate identifier: {ident.Name}"
         else
             let env : TypeEnvironment = Map.add ident node env
             Ok env
@@ -194,10 +194,10 @@ module TypeCheck =
                 if bodyType <> arrowDef.OutputType then
                     return! Type.mismatch arrowDef.OutputType bodyType
                 else
-                    return (Map.add
+                    return! TypeEnvironment.tryAdd
                         decl.Identifier
                         decl.Scheme.Type
-                        env : TypeEnvironment)
+                        env
             }
 
     let typeOf program =
