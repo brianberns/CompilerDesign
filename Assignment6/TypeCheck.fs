@@ -184,10 +184,11 @@ module TypeCheck =
                             }
                         | _ -> Error "Invalid decl scheme"
 
-                let env' =
-                    (env, decl.Parameters, arrowDef.InputTypes)
-                        |||> List.fold2 (fun acc ident typ ->
-                                acc |> Map.add ident typ)
+                let! env' =
+                    let pairs = List.zip decl.Parameters arrowDef.InputTypes
+                    (env, pairs)
+                        ||> Result.List.foldM (fun acc (ident, typ) ->
+                            acc |> TypeEnvironment.tryAdd ident typ)
                 let! bodyType = Expr.typeOf env' decl.Body
 
                 if bodyType <> arrowDef.OutputType then
