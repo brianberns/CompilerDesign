@@ -64,22 +64,6 @@ module ArityEnvironment =
 
 module Compiler =
 
-    let private compileNumber (env : env) (def : NumberDef<_>) =
-        let node =
-            Syntax.numericLiteral def.Number
-                :> Syntax.ExpressionSyntax
-        Ok (node, env)
-
-    let private compileBool (env : env) (def : BoolDef<_>) =
-        let node =
-            Syntax.boolLiteral def.Flag
-                :> Syntax.ExpressionSyntax
-        Ok (node, env)
-
-    let private compileIdentifier env (def : IdentifierDef<_>) =
-        Env.tryFind def.Name env
-            |> Result.map (fun node -> node, env)
-
     module private rec Expr =
 
         let compile env aenv = function
@@ -91,6 +75,22 @@ module Compiler =
             | IdentifierExpr def -> compileIdentifier env def
             | BoolExpr def -> compileBool env def
             | ApplicationExpr def -> compileApplication env aenv def
+
+        let private compileNumber (env : env) (def : NumberDef<_>) =
+            let node =
+                Syntax.numericLiteral def.Number
+                    :> Syntax.ExpressionSyntax
+            Ok (node, env)
+
+        let private compileBool (env : env) (def : BoolDef<_>) =
+            let node =
+                Syntax.boolLiteral def.Flag
+                    :> Syntax.ExpressionSyntax
+            Ok (node, env)
+
+        let private compileIdentifier env (def : IdentifierDef<_>) =
+            Env.tryFind def.Name env
+                |> Result.map (fun node -> node, env)
 
         let private compileLet env aenv (def : LetDef<_>) =
             result {
