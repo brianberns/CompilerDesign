@@ -16,7 +16,6 @@ let program =
         |> Result.get
 
 Program.unparse program
-    |> printfn "%s"(*
+    |> printfn "%s"
 TypeCheck.typeOf program
     |> printfn "%A"
-*)

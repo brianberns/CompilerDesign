@@ -69,16 +69,6 @@ module Type =
     let int = TypeConstant (IdentifierDef.create "Int")
     let bool = TypeConstant (IdentifierDef.create "Bool")
 
-    let checkMissing typ =
-        if typ = TypeBlank () then
-            Error "Missing type"
-        else Ok ()
-
-    let mismatch expected actual =
-        Error
-            $"Expected: {unparse expected}, \
-            Actual: {unparse actual}"
-
     let rec freeTypeVars = function
         | TypeVariable ident -> Set.singleton ident
         | TypeArrow def ->

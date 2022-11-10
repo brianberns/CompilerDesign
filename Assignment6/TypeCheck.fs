@@ -32,15 +32,17 @@ module TypeEnvironment =
 
 module TypeCheck =
 
-    let private checkMissing typ =
-        if typ = TypeBlank () then
-            Error "Missing type"
-        else Ok ()
+    module private Type =
 
-    let private mismatch expected actual =
-        Error
-            $"Expected: {Type.unparse expected}, \
-            Actual: {Type.unparse actual}"
+        let checkMissing typ =
+            if typ = TypeBlank () then
+                Error "Missing type"
+            else Ok ()
+
+        let mismatch expected actual =
+            Error
+                $"Expected: {Type.unparse expected}, \
+                Actual: {Type.unparse actual}"
 
     module private rec Expr =
 
