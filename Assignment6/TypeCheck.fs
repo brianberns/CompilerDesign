@@ -6,6 +6,13 @@ type TypeEnvironment = Map<IdentifierDef<unit>, Type<unit>>
 
 module TypeEnvironment =
 
+    let tryAdd ident node (env : TypeEnvironment) =
+        if Map.containsKey ident env then
+            Error $"Variable already exists: {ident.Name}"
+        else
+            let env : TypeEnvironment = Map.add ident node env
+            Ok env
+
     let tryFind ident (env : TypeEnvironment) =
         match Map.tryFind ident env with
             | Some typ -> Ok typ
@@ -63,7 +70,7 @@ module TypeCheck =
                                 do! Type.checkMissing binding.Type
                                 let! typeExpr = typeOf acc binding.Expr
                                 if binding.Type = typeExpr then
-                                    return Map.add
+                                    return! TypeEnvironment.tryAdd
                                         binding.Identifier
                                         typeExpr
                                         acc

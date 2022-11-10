@@ -72,6 +72,8 @@ type TaipanTests() =
                 "def plus(x, y): x + y plus(3, 4)", Error "Missing type"
                 "let x : Int = 1, y : Int = x + 2 in (x + y : Int)", Ok Type.int
                 "def f(x : Int, y : Int) -> Int: x + y f(0)", Error "Arity mismatch: expected 2, actual 1"
+                "f(0)", Error "Unbound identifier: f"
+                "let x : Int = 0, x : Bool = true in x", Error "Variable already exists: x"
             ]
 
         for text, expected in pairs do
