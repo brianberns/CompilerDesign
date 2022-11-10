@@ -142,7 +142,7 @@ type TaipanTests() =
                 "add1(false)", Error "Could not unify Int and Bool"
                 "(0 : 'a)", Ok Type.int
                 "(0 : _)", Ok Type.int
-                "(0 : Bool)", Error "Could not unify Bool and Int"
+                "(false : Int)", Ok Type.bool
             ]
 
         for text, expected in pairs do

@@ -113,7 +113,7 @@ module TypeInfer =
             | IfExpr def -> inferIf funenv env def
             | LetExpr def -> inferLet funenv env def
             | ApplicationExpr def -> inferApplication funenv env def
-            | AnnotationExpr def -> inferAnnotation funenv env def
+            | AnnotationExpr def -> infer funenv env def.Expr
 
         let private inferIdentifier _funenv env ident =
             result {
@@ -221,15 +221,6 @@ module TypeInfer =
                 return
                     (List.reduce (++) argSubsts) ++ subst,
                     Type.apply subst outType
-            }
-
-        let private inferAnnotation funenv env (def : AnnotationDef<_>) =
-            result {
-                let! exprSubst, exprTyp = infer funenv env def.Expr
-                let! subst = unify def.Type exprTyp
-                return
-                    exprSubst ++ subst,
-                    exprTyp
             }
 
         let typeOf expr =
