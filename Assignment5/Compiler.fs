@@ -180,10 +180,9 @@ module Compiler =
 
                 let! argsNode =
                     def.Arguments
-                        |> List.map (fun expr ->
+                        |> Result.List.traverse (fun expr ->
                             compile env aenv expr
                                 |> Result.map (fst >> Argument))
-                        |> Result.List.sequence
                         |> Result.map SeparatedList
 
                 let node =
