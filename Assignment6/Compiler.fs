@@ -45,49 +45,39 @@ module private Syntax =
 
 module Compiler =
 
-    let private compileNumber (env : env) num =
+    let private compileNumber (env : env) (def : NumberDef<_>) =
         let node =
-            Syntax.numericLiteral num
+            Syntax.numericLiteral def.Number
                 :> Syntax.ExpressionSyntax
         Ok (node, env)
 
-    let private compileBool (env : env) flag =
+    let private compileBool (env : env) (def : BoolDef<_>) =
         let node =
-            Syntax.boolLiteral flag
+            Syntax.boolLiteral def.Flag
                 :> Syntax.ExpressionSyntax
         Ok (node, env)
 
-    let private compileIdentifier env ident =
-        Env.tryFind ident env
+    let private compileIdentifier env (def : IdentifierDef<_>) =
+        Env.tryFind def.Name env
             |> Result.map (fun node -> node, env)
 
     module private rec Expr =
 
-        let compile env expr : CompilerResult<_> =
-            match expr with
-                | LetExpr def ->
-                    compileLet env def.Bindings def.Expr
-                | Prim1Expr def ->
-                    compilePrim1 env def.Operator def.Expr
-                | Prim2Expr def ->
-                    compilePrim2 env def.Operator def.Left def.Right
-                | IfExpr def ->
-                    compileIf env def.Condition def.TrueBranch def.FalseBranch
-                | NumberExpr def ->
-                    compileNumber env def.Number
-                | IdentifierExpr def ->
-                    compileIdentifier env def.Name
-                | BoolExpr def ->
-                    compileBool env def.Flag
-                | ApplicationExpr def ->
-                    compileApplication env def.Identifier def.Arguments
-                | AnnotationExpr def ->
-                    compile env def.Expr
+        let compile env = function
+            | LetExpr def -> (compileLet env def : CompilerResult<_>)
+            | Prim1Expr def -> compilePrim1 env def
+            | Prim2Expr def -> compilePrim2 env def
+            | IfExpr def -> compileIf env def
+            | NumberExpr def -> compileNumber env def
+            | IdentifierExpr def -> compileIdentifier env def
+            | BoolExpr def -> compileBool env def
+            | ApplicationExpr def -> compileApplication env def
+            | AnnotationExpr def -> compile env def.Expr
 
-        let private compileLet env bindings expr =
+        let private compileLet env (def : LetDef<_>) =
             result {
                 let! env' =
-                    (env, bindings)
+                    (env, def.Bindings)
                         ||> Result.List.foldM (fun acc binding ->
                             result {
                                 let! node, acc' =
@@ -97,15 +87,14 @@ module Compiler =
                                         binding.Identifier.Name
                                         node
                             })
-                return! compile env' expr
+                return! compile env' def.Expr
             }
 
-        let private compilePrim1 env op expr =
+        let private compilePrim1 env (def : Prim1Def<_>) =
             result {
-                let! node, _ = compile env expr
-
+                let! node, _ = compile env def.Expr
                 let prim1Node =
-                    match op with
+                    match def.Operator with
                         | Add1 ->
                             Syntax.by1 node SyntaxKind.AddExpression
                                 :> Syntax.ExpressionSyntax
@@ -122,9 +111,9 @@ module Compiler =
                 return prim1Node, env
             }
 
-        let private compilePrim2 env op left right =
+        let private compilePrim2 env (def: Prim2Def<_>) =
             let kind =
-                match op with
+                match def.Operator with
                     | Plus -> SyntaxKind.AddExpression
                     | Minus -> SyntaxKind.SubtractExpression
                     | Times -> SyntaxKind.MultiplyExpression
@@ -136,8 +125,8 @@ module Compiler =
                     | LessEq -> SyntaxKind.LessThanOrEqualExpression
                     | Eq -> SyntaxKind.EqualsExpression
             result {
-                let! leftNode, _ = compile env left
-                let! rightNode, _ = compile env right
+                let! leftNode, _ = compile env def.Left
+                let! rightNode, _ = compile env def.Right
                 let node =
                     BinaryExpression(
                         kind,
@@ -146,12 +135,12 @@ module Compiler =
                 return node, env
             }
 
-        let private compileIf env cond trueBranch falseBranch =
+        let private compileIf env (def : IfDef<_>) =
             result {
 
-                let! condNode, _ = compile env cond
-                let! trueNode, _ = compile env trueBranch
-                let! falseNode, _ = compile env falseBranch
+                let! condNode, _ = compile env def.Condition
+                let! trueNode, _ = compile env def.TrueBranch
+                let! falseNode, _ = compile env def.FalseBranch
 
                 let node =
                     ConditionalExpression(
@@ -160,11 +149,11 @@ module Compiler =
                 return node, env
             }
 
-        let private compileApplication env ident args =
+        let private compileApplication env (def : ApplicationDef<_>) =
             result {
 
                 let! argsNode =
-                    args
+                    def.Arguments
                         |> List.map (fun expr ->
                             compile env expr
                                 |> Result.map (fst >> Argument))
@@ -173,7 +162,7 @@ module Compiler =
 
                 let node =
                     InvocationExpression(
-                        IdentifierName(ident.Name))
+                        IdentifierName(def.Identifier.Name))
                         .WithArgumentList(ArgumentList(argsNode))
 
                 return node, env

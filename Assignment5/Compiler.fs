@@ -82,24 +82,15 @@ module Compiler =
 
     module private rec Expr =
 
-        let compile env aenv expr : CompilerResult<_> =
-            match expr with
-                | LetExpr def ->
-                    compileLet env aenv def
-                | Prim1Expr def ->
-                    compilePrim1 env aenv def
-                | Prim2Expr def ->
-                    compilePrim2 env aenv def
-                | IfExpr def ->
-                    compileIf env aenv def
-                | NumberExpr def ->
-                    compileNumber env def
-                | IdentifierExpr def ->
-                    compileIdentifier env def
-                | BoolExpr def ->
-                    compileBool env def
-                | ApplicationExpr def ->
-                    compileApplication env aenv def
+        let compile env aenv = function
+            | LetExpr def -> compileLet env aenv def
+            | Prim1Expr def -> compilePrim1 env aenv def
+            | Prim2Expr def -> compilePrim2 env aenv def
+            | IfExpr def -> compileIf env aenv def
+            | NumberExpr def -> compileNumber env def
+            | IdentifierExpr def -> compileIdentifier env def
+            | BoolExpr def -> compileBool env def
+            | ApplicationExpr def -> compileApplication env aenv def
 
         let private compileLet env aenv (def : LetDef<_>) =
             result {
