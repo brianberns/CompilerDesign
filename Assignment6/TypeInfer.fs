@@ -34,12 +34,11 @@ module SchemeEnvironment =
             Prim2.unparse LessEq, "(Int, Int -> Bool)"
             Prim2.unparse Eq, "<'a>('a, 'a -> Bool)"
         ]
-            |> List.map (fun (name, text) ->
+            |> Result.List.traverse (fun (name, text) ->
                 result {
                     let! scheme = Parser.Scheme.parse text
                     return name, Scheme.untag scheme
                 })
-            |> Result.List.sequence
             |> Result.get
             |> Map
 

@@ -147,8 +147,7 @@ module TypeCheck =
                 if typeArrowDef.InputTypes.Length = def.Arguments.Length then
                     let! argTypes =
                         def.Arguments
-                            |> List.map (typeOf env)
-                            |> Result.List.sequence
+                            |> Result.List.traverse (typeOf env)
                     let pairs =
                         List.zip
                             typeArrowDef.InputTypes

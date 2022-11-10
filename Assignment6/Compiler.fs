@@ -154,10 +154,9 @@ module Compiler =
 
                 let! argsNode =
                     def.Arguments
-                        |> List.map (fun expr ->
+                        |> Result.List.traverse (fun expr ->
                             compile env expr
                                 |> Result.map (fst >> Argument))
-                        |> Result.List.sequence
                         |> Result.map SeparatedList
 
                 let node =
@@ -192,8 +191,7 @@ module Compiler =
                             })
                 let! parmNodes =
                     decl.Parameters
-                        |> List.map compileParameter
-                        |> Result.List.sequence
+                        |> Result.List.traverse compileParameter
                 let! bodyNode, _ = Expr.compile env decl.Body
 
                 return MethodDeclaration(
