@@ -15,25 +15,34 @@ module SchemeEnvironment =
                     Scheme.substitute fromIdent toType typ) acc)
 
     let initial : SchemeEnvironment =
-        [
-            Prim1.unparse Add1, "(Int -> Int)"
-            Prim1.unparse Sub1, "(Int -> Int)"
-            Prim1.unparse Print, "<'a>('a -> 'a)"
-            Prim1.unparse IsBool, "<'a>('a -> Bool)"
-            Prim1.unparse IsNum, "<'a>('a -> Bool)"
-            Prim1.unparse Not, "(Bool -> Bool)"
 
-            Prim2.unparse Plus, "(Int, Int -> Int)"
-            Prim2.unparse Minus, "(Int, Int -> Int)"
-            Prim2.unparse Times, "(Int, Int -> Int)"
-            Prim2.unparse And, "(Bool, Bool -> Bool)"
-            Prim2.unparse Or, "(Bool, Bool -> Bool)"
-            Prim2.unparse Greater, "(Int, Int -> Bool)"
-            Prim2.unparse GreaterEq, "(Int, Int -> Bool)"
-            Prim2.unparse Less, "(Int, Int -> Bool)"
-            Prim2.unparse LessEq, "(Int, Int -> Bool)"
-            Prim2.unparse Eq, "<'a>('a, 'a -> Bool)"
-        ]
+        let prim1s =
+            [
+                Add1, "(Int -> Int)"
+                Sub1, "(Int -> Int)"
+                Print, "<'a>('a -> 'a)"
+                IsBool, "<'a>('a -> Bool)"
+                IsNum, "<'a>('a -> Bool)"
+                Not, "(Bool -> Bool)"
+            ] |> List.map (fun (op, text) ->
+                Prim1.unparse op, text)
+
+        let prim2s =
+            [
+                Plus, "(Int, Int -> Int)"
+                Minus, "(Int, Int -> Int)"
+                Times, "(Int, Int -> Int)"
+                And, "(Bool, Bool -> Bool)"
+                Or, "(Bool, Bool -> Bool)"
+                Greater, "(Int, Int -> Bool)"
+                GreaterEq, "(Int, Int -> Bool)"
+                Less, "(Int, Int -> Bool)"
+                LessEq, "(Int, Int -> Bool)"
+                Eq, "<'a>('a, 'a -> Bool)"
+            ] |> List.map (fun (op, text) ->
+                Prim2.unparse op, text)
+
+        prim1s @ prim2s
             |> Result.List.traverse (fun (name, text) ->
                 result {
                     let! scheme = Parser.Scheme.parse text
