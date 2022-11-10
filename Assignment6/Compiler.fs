@@ -209,15 +209,20 @@ module Compiler =
                         Block(ReturnStatement(bodyNode)))
             }
 
+    module private DeclGroup =
+
+        let compile group =
+            group.Decls
+                |> Result.List.traverse Decl.compile
+
     module private Program =
 
         let compile program =
             result {
                 let! declNodes =
-                    program.Declarations
-                        |> List.map Decl.compile
-                        |> Result.List.sequence
-                        |> Result.map Seq.toArray
+                    program.DeclGroups
+                        |> Result.List.traverse DeclGroup.compile
+                        |> Result.map (Seq.concat >> Seq.toArray)
                 let! mainNode, _ =
                     Expr.compile Env.empty program.Main
                 return mainNode, declNodes

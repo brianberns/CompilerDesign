@@ -405,16 +405,29 @@ module Parser =
                 }
             }
 
+    module private DeclGroup =
+
+        let parse =
+            parse {
+                let! decls =
+                    sepBy1
+                        Decl.parse
+                        (spaces
+                            .>> skipString "and"
+                            >>. spaces)
+                return { Decls = decls }
+            }
+
     module private Program =
 
         let parse =
             parse {
                 do! spaces
-                let! decls =
-                    many (Decl.parse .>> spaces)
+                let! groups =
+                    many (DeclGroup.parse .>> spaces)
                 let! main = Expr.parse .>> spaces
                 return {
-                    Declarations = decls
+                    DeclGroups = groups
                     Main = main
                 }
             }

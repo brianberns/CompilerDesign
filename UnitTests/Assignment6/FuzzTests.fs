@@ -108,6 +108,15 @@ module Decl =
             }
         } |> Arb.fromGen
 
+module DeclGroup =
+
+    let arb =
+        gen {
+            let! decls =
+                Generator.from<NonEmptyArray<Decl<unit>>>
+            return { Decls = Seq.toList decls.Get }
+        } |> Arb.fromGen
+
 type Arbitraries =
     static member LetDef() = LetDef.arb
     static member NumberDef() = NumberDef.arb
@@ -115,6 +124,7 @@ type Arbitraries =
     static member TypeArrowDef() = TypeArrowDef.arb
     static member Type() = Type.arb
     static member Decl() = Decl.arb
+    static member DeclGroup() = DeclGroup.arb
 
 [<TestClass>]
 type FuzzTests() =

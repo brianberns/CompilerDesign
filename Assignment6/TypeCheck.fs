@@ -44,7 +44,7 @@ module TypeCheck =
 
     module private rec Expr =
 
-        let typeOf (env : TypeEnvironment) expr =
+        let typeOf env expr =
             result {
                 let! typ =
                     match expr with
@@ -173,7 +173,7 @@ module TypeCheck =
 
     module private Decl =
 
-        let typeCheck (env : TypeEnvironment) decl =
+        let typeCheck env decl =
             result {
                 let! arrowDef =
                     match decl.Scheme.Type with
@@ -200,11 +200,17 @@ module TypeCheck =
                         env
             }
 
+    module private DeclGroup =
+
+        let typeCheck env group =
+            (env, group.Decls)
+                ||> Result.List.foldM Decl.typeCheck
+
     let typeOf program =
         result {
             let program' = Program.untag program
             let! env =
-                (Map.empty, program'.Declarations)
-                    ||> Result.List.foldM Decl.typeCheck
+                (Map.empty, program'.DeclGroups)
+                    ||> Result.List.foldM DeclGroup.typeCheck
             return! Expr.typeOf env program'.Main
         }

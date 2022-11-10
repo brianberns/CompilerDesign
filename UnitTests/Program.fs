@@ -3,9 +3,20 @@ open CompilerDesign.Assignment6
 open CompilerDesign.Core
 
 let program =
-    "let x = false in print(x)"
+    """
+    def f<'a>(x : 'a) -> 'a:
+      print(x)
+
+    and def ab_bool<'a, 'b>(a : 'a, b : 'b) -> Bool:
+      isnum(f(a)) && f(b)
+
+    ab_bool(3, true) && ab_bool(true, false)
+    """
         |> Parser.parse
         |> Result.get
-TypeInfer.inferType program.Main
-    |> Result.map Type.unparse
+
+Program.unparse program
+    |> printfn "%s"(*
+TypeCheck.typeOf program
     |> printfn "%A"
+*)

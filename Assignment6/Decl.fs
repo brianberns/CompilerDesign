@@ -76,9 +76,27 @@ module Decl =
         let body = Expr.unparse decl.Body
         $"def {ident}{tvIdents}({parms}){sOutType}:\n    {body}\n\n"
 
+type DeclGroup<'tag> =
+    {
+        Decls : List<Decl<'tag>>
+    }
+
+module DeclGroup =
+
+    let untag group =
+        {
+            Decls =
+                List.map Decl.untag group.Decls
+        }
+
+    let unparse group =
+        group.Decls
+            |> List.map Decl.unparse
+            |> String.concat "and "
+
 type Program<'tag> =
     {
-        Declarations : List<Decl<'tag>>
+        DeclGroups : List<DeclGroup<'tag>>
         Main : Expr<'tag>
     }
 
@@ -86,16 +104,16 @@ module Program =
 
     let untag program =
         {
-            Declarations =
-                program.Declarations
-                    |> List.map Decl.untag
+            DeclGroups =
+                program.DeclGroups
+                    |> List.map DeclGroup.untag
             Main = Expr.untag program.Main
         }
 
     let unparse program =
-        let decls =
-            program.Declarations
-                |> List.map Decl.unparse
+        let declGroups =
+            program.DeclGroups
+                |> List.map DeclGroup.unparse
                 |> String.concat ""
         let main = Expr.unparse program.Main
-        $"{decls}{main}"
+        $"{declGroups}{main}"
