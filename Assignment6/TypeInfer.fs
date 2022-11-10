@@ -246,8 +246,25 @@ module TypeInfer =
                             let typ = generateTypeVariable ident.Name
                             acc |> TypeEnvironment.tryAdd ident typ)
 
-                let! outSubst, outType= Expr.infer funenv env' decl.Body
-                return outSubst, outType
+                let! outSubst, outType = Expr.infer funenv env' decl.Body
+
+                let! parmTypes =
+                    decl.Parameters
+                        |> Result.List.traverse (fun ident ->
+                            result {
+                                let! typ =
+                                    env' |> TypeEnvironment.tryFind ident
+                                return Type.apply outSubst typ
+                            })
+
+                let declType =
+                    TypeArrow {
+                        InputTypes = parmTypes
+                        OutputType = outType
+                        Tag = ()
+                    }
+
+                return outSubst, declType
             }
 
     (*
