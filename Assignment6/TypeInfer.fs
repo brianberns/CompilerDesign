@@ -104,7 +104,7 @@ module TypeInfer =
 
     module rec Expr =
 
-        let private inferExpr funenv env = function
+        let infer funenv env = function
             | NumberExpr _ -> Ok (Substitution.empty, Type.int)
             | BoolExpr _ -> Ok (Substitution.empty, Type.bool)
             | IdentifierExpr ident -> inferIdentifier funenv env ident
@@ -113,7 +113,7 @@ module TypeInfer =
             | IfExpr def -> inferIf funenv env def
             | LetExpr def -> inferLet funenv env def
             | ApplicationExpr def -> inferApplication funenv env def
-            | AnnotationExpr def -> inferExpr funenv env def.Expr
+            | AnnotationExpr def -> inferAnnotation funenv env def
 
         let private inferIdentifier _funenv env ident =
             result {
@@ -127,7 +127,7 @@ module TypeInfer =
                     SchemeEnvironment.tryFindPrim1 def.Operator funenv
                 let schemeType = Scheme.instantiate scheme
                 let! argSubst, argType =
-                    inferExpr funenv env def.Expr
+                    infer funenv env def.Expr
                 let outType = generateTypeVariable "out"
                 let arrowType =
                     TypeArrow {
@@ -147,9 +147,9 @@ module TypeInfer =
                     SchemeEnvironment.tryFindPrim2 def.Operator funenv
                 let schemeType = Scheme.instantiate scheme
                 let! leftSubst, leftType =
-                    inferExpr funenv env def.Left
+                    infer funenv env def.Left
                 let! rightSubst, rightType =
-                    inferExpr funenv env def.Right
+                    infer funenv env def.Right
                 let outType = generateTypeVariable "out"
                 let arrowType =
                     TypeArrow {
@@ -166,11 +166,11 @@ module TypeInfer =
         let private inferIf funenv env (def : IfDef<_>) =
             result {
                 let! condSubst, condType =
-                    inferExpr funenv env def.Condition
+                    infer funenv env def.Condition
                 let! trueSubst, trueType =
-                    inferExpr funenv env def.TrueBranch
+                    infer funenv env def.TrueBranch
                 let! falseSubst, falseType =
-                    inferExpr funenv env def.Condition
+                    infer funenv env def.Condition
                 let! boolSubst = unify condType Type.bool
                 let! sameSubst = unify trueType falseType
                 return
@@ -186,7 +186,7 @@ module TypeInfer =
                         ||> Result.List.foldM (fun (accEnv, accSubst) binding ->
                             result {
                                 let! subst, typ =
-                                    inferExpr funenv accEnv binding.Expr
+                                    infer funenv accEnv binding.Expr
                                 let! accEnv' =
                                     TypeEnvironment.tryAdd
                                         binding.Identifier
@@ -194,7 +194,7 @@ module TypeInfer =
                                         accEnv
                                 return accEnv', accSubst ++ subst
                             })
-                let! bodySubst, bodyType = inferExpr funenv env' def.Expr
+                let! bodySubst, bodyType = infer funenv env' def.Expr
                 return
                     bindingSubst ++ bodySubst,
                     Type.apply bodySubst bodyType
@@ -208,7 +208,7 @@ module TypeInfer =
                 let! argSubsts, argTypes =
                     def.Arguments
                         |> Result.List.traverse (
-                            inferExpr funenv env)
+                            infer funenv env)
                         |> Result.map List.unzip
                 let outType = generateTypeVariable "out"
                 let arrowType =
@@ -223,13 +223,38 @@ module TypeInfer =
                     Type.apply subst outType
             }
 
+        let private inferAnnotation funenv env (def : AnnotationDef<_>) =
+            result {
+                let! exprSubst, exprTyp = infer funenv env def.Expr
+                let! subst = unify def.Type exprTyp
+                return
+                    exprSubst ++ subst,
+                    Type.apply subst exprTyp
+            }
+
         let typeOf expr =
             result {
                 let expr' = Expr.untag expr
                 let! _, typ =
-                    inferExpr
+                    infer
                         SchemeEnvironment.initial
                         Map.empty
                         expr'
                 return typ
             }
+
+    (*
+    module private Decl =
+
+        // def add(x, y) : x + y
+        // def id(x) : x
+        let infer funenv env (decl : Decl<_>) =
+            result {
+                let outType = generateTypeVariable "out"
+            }
+
+    module private DeclGroup =
+
+        let infer funenv env group =
+            Expr.infer funenv env decl.Body
+    *)

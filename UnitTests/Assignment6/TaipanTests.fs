@@ -139,6 +139,10 @@ type TaipanTests() =
             [
                 "let x = 1, y = x + 2 in x + y", Ok Type.int
                 "let x = 0, x = true in x", Error "Duplicate identifier: x"
+                "add1(false)", Error "Could not unify Int and Bool"
+                "(0 : 'a)", Ok Type.int
+                "(0 : _)", Ok Type.int
+                "(0 : Bool)", Error "Could not unify Bool and Int"
             ]
 
         for text, expected in pairs do
