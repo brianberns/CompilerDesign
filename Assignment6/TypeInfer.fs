@@ -329,20 +329,24 @@ module TypeInfer =
                                 return Type.apply bodySubst typ
                             })
 
+                let scheme =
+                    TypeArrow {
+                        InputTypes = parmTypes
+                        OutputType = bodyType
+                        Tag = ()
+                    } |> Scheme.generalize env
                 let! funenv' =
-                    let scheme =
-                        TypeArrow {
-                            InputTypes = parmTypes
-                            OutputType = bodyType
-                            Tag = ()
-                        } |> Scheme.generalize env
                     funenv
                         |> SchemeEnvironment.tryAdd
                             decl.Identifier.Name
                             scheme
 
                 let decl' =
-                    { decl with Body = bodyExpr }
+                    {
+                        decl with
+                            Body = bodyExpr
+                            Scheme = scheme
+                    }
 
                 return bodySubst, funenv', decl'
             }

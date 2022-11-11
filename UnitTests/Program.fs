@@ -4,7 +4,8 @@ open CompilerDesign.Core
 
 let program =
     """
-    let x = 1 in x + x
+    def f(x) : x
+    0
     """
         |> Parser.parse
         |> Result.get
