@@ -77,6 +77,11 @@ type TaipanTests() =
                 and def b() -> Int: a()
                 a()
                 """, Ok Type.int
+
+                """
+                def id<'t>(x : 't) -> 't: x
+                id(0)
+                """, Ok Type.int
             ]
 
         for text, expected in pairs do

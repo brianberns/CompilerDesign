@@ -5,13 +5,14 @@ open CompilerDesign.Core
 let program =
     """
     def f(x) : x
-    0
+    let a = f(0), b = f(false) in 0
     """
         |> Parser.parse
         |> Result.get
 
 result {
     let! program' = TypeInfer.annotate program
-    printfn "%s" <| Program.unparse program'
-    return! TypeCheck.typeOf program'
-} |> printfn "%A"
+    printfn "Inferred:\n%s" <| Program.unparse program'
+    let! typ = TypeCheck.typeOf program'
+    printfn "\nChecked: %s" (Type.unparse typ)
+} |> printfn "\n%A"
