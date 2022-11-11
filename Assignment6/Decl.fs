@@ -1,36 +1,5 @@
 ﻿namespace CompilerDesign.Assignment6
 
-/// E.g. isnum has scheme: <'a>('a -> Bool)
-type Scheme<'tag> =
-    {
-        TypeVariableIdents : List<IdentifierDef<'tag>>
-        Type : Type<'tag>
-        Tag : 'tag
-    }
-
-module Scheme =
-
-    let untag scheme =
-        {
-            TypeVariableIdents =
-                scheme.TypeVariableIdents
-                    |> List.map IdentifierDef.untag
-            Type = Type.untag scheme.Type
-            Tag = ()
-        }
-
-    let unparseTypeVariableIdents scheme =
-        if scheme.TypeVariableIdents.IsEmpty then ""
-        else
-            scheme.TypeVariableIdents
-                |> Seq.map (fun ident -> $"'{ident.Name}")
-                |> String.concat ", "
-                |> sprintf "<%s>"
-
-    let unparse scheme =
-        let typeVars = unparseTypeVariableIdents scheme
-        $"{typeVars}{Type.unparse scheme.Type}"
-
 type Decl<'tag> =
     {
         /// Name of function begin declared.
@@ -93,27 +62,3 @@ module DeclGroup =
         group.Decls
             |> List.map Decl.unparse
             |> String.concat "and "
-
-type Program<'tag> =
-    {
-        DeclGroups : List<DeclGroup<'tag>>
-        Main : Expr<'tag>
-    }
-
-module Program =
-
-    let untag program =
-        {
-            DeclGroups =
-                program.DeclGroups
-                    |> List.map DeclGroup.untag
-            Main = Expr.untag program.Main
-        }
-
-    let unparse program =
-        let declGroups =
-            program.DeclGroups
-                |> List.map DeclGroup.unparse
-                |> String.concat ""
-        let main = Expr.unparse program.Main
-        $"{declGroups}{main}"
