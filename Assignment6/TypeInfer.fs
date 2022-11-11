@@ -133,7 +133,7 @@ module TypeInfer =
         let private inferIdentifier _funenv env ident =
             result {
                 let! typ = TypeEnvironment.tryFind ident env
-                let expr = annotate (IdentifierExpr ident) typ
+                let expr = IdentifierExpr ident   // don't annotate
                 return Substitution.empty, typ, expr
             }
 
@@ -217,25 +217,36 @@ module TypeInfer =
                     expr
             }
 
+        let private inferBinding funenv env (binding : Binding<_>) =
+            result {
+                let! subst, typ, expr =
+                    infer funenv env binding.Expr
+                let! env' =
+                    TypeEnvironment.tryAdd
+                        binding.Identifier
+                        typ
+                        env
+                let binding' =
+                    {
+                        binding with
+                            Expr = expr
+                            Type = typ
+                    }
+                return env', subst, binding'
+            }
+
         let private inferLet funenv env (def : LetDef<_>) =
             result {
                 let! env', bindingSubst, bindingsRev =
                     ((env, Substitution.empty, []), def.Bindings)
                         ||> Result.List.foldM (fun (accEnv, accSubst, accBindings) binding ->
                             result {
-                                let! subst, typ, expr =
-                                    infer funenv accEnv binding.Expr
-                                let! accEnv' =
-                                    TypeEnvironment.tryAdd
-                                        binding.Identifier
-                                        typ
-                                        accEnv
-                                let accBindings' =
-                                    { binding with Expr = expr } :: accBindings
+                                let! accEnv', subst, binding' =
+                                    inferBinding funenv accEnv binding
                                 return
                                     accEnv',
                                     accSubst ++ subst,
-                                    accBindings'
+                                    binding' :: accBindings
                             })
                 let! bodySubst, bodyType, bodyExpr =
                     infer funenv env' def.Expr
