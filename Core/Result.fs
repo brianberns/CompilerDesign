@@ -49,7 +49,7 @@ module Result =
 
     let get = function
         | Ok x -> x
-        | Error msg -> failwith msg
+        | Error err -> failwith (string err)
 
     module List =
 

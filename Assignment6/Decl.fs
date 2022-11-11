@@ -1,5 +1,7 @@
 ﻿namespace CompilerDesign.Assignment6
 
+open CompilerDesign.Core
+
 type Decl<'tag> =
     {
         /// Name of function begin declared.
@@ -22,15 +24,20 @@ module Decl =
             Body = Expr.untag decl.Body
         }
 
-    let private getSchemeTypes decl =
+    let getTypeArrow decl =
         match decl.Scheme.Type with
-            | TypeArrow def -> def.InputTypes, def.OutputType
-            | _ -> failwith "Unexpected"
+            | TypeArrow arrowDef -> Ok arrowDef
+            | _ -> Error "Invalid decl scheme"
 
     let unparse decl =
         let ident = decl.Identifier.Name
         let tvIdents = Scheme.unparseTypeVariableIdents decl.Scheme
-        let parmTypes, outType = getSchemeTypes decl
+        let parmTypes, outType =
+            let arrowDef =
+                decl
+                    |> getTypeArrow
+                    |> Result.get
+            arrowDef.InputTypes, arrowDef.OutputType
         let parms =
             (decl.Parameters, parmTypes)
                 ||> Seq.map2 (fun ident typ ->

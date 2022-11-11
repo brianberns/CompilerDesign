@@ -158,15 +158,7 @@ module TypeCheck =
 
         let typeCheck env decl =
             result {
-                let! arrowDef =
-                    match decl.Scheme.Type with
-                        | TypeArrow def ->
-                            result {
-                                do! Type.checkMissing def.OutputType
-                                return def
-                            }
-                        | _ -> Error "Invalid decl scheme"
-
+                let! arrowDef = Decl.getTypeArrow decl
                 let! env' =
                     let pairs = List.zip decl.Parameters arrowDef.InputTypes
                     (env, pairs)
