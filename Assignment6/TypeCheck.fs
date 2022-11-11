@@ -117,17 +117,21 @@ module TypeCheck =
                 let! typeArrowDef =
                     TypeEnvironment.tryFindFunc def.Identifier env
                 if typeArrowDef.InputTypes.Length = def.Arguments.Length then
+                    let expected = TypeArrow typeArrowDef
                     let! argTypes =
                         def.Arguments
                             |> Result.List.traverse (typeOf env)
-                    let pairs =
-                        List.zip
-                            typeArrowDef.InputTypes
-                            argTypes
-                    for (expected, actual) in pairs do
-                        if expected <> actual then
-                            return! Type.mismatch expected actual
-                    return typeArrowDef.OutputType
+                    let actual =
+                        TypeArrow {
+                            InputTypes = argTypes
+                            OutputType = typeArrowDef.OutputType
+                            Tag = ()
+                        }
+                    let! subst =
+                        Substitution.unify expected actual   // needed to type check application of a polymorphic function
+                    return Substitution.Type.apply
+                        subst
+                        typeArrowDef.OutputType
                 else
                     return! Error $"Arity mismatch: \
                         expected {typeArrowDef.InputTypes.Length}, \

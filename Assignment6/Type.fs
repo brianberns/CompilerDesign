@@ -41,16 +41,13 @@ module Type =
         | TypeVariable def -> $"'{def.Name}"     // apostrophe is implicit
         | TypeArrow def ->
             let inputs =
-                if def.InputTypes.IsEmpty then   // to-do: handle function with no inputs
-                    failwith "Not supported"
+                if def.InputTypes.IsEmpty then
+                    "Unit"                       // no other way to represent a function with no inputs
                 else
                     def.InputTypes
                         |> Seq.map unparse
                         |> String.concat ", "
             $"({inputs} -> {unparse def.OutputType})"
-
-    let int = TypeConstant (IdentifierDef.create "Int")
-    let bool = TypeConstant (IdentifierDef.create "Bool")
 
     let rec freeTypeVars = function
         | TypeVariable ident -> Set.singleton ident
@@ -60,3 +57,6 @@ module Type =
                 (freeTypeVars def.OutputType)
                 def.InputTypes
         | _ -> Set.empty
+
+    let int = TypeConstant (IdentifierDef.create "Int")
+    let bool = TypeConstant (IdentifierDef.create "Bool")
