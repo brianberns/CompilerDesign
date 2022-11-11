@@ -260,7 +260,8 @@ module TypeInfer =
                             InputTypes = parmTypes
                             OutputType = outType
                             Tag = ()
-                        } |> Scheme.generalize env'
+                        } |> Scheme.generalize env
+                    printfn $"{decl.Identifier.Name}: {Scheme.unparse scheme}"
                     funenv
                         |> SchemeEnvironment.tryAdd
                             decl.Identifier.Name
