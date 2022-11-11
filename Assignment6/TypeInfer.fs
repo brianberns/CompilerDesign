@@ -111,21 +111,30 @@ module TypeInfer =
 
     module private rec Expr =
 
-        let infer funenv env = function
-            | NumberExpr _ -> Ok (Substitution.empty, Type.int)
-            | BoolExpr _ -> Ok (Substitution.empty, Type.bool)
-            | IdentifierExpr ident -> inferIdentifier funenv env ident
-            | Prim1Expr def -> inferPrim1 funenv env def
-            | Prim2Expr def -> inferPrim2 funenv env def
-            | IfExpr def -> inferIf funenv env def
-            | LetExpr def -> inferLet funenv env def
-            | ApplicationExpr def -> inferApplication funenv env def
-            | AnnotationExpr def -> infer funenv env def.Expr
+        let annotate expr typ =
+            AnnotationExpr {
+                Expr = expr
+                Type = typ
+                Tag = expr.Tag'
+            }
+
+        let infer funenv env expr =
+            match expr with
+                | NumberExpr _ -> Ok (Substitution.empty, Type.int, expr)
+                | BoolExpr _ -> Ok (Substitution.empty, Type.bool, expr)
+                | IdentifierExpr ident -> inferIdentifier funenv env ident
+                | Prim1Expr def -> inferPrim1 funenv env def
+                | Prim2Expr def -> inferPrim2 funenv env def
+                | IfExpr def -> inferIf funenv env def
+                | LetExpr def -> inferLet funenv env def
+                | ApplicationExpr def -> inferApplication funenv env def
+                | AnnotationExpr def -> inferAnnotation funenv env def
 
         let private inferIdentifier _funenv env ident =
             result {
                 let! typ = TypeEnvironment.tryFind ident env
-                return Substitution.empty, typ
+                let expr = annotate (IdentifierExpr ident) typ
+                return Substitution.empty, typ, expr
             }
 
         let private inferPrim1 funenv env (def : Prim1Def<_>) =
@@ -133,7 +142,7 @@ module TypeInfer =
                 let! scheme =
                     SchemeEnvironment.tryFindPrim1 def.Operator funenv
                 let schemeType = Scheme.instantiate scheme
-                let! argSubst, argType =
+                let! argSubst, argType, argExpr =
                     infer funenv env def.Expr
                 let outType = generateTypeVariable "out"
                 let arrowType =
@@ -143,9 +152,12 @@ module TypeInfer =
                         Tag = ()
                     }
                 let! subst = unify schemeType arrowType
-                return
-                    argSubst ++ subst,
-                    Type.apply subst outType
+                let fullType = Type.apply subst outType
+                let expr =
+                    annotate
+                        (Prim1Expr { def with Expr = argExpr })
+                        fullType
+                return argSubst ++ subst, fullType, expr
             }
 
         let private inferPrim2 funenv env (def : Prim2Def<_>) =
@@ -153,9 +165,9 @@ module TypeInfer =
                 let! scheme =
                     SchemeEnvironment.tryFindPrim2 def.Operator funenv
                 let schemeType = Scheme.instantiate scheme
-                let! leftSubst, leftType =
+                let! leftSubst, leftType, leftExpr =
                     infer funenv env def.Left
-                let! rightSubst, rightType =
+                let! rightSubst, rightType, rightExpr =
                     infer funenv env def.Right
                 let outType = generateTypeVariable "out"
                 let arrowType =
@@ -165,46 +177,80 @@ module TypeInfer =
                         Tag = ()
                     }
                 let! subst = unify schemeType arrowType
+                let fullType = Type.apply subst outType
+                let expr =
+                    annotate
+                        (Prim2Expr {
+                            def with
+                                Left = leftExpr
+                                Right = rightExpr })
+                        fullType
                 return
                     leftSubst ++ rightSubst ++ subst,
-                    Type.apply subst outType
+                    fullType,
+                    expr
             }
 
         let private inferIf funenv env (def : IfDef<_>) =
             result {
-                let! condSubst, condType =
+                let! condSubst, condType, condExpr =
                     infer funenv env def.Condition
-                let! trueSubst, trueType =
+                let! trueSubst, trueType, trueExpr =
                     infer funenv env def.TrueBranch
-                let! falseSubst, falseType =
+                let! falseSubst, falseType, falseExpr =
                     infer funenv env def.Condition
                 let! boolSubst = unify condType Type.bool
                 let! sameSubst = unify trueType falseType
+                let fullType = Type.apply sameSubst trueType
+                let expr =
+                    annotate
+                        (IfExpr {
+                            def with
+                                Condition = condExpr
+                                TrueBranch = trueExpr
+                                FalseBranch = falseExpr })
+                        fullType
                 return
                     condSubst ++ trueSubst ++ falseSubst
                         ++ boolSubst ++ sameSubst,
-                    Type.apply sameSubst trueType
+                    fullType,
+                    expr
             }
 
         let private inferLet funenv env (def : LetDef<_>) =
             result {
-                let! env', bindingSubst =
-                    ((env, Substitution.empty), def.Bindings)
-                        ||> Result.List.foldM (fun (accEnv, accSubst) binding ->
+                let! env', bindingSubst, bindingsRev =
+                    ((env, Substitution.empty, []), def.Bindings)
+                        ||> Result.List.foldM (fun (accEnv, accSubst, accBindings) binding ->
                             result {
-                                let! subst, typ =
+                                let! subst, typ, expr =
                                     infer funenv accEnv binding.Expr
                                 let! accEnv' =
                                     TypeEnvironment.tryAdd
                                         binding.Identifier
                                         typ
                                         accEnv
-                                return accEnv', accSubst ++ subst
+                                let accBindings' =
+                                    { binding with Expr = expr } :: accBindings
+                                return
+                                    accEnv',
+                                    accSubst ++ subst,
+                                    accBindings'
                             })
-                let! bodySubst, bodyType = infer funenv env' def.Expr
+                let! bodySubst, bodyType, bodyExpr =
+                    infer funenv env' def.Expr
+                let fullType = Type.apply bodySubst bodyType
+                let expr =
+                    annotate
+                        (LetExpr {
+                            def with
+                                Bindings = List.rev bindingsRev
+                                Expr = bodyExpr })
+                        fullType
                 return
                     bindingSubst ++ bodySubst,
-                    Type.apply bodySubst bodyType
+                    fullType,
+                    expr
             }
 
         let private inferApplication funenv env (def : ApplicationDef<_>) =
@@ -212,11 +258,11 @@ module TypeInfer =
                 let! scheme =
                     SchemeEnvironment.tryFindIdent def.Identifier funenv
                 let schemeType = Scheme.instantiate scheme
-                let! argSubsts, argTypes =
+                let! argSubsts, argTypes, argExprs =
                     def.Arguments
                         |> Result.List.traverse (
                             infer funenv env)
-                        |> Result.map List.unzip
+                        |> Result.map List.unzip3
                 let outType = generateTypeVariable "out"
                 let arrowType =
                     TypeArrow {
@@ -225,15 +271,32 @@ module TypeInfer =
                         Tag = ()
                     }
                 let! subst = unify schemeType arrowType
+                let fullType = Type.apply subst outType
+                let expr =
+                    annotate
+                        (ApplicationExpr {
+                            def with Arguments = argExprs })
+                        fullType
                 return
                     (List.reduce (++) argSubsts) ++ subst,
-                    Type.apply subst outType
+                    fullType,
+                    expr
+            }
+
+        let private inferAnnotation funenv env (def : AnnotationDef<_>) =
+            result {
+                let! subst, typ, expr =
+                    infer funenv env def.Expr
+                let expr' =
+                    annotate
+                        (AnnotationExpr {
+                            def with Expr = expr })
+                        typ
+                return subst, typ, expr'
             }
 
     module private Decl =
 
-        // def add(x, y) : x + y
-        // def id(x) : x
         let infer funenv env (decl : Decl<_>) =
             result {
 
@@ -243,7 +306,8 @@ module TypeInfer =
                             let typ = generateTypeVariable ident.Name
                             acc |> TypeEnvironment.tryAdd ident typ)
 
-                let! outSubst, outType = Expr.infer funenv env' decl.Body
+                let! bodySubst, bodyType, bodyExpr =
+                    Expr.infer funenv env' decl.Body
 
                 let! parmTypes =
                     decl.Parameters
@@ -251,63 +315,98 @@ module TypeInfer =
                             result {
                                 let! typ =
                                     env' |> TypeEnvironment.tryFind ident
-                                return Type.apply outSubst typ
+                                return Type.apply bodySubst typ
                             })
 
                 let! funenv' =
                     let scheme =
                         TypeArrow {
                             InputTypes = parmTypes
-                            OutputType = outType
+                            OutputType = bodyType
                             Tag = ()
                         } |> Scheme.generalize env
-                    printfn $"{decl.Identifier.Name}: {Scheme.unparse scheme}"
                     funenv
                         |> SchemeEnvironment.tryAdd
                             decl.Identifier.Name
                             scheme
 
-                return outSubst, funenv'
+                let decl' =
+                    { decl with Body = bodyExpr }
+
+                return bodySubst, funenv', decl'
             }
 
     module private DeclGroup =
 
         let infer funenv env group =
-            ((Substitution.empty, funenv), group.Decls)
-                ||> Result.List.foldM (fun (subst, acc) decl ->
-                    result {
-                        let! subst', acc' =
-                            Decl.infer acc env decl
-                        return subst ++ subst', acc'
-                    })
+            result {
+                let! subst, typ, declsRev =
+                    ((Substitution.empty, funenv, []), group.Decls)
+                        ||> Result.List.foldM (fun (subst, accFunenv, accDecls) decl ->
+                            result {
+                                let! subst', accFunenv', decl' =
+                                    Decl.infer accFunenv env decl
+                                return
+                                    subst ++ subst',
+                                    accFunenv',
+                                    decl' :: accDecls
+                            })
+                let group' =
+                    { group with Decls = List.rev declsRev }
+                return subst, typ, group'
+            }
 
     module private Program =
 
         let infer program =
             result {
-                let! substDecls, funenv =
-                    ((Substitution.empty, SchemeEnvironment.initial), program.DeclGroups)
-                        ||> Result.List.foldM (fun (subst, acc) group ->
+                let! substDecls, funenv, groupsRev =
+                    ((Substitution.empty, SchemeEnvironment.initial, []), program.DeclGroups)
+                        ||> Result.List.foldM (fun (subst, accFunenv, accGroups) group ->
                             result {
-                                let! subst', acc' =
+                                let! subst', accFunenv', group' =
                                     DeclGroup.infer
-                                        acc
+                                        accFunenv
                                         TypeEnvironment.empty
                                         group
-                                return subst ++ subst', acc'
+                                return
+                                    subst ++ subst',
+                                    accFunenv',
+                                    group' :: accGroups
                             })
-                let! substMain, typ =
+                let! mainSubst, mainType, mainExpr =
                     Expr.infer 
                         funenv
                         TypeEnvironment.empty
                         program.Main
+                let fullType =
+                    Type.apply substDecls mainType
+                let program' =
+                    {
+                        program with
+                            DeclGroups = List.rev groupsRev
+                            Main = Expr.annotate mainExpr fullType
+                    }
                 return
-                    substDecls ++ substMain,
-                    Type.apply substDecls typ
+                    substDecls ++ mainSubst,
+                    fullType,
+                    program'
             }
 
     let typeOf program =
-        program
-            |> Program.untag
-            |> Program.infer
-            |> Result.map snd
+        result {
+            let! _, typ, _ =
+                program
+                    |> Program.untag
+                    |> Program.infer
+            return typ
+        }
+
+    let annotate program =
+        result {
+            let! _, _, program' =
+                program
+                    |> Program.untag
+                    |> Program.infer
+            return program'
+        }

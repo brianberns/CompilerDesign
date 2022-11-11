@@ -16,6 +16,6 @@ ab_bool(3, true) && ab_bool(true, false)
         |> Result.get
 
 result {
-    let! typ = TypeInfer.typeOf program
-    return Type.unparse typ
+    let! program' = TypeInfer.annotate program
+    return Program.unparse program'
 } |> printfn "%A"
