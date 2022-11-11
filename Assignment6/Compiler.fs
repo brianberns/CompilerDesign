@@ -169,13 +169,27 @@ module Compiler =
 
     module private Decl =
 
-        let private compileParameter parm =
+        let private predefinedType =
+            let map =
+                Map [
+                    Type.int, SyntaxKind.IntKeyword
+                    Type.bool, SyntaxKind.BoolKeyword
+                ]
+            fun typ ->
+                result {
+                    let typ' = Type.untag typ
+                    do! TypeCheck.Type.checkMissing typ'
+                    match Map.tryFind typ' map with
+                        | Some kind -> return kind
+                        | None -> return! Error $"Unknown type: {Type.unparse typ}"
+                }
+
+        let private compileParameter parm typ =
             result {
+                let! kind = predefinedType typ
                 return Parameter(
                     Identifier(parm.Name))
-                    .WithType(
-                        PredefinedType(
-                            Token(SyntaxKind.IntKeyword)))   // ugh
+                    .WithType(PredefinedType(Token(kind)))
             }
 
         let compile decl =
@@ -189,9 +203,11 @@ module Compiler =
                                 return! acc
                                     |> Env.tryAdd parm.Name node
                             })
+                let! arrowDef = Decl.getTypeArrow decl
                 let! parmNodes =
-                    decl.Parameters
-                        |> Result.List.traverse compileParameter
+                    List.zip decl.Parameters arrowDef.InputTypes
+                        |> Result.List.traverse (fun (parm, typ) ->
+                            compileParameter parm typ)
                 let! bodyNode, _ = Expr.compile env decl.Body
 
                 return MethodDeclaration(

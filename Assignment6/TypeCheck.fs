@@ -4,7 +4,7 @@ open CompilerDesign.Core
 
 module TypeCheck =
 
-    module private Type =
+    module Type =
 
         let checkMissing typ =
             if typ = TypeBlank () then
