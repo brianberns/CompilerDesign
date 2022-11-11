@@ -149,7 +149,7 @@ type TaipanTests() =
             let parsed = Parser.parse text
             match parsed with
                 | Ok program ->
-                    let actual = TypeInfer.Expr.typeOf program.Main
+                    let actual = TypeInfer.typeOf program
                     Assert.AreEqual(expected, actual, text)
                 | Error msg ->
                     Assert.Fail($"{text}\n{msg}")

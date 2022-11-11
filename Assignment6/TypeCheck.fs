@@ -6,11 +6,13 @@ type TypeEnvironment = Map<IdentifierDef<unit>, Type<unit>>
 
 module TypeEnvironment =
 
-    let tryAdd ident node (env : TypeEnvironment) =
+    let empty : TypeEnvironment = Map.empty
+
+    let tryAdd ident typ (env : TypeEnvironment) =
         if Map.containsKey ident env then
             Error $"Duplicate identifier: {ident.Name}"
         else
-            let env : TypeEnvironment = Map.add ident node env
+            let env : TypeEnvironment = Map.add ident typ env
             Ok env
 
     let tryFind ident (env : TypeEnvironment) =
@@ -218,7 +220,7 @@ module TypeCheck =
         result {
             let program' = Program.untag program
             let! env =
-                (Map.empty, program'.DeclGroups)
+                (TypeEnvironment.empty, program'.DeclGroups)
                     ||> Result.List.foldM DeclGroup.typeCheck
             return! Expr.typeOf env program'.Main
         }

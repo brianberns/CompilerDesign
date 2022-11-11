@@ -51,6 +51,13 @@ module SchemeEnvironment =
             |> Result.get
             |> Map
 
+    let tryAdd name scheme (env : SchemeEnvironment) =
+        if Map.containsKey name env then
+            Error $"Duplicate scheme name: {name}"
+        else
+            let env : SchemeEnvironment = Map.add name scheme env
+            Ok env
+
     let tryFind name (env : SchemeEnvironment) =
         env
             |> Map.tryFind name
@@ -102,7 +109,7 @@ module TypeInfer =
 
     let (++) = Substitution.compose
 
-    module rec Expr =
+    module private rec Expr =
 
         let infer funenv env = function
             | NumberExpr _ -> Ok (Substitution.empty, Type.int)
@@ -223,23 +230,13 @@ module TypeInfer =
                     Type.apply subst outType
             }
 
-        let typeOf expr =
-            result {
-                let expr' = Expr.untag expr
-                let! _, typ =
-                    infer
-                        SchemeEnvironment.initial
-                        Map.empty
-                        expr'
-                return typ
-            }
-
-    module Decl =
+    module private Decl =
 
         // def add(x, y) : x + y
         // def id(x) : x
         let infer funenv env (decl : Decl<_>) =
             result {
+
                 let! env' =
                     (env, decl.Parameters)
                         ||> Result.List.foldM (fun acc ident ->
@@ -257,19 +254,59 @@ module TypeInfer =
                                 return Type.apply outSubst typ
                             })
 
-                let declType =
-                    TypeArrow {
-                        InputTypes = parmTypes
-                        OutputType = outType
-                        Tag = ()
-                    }
+                let! funenv' =
+                    let scheme =
+                        TypeArrow {
+                            InputTypes = parmTypes
+                            OutputType = outType
+                            Tag = ()
+                        } |> Scheme.generalize env'
+                    funenv
+                        |> SchemeEnvironment.tryAdd
+                            decl.Identifier.Name
+                            scheme
 
-                return outSubst, declType
+                return outSubst, funenv'
             }
 
-    (*
     module private DeclGroup =
 
         let infer funenv env group =
-            Expr.infer funenv env decl.Body
-    *)
+            ((Substitution.empty, funenv), group.Decls)
+                ||> Result.List.foldM (fun (subst, acc) decl ->
+                    result {
+                        let! subst', acc' =
+                            Decl.infer acc env decl
+                        return subst ++ subst', acc'
+                    })
+
+    module private Program =
+
+        let infer program =
+            result {
+                let! substDecls, funenv =
+                    ((Substitution.empty, SchemeEnvironment.initial), program.DeclGroups)
+                        ||> Result.List.foldM (fun (subst, acc) group ->
+                            result {
+                                let! subst', acc' =
+                                    DeclGroup.infer
+                                        acc
+                                        TypeEnvironment.empty
+                                        group
+                                return subst ++ subst', acc'
+                            })
+                let! substMain, typ =
+                    Expr.infer 
+                        funenv
+                        TypeEnvironment.empty
+                        program.Main
+                return
+                    substDecls ++ substMain,
+                    Type.apply substDecls typ
+            }
+
+    let typeOf program =
+        program
+            |> Program.untag
+            |> Program.infer
+            |> Result.map snd
