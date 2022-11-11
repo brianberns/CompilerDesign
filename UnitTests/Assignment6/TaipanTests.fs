@@ -101,35 +101,38 @@ type TaipanTests() =
         let tuples =
             [
                     // unify 'X -> Int and Bool -> 'Y under the substitution ['X = Bool, 'Y = Int]
-                parseType "('X -> Int)",
-                parseType "(Bool -> 'Y)",
+                "('X -> Int)",
+                "(Bool -> 'Y)",
                 Ok [
                     IdentifierDef.create "X", Type.bool
                     IdentifierDef.create "Y", Type.int
                 ]
                     // no substitution that can unify Int -> 'X with Bool -> 'Y
-                parseType "(Int -> 'X)",
-                parseType "(Bool -> 'Y)",
+                "(Int -> 'X)",
+                "(Bool -> 'Y)",
                 Error "Could not unify Int and Bool"
 
                     // cannot unify 'A with 'A -> 'B, because we would get the absurd substitution ['A = 'A -> 'B]
-                parseType "'A",
-                parseType "('A -> 'B)",
+                "'A",
+                "('A -> 'B)",
                 Error "Could not unify 'A and ('A -> 'B)"
 
-                parseType "('A -> 'A)",
-                parseType "(Int -> Bool)",
+                "('A -> 'A)",
+                "(Int -> Bool)",
                 Error "Could not unify Int and Bool"
 
-                parseType "('A -> 'A)",
-                parseType "(Int -> 'B)",
+                "('A -> 'A)",
+                "(Int -> 'B)",
                 Ok [
                     IdentifierDef.create "A", Type.int
                     IdentifierDef.create "B", Type.int
                 ]
             ]
-        for (typ1, typ2, expected) in tuples do
-            let actual = Substitution.unify typ1 typ2
+        for (text1, text2, expected) in tuples do
+            let actual =
+                let typ1 = parseType text1
+                let typ2 = parseType text2
+                Substitution.unify typ1 typ2
             Assert.AreEqual(expected, actual)
 
     [<TestMethod>]
