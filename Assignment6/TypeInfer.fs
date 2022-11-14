@@ -228,16 +228,19 @@ module TypeInfer =
             result {
                 let! innerSubst, innerType, innerExpr =
                     infer funenv env def.Expr
-                let! annotSubst = unify innerType def.Type
-                let fullType = Type.apply annotSubst innerType
-                let expr =
-                    annotate
-                        (AnnotationExpr {
-                            def with Expr = innerExpr })
-                        fullType
-                return innerSubst ++ annotSubst,
-                    fullType,
-                    expr
+                if def.Type = TypeBlank () then
+                    return innerSubst, innerType, innerExpr
+                else
+                    let! annotSubst = unify innerType def.Type
+                    let fullType = Type.apply annotSubst innerType
+                    let expr =
+                        annotate
+                            (AnnotationExpr {
+                                def with Expr = innerExpr })
+                            fullType
+                    return innerSubst ++ annotSubst,
+                        fullType,
+                        expr
             }
 
     module private Decl =
