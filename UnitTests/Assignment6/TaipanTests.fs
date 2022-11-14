@@ -237,6 +237,7 @@ type TaipanTests() =
 
     [<TestMethod>]
     member _.Polymorphic() =
+
         let text =
             """
             def identity(x): x
@@ -244,3 +245,11 @@ type TaipanTests() =
             identity(true)
             """
         Assert.AreEqual(Ok "True", run text)
+
+        let text =
+            """
+            def id(x): x
+
+            let f = id(true) in id(3)
+            """
+        Assert.AreEqual(Ok "3", run text)
