@@ -49,15 +49,17 @@ module Substitution =
 
     let unify type1 type2 =
 
+        let err type1 type2 =
+            Error $"Could not unify {Type.unparse type1} \
+                and {Type.unparse type2}"
+
         let rec loop type1 type2 =
-            let err =
-                Error $"Could not unify {Type.unparse type1} \
-                    and {Type.unparse type2}"
             result {
                 match type1, type2 with
 
                     | TypeBlank (), _
-                    | _, TypeBlank () -> return! err
+                    | _, TypeBlank () ->
+                        return! err type1 type2
 
                     | TypeConstant ident1, TypeConstant ident2
                         when ident1 = ident2 ->
@@ -91,7 +93,8 @@ module Substitution =
                                     return compose subst subst'
                                 })
 
-                    | _ -> return! err
+                    | _ ->
+                        return! err type1 type2
             }
 
         loop

@@ -58,11 +58,12 @@ module SchemeEnvironment =
             let env : SchemeEnvironment = Map.add name scheme env
             Ok env
 
-    let tryFind name (env : SchemeEnvironment) =
+    let private tryFind name (env : SchemeEnvironment) =
         env
             |> Map.tryFind name
             |> Option.map Result.Ok
-            |> Option.defaultValue (Result.Error $"Name not found: {name}")
+            |> Option.defaultWith (fun () ->
+                Result.Error $"Name not found: {name}")
 
     let tryFindIdent ident =
         tryFind ident.Name

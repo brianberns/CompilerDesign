@@ -41,6 +41,19 @@ type TaipanTests() =
         Assert.AreEqual(Ok "7\nFalse", run text)
 
     [<TestMethod>]
+    member _.Factorial() =
+        let text =
+            """
+            # recursive factorial function
+            def factorial(n):
+                if n <= 0: 1
+                else: n * factorial(n-1)
+
+            factorial(6)
+            """
+        Assert.AreEqual(Ok "720", run text)
+
+    [<TestMethod>]
     member _.MutualRecursion() =
 
         let text =

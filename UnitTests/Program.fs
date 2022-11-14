@@ -4,9 +4,11 @@ open CompilerDesign.Core
 
 let text =
     """
-    def id(x): x
+    def factorial(n):
+        if n <= 0: 1
+        else: n * factorial(n-1)
 
-    let f = id(true) in id(3)
+    factorial(6)
     """
 
 let program =
