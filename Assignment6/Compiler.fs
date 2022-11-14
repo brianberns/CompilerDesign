@@ -198,12 +198,13 @@ module Compiler =
         let compile decl =
             result {
 
+                let! typedParms, outputType = Decl.getSignature decl
+                let! returnType = compileType outputType
                 let typeParmNodes =
                     decl.Scheme.TypeVariableIdents
                         |> Seq.map (fun tvIdent ->
                             TypeParameter(
                                 Identifier(tvIdent.Name)))
-                let! typedParms, _ = Decl.getSignature decl
                 let! env =
                     (Env.empty, typedParms)
                         ||> Result.List.foldM (fun acc (parm, _) ->
@@ -219,9 +220,7 @@ module Compiler =
                 let! bodyNode, _ = Expr.compile env decl.Body
 
                 return MethodDeclaration(
-                    returnType =
-                        PredefinedType(
-                            Token(SyntaxKind.IntKeyword)),
+                    returnType = returnType,
                     identifier = decl.Identifier.Name)
                     .AddModifiers(
                         Token(SyntaxKind.StaticKeyword))
