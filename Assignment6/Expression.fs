@@ -1,5 +1,6 @@
 ﻿namespace CompilerDesign.Assignment6
 
+/// Primitive unary operators.
 type Prim1 =
     | Add1
     | Sub1
@@ -14,6 +15,7 @@ module Prim1 =
         | Not -> "!"
         | prim1 -> (string prim1).ToLower()
 
+/// Primitive binary operators.
 type Prim2 =
     | Plus
     | Minus
@@ -40,27 +42,48 @@ module Prim2 =
         | LessEq -> "<="
         | Eq -> "=="
 
+/// Numeric literal.
 type NumberDef<'tag> =
     {
         Number : int
         Tag : 'tag
     }
 
+/// Boolean literal.
 type BoolDef<'tag> =
     {
         Flag : bool
         Tag : 'tag
     }
 
+/// An expression that evaluates to a value.
 type Expression<'tag> =
+
+    /// E.g. "let x = 0 in 2 * x".
     | LetExpr of LetDef<'tag>
+
+    /// E.g. "add1(0)".
     | Prim1Expr of Prim1Def<'tag>
+
+    /// E.g. "1 + 2".
     | Prim2Expr of Prim2Def<'tag>
+
+    /// E.g. "if flag: 1 else: 2".
     | IfExpr of IfDef<'tag>
-    | NumberExpr of NumberDef<'tag>   // numeric literal
+
+    /// Numeric literal. E.g. "1".
+    | NumberExpr of NumberDef<'tag>
+
+    /// Value identifier. E.g. "x".
     | IdentifierExpr of IdentifierDef<'tag>
-    | BoolExpr of BoolDef<'tag>       // Boolean literal
+
+    /// Boolean literal. E.g. "true".
+    | BoolExpr of BoolDef<'tag>
+
+    /// Function application. E.g. "f(3)".
     | ApplicationExpr of ApplicationDef<'tag>
+
+    /// Type annotation. E.g. "(x : Int)".
     | AnnotationExpr of AnnotationDef<'tag>
     with
     

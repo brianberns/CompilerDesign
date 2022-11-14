@@ -2,12 +2,20 @@
 
 open CompilerDesign.Core
 
+/// Function declaration.
+/// E.g. "def f(x): x + x".
 type Decl<'tag> =
     {
-        /// Name of function begin declared.
+        /// Name of function begin declared. E.g. "f".
         Identifier : IdentifierDef<'tag>
+
+        /// Function parameters. E.g. "(x)".
         Parameters : List<IdentifierDef<'tag>>
+
+        /// Generalized function signature.
         Scheme : Scheme<'tag>
+
+        /// Function body. E.g. "x + x".
         Body : Expression<'tag>
     }
 

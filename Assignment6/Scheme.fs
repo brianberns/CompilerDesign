@@ -1,10 +1,15 @@
 ﻿namespace CompilerDesign.Assignment6
 
+/// Generalized type signature of a function.
 /// E.g. isnum has scheme: <'a>('a -> Bool)
 type Scheme<'tag> =
     {
+        /// E.g. <'a, 'b>.
         TypeVariableIdents : List<IdentifierDef<'tag>>
+
+        /// E.g. ('a, 'b -> Bool).
         Type : Type<'tag>
+
         Tag : 'tag
     }
 
