@@ -5,9 +5,13 @@ open CompilerDesign.Core
 let program =
     """
     def whatever(x):
-        (x : Int)
+        let y : Int = x + 5 in # type-annotations on let-bindings do not need parens
+        (x : Int) + y # type-annotated variables must be surrounded by parens
 
-    whatever(2)
+    # parameters to function definitions do not need parens
+    def plus(x : Int, y : Int) -> Int: x + y
+
+    plus(whatever(2), 3)
     """
         |> Parser.parse
         |> Result.get

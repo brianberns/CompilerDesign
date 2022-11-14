@@ -226,14 +226,18 @@ module TypeInfer =
 
         let private inferAnnotation funenv env (def : AnnotationDef<_>) =
             result {
-                let! subst, typ, expr =
+                let! innerSubst, innerType, innerExpr =
                     infer funenv env def.Expr
-                let expr' =
+                let! annotSubst = unify innerType def.Type
+                let fullType = Type.apply annotSubst innerType
+                let expr =
                     annotate
                         (AnnotationExpr {
-                            def with Expr = expr })
-                        typ
-                return subst, typ, expr'
+                            def with Expr = innerExpr })
+                        fullType
+                return innerSubst ++ annotSubst,
+                    fullType,
+                    expr
             }
 
     module private Decl =
