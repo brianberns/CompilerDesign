@@ -57,6 +57,19 @@ type TaipanTests() =
 
         let text =
             """
+            # out of order
+            def ab_bool(a, b):
+              isnum(f(a)) && f(b)
+
+            def f(x):
+              print(x)
+
+            ab_bool(3, true) && ab_bool(true, false)
+            """
+        Assert.AreEqual(Error "Name not found: f", run text)
+
+        let text =
+            """
             def f(x):
               print(x)
 
