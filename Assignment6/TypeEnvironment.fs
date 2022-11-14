@@ -1,5 +1,8 @@
 ﻿namespace CompilerDesign.Assignment6
 
+/// Maps a value or function identifier to its type.
+/// E.g. x : Int
+/// E.g. f : Int -> Bool
 type TypeEnvironment = Map<IdentifierDef<unit>, Type<unit>>
 
 module TypeEnvironment =

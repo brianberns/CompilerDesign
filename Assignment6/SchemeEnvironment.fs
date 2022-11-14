@@ -3,6 +3,9 @@
 open CompilerDesign.Core
 open Substitution
 
+/// Maps primitive operations and declared function to their schemes.
+/// E.g. isbool : <'a>('a -> Bool)
+/// E.g. myIdentityFunction : <'a>('a -> 'a)
 type private SchemeEnvironment =
     Map<string, Scheme<unit>>
 

@@ -2,6 +2,8 @@
 
 open CompilerDesign.Core
 
+/// Type variable substitution.
+/// E.g. ['x = Int; 'y = Bool -> Int; 'z = 'x].
 type Substitution<'tag> =
     List<IdentifierDef<'tag> * Type<'tag>>
 

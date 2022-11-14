@@ -1,5 +1,6 @@
 ﻿namespace CompilerDesign.Assignment6
 
+/// A program computes a single value via its "main" expression.
 type Program<'tag> =
     {
         DeclGroups : List<DeclGroup<'tag>>
