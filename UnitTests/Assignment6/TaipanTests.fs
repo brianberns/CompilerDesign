@@ -52,7 +52,7 @@ type TaipanTests() =
 
             ab_bool(3, true) && ab_bool(true, false)
             """
-        Assert.AreEqual(Ok "False", run text)
+        Assert.AreEqual(Ok "3\nTrue\nTrue\nFalse", run text)
 
     [<TestMethod>]
     member _.Annotation() =
