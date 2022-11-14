@@ -42,6 +42,7 @@ type TaipanTests() =
 
     [<TestMethod>]
     member _.MutualRecursion() =
+
         let text =
             """
             def f(x): # should have scheme Forall 'X, ('X -> 'X)
@@ -53,6 +54,18 @@ type TaipanTests() =
             ab_bool(3, true) && ab_bool(true, false)
             """
         Assert.AreEqual(Ok "3\nTrue\nTrue\nFalse", run text)
+
+        let text =
+            """
+            def f(x):
+              print(x)
+
+            and def ab_bool(a, b):
+              isnum(f(a)) && f(b) # ???
+
+            ab_bool(3, true) && ab_bool(true, false)
+            """
+        Assert.AreEqual(Error "moo", run text)
 
     [<TestMethod>]
     member _.Annotation() =
