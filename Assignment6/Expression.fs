@@ -52,7 +52,7 @@ type BoolDef<'tag> =
         Tag : 'tag
     }
 
-type Expr<'tag> =
+type Expression<'tag> =
     | LetExpr of LetDef<'tag>
     | Prim1Expr of Prim1Def<'tag>
     | Prim2Expr of Prim2Def<'tag>
@@ -79,7 +79,7 @@ type Expr<'tag> =
 and LetDef<'tag> =
     {
         Bindings : List<Binding<'tag>>
-        Expr : Expr<'tag>
+        Expr : Expression<'tag>
         Tag : 'tag
     }
 
@@ -87,14 +87,14 @@ and Binding<'tag> =
     {
         Identifier : IdentifierDef<'tag>
         Type : Type<'tag>
-        Expr : Expr<'tag>
+        Expr : Expression<'tag>
     }
 
 and Prim1Def<'tag> =
     {
         Operator : Prim1
         TypeArguments : List<Type<'tag>>
-        Expr : Expr<'tag>
+        Expr : Expression<'tag>
         Tag : 'tag
     }
 
@@ -102,16 +102,16 @@ and Prim2Def<'tag> =
     {
         Operator : Prim2
         TypeArguments : List<Type<'tag>>
-        Left : Expr<'tag>
-        Right : Expr<'tag>
+        Left : Expression<'tag>
+        Right : Expression<'tag>
         Tag : 'tag
     }
 
 and IfDef<'tag> =
     {
-        Condition : Expr<'tag>
-        TrueBranch : Expr<'tag>
-        FalseBranch : Expr<'tag>
+        Condition : Expression<'tag>
+        TrueBranch : Expression<'tag>
+        FalseBranch : Expression<'tag>
         Tag : 'tag
     }
 
@@ -120,18 +120,18 @@ and ApplicationDef<'tag> =
         /// Name of function being called.
         Identifier : IdentifierDef<'tag>
         TypeArguments : List<Type<'tag>>
-        Arguments : List<Expr<'tag>>
+        Arguments : List<Expression<'tag>>
         Tag : 'tag
     }
 
 and AnnotationDef<'tag> =
     {
-        Expr : Expr<'tag>
+        Expr : Expression<'tag>
         Type: Type<'tag>
         Tag : 'tag
     }
 
-module Expr =
+module Expression =
 
     let rec untag = function
         | LetExpr def->

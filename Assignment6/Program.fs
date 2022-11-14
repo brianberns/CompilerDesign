@@ -3,7 +3,7 @@
 type Program<'tag> =
     {
         DeclGroups : List<DeclGroup<'tag>>
-        Main : Expr<'tag>
+        Main : Expression<'tag>
     }
 
 module Program =
@@ -13,7 +13,7 @@ module Program =
             DeclGroups =
                 program.DeclGroups
                     |> List.map DeclGroup.untag
-            Main = Expr.untag program.Main
+            Main = Expression.untag program.Main
         }
 
     let unparse program =
@@ -21,5 +21,5 @@ module Program =
             program.DeclGroups
                 |> List.map DeclGroup.unparse
                 |> String.concat ""
-        let main = Expr.unparse program.Main
+        let main = Expression.unparse program.Main
         $"{declGroups}{main}"

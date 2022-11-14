@@ -1,5 +1,6 @@
 ﻿namespace CompilerDesign.Assignment6
 
+/// The type of a value or function.
 type Type<'tag> =
 
     /// No type specified. Will be inferred later.
@@ -14,6 +15,7 @@ type Type<'tag> =
     /// Function type. E.g. "('a, Bool) -> Int".
     | TypeArrow of TypeArrowDef<'tag>
 
+/// Function type. E.g. "('a, Bool) -> Int".
 and TypeArrowDef<'tag> =
     {
         InputTypes : List<Type<'tag>>

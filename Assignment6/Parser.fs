@@ -137,7 +137,7 @@ module Parser =
 
         do parseTypeRef.Value <- parseTypeImpl
 
-    module private Expr =
+    module private Expression =
 
         let private parseExpr, private parseExprRef =
             createParserForwardedToRef ()
@@ -302,7 +302,7 @@ module Parser =
 
         let private parseExprImpl =
 
-            let create (str, prim2) : Parser<Expr<_> -> Expr<_> -> Expr<_>, _> =
+            let create (str, prim2) : Parser<Expression<_> -> Expression<_> -> Expression<_>, _> =
                 skipString str
                     >>. spaces
                     >>. parseTypeArgs
@@ -315,7 +315,7 @@ module Parser =
                             Tag = fst left.Tag', snd right.Tag'
                         })
 
-            let parseOp : Parser<Expr<_> -> Expr<_> -> Expr<_>, _> =
+            let parseOp : Parser<Expression<_> -> Expression<_> -> Expression<_>, _> =
                 [
                     "+", Plus
                     "-", Minus
@@ -383,7 +383,7 @@ module Parser =
                 do! spaces
                 let! outType = parseOutputType
                 do! skipChar ':' >>. spaces
-                let! body = Expr.parse
+                let! body = Expression.parse
 
                 let parms, parmTypes = List.unzip parmPairs
 
@@ -425,7 +425,7 @@ module Parser =
                 do! spaces
                 let! groups =
                     many (DeclGroup.parse .>> spaces)
-                let! main = Expr.parse .>> spaces
+                let! main = Expression.parse .>> spaces
                 return {
                     DeclGroups = groups
                     Main = main

@@ -1,5 +1,6 @@
 ﻿namespace CompilerDesign.Assignment6
 
+/// An identifier, such as the name of a value or function.
 type IdentifierDef<'tag> =
     {
         Name : string

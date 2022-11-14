@@ -45,7 +45,7 @@ module private Syntax =
 
 module Compiler =
 
-    module private rec Expr =
+    module private rec Expression =
 
         let compile env = function
             | LetExpr def -> (compileLet env def : CompilerResult<_>)
@@ -217,7 +217,7 @@ module Compiler =
                     typedParms
                         |> Result.List.traverse (fun (parm, typ) ->
                             compileParameter parm typ)
-                let! bodyNode, _ = Expr.compile env decl.Body
+                let! bodyNode, _ = Expression.compile env decl.Body
 
                 return MethodDeclaration(
                     returnType = returnType,
@@ -247,7 +247,7 @@ module Compiler =
                         |> Result.List.traverse DeclGroup.compile
                         |> Result.map (Seq.concat >> Seq.toArray)
                 let! mainNode, _ =
-                    Expr.compile Env.empty program.Main
+                    Expression.compile Env.empty program.Main
                 return mainNode, declNodes
             }
 

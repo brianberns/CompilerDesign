@@ -8,7 +8,7 @@
     <None Include="Readme.md" />
     <Compile Include="Identifier.fs" />
     <Compile Include="Type.fs" />
-    <Compile Include="Expr.fs" />
+    <Compile Include="Expression.fs" />
     <Compile Include="Scheme.fs" />
     <Compile Include="Decl.fs" />
     <Compile Include="Program.fs" />

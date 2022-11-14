@@ -130,7 +130,7 @@ module Substitution =
                     Map.map (fun _ typ ->
                         Type.substitute fromIdent toType typ) acc)
 
-    module Expr =
+    module Expression =
 
         let rec apply (subst : Substitution<_>) = function
             | LetExpr def -> applyLet subst def

@@ -21,7 +21,7 @@ module LetDef =
             let! bindings =
                 Generator.from<NonEmptyArray<_>>
             let! expr =
-                Generator.from<Expr<_>>
+                Generator.from<Expression<_>>
             return {
                 Bindings = Seq.toList bindings.Get
                 Expr = expr
@@ -86,7 +86,7 @@ module Decl =
             let! outType =
                 Generator.from<Type<_>>
 
-            let! body = Generator.from<Expr<_>>
+            let! body = Generator.from<Expression<_>>
 
             let parms, parmTypes = List.unzip parmPairs
 

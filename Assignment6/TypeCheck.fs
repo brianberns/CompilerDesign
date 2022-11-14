@@ -16,7 +16,7 @@ module TypeCheck =
                 $"Expected: {Type.unparse expected}, \
                 Actual: {Type.unparse actual}"
 
-    module private rec Expr =
+    module private rec Expression =
 
         let typeOf env expr =
             result {
@@ -158,7 +158,7 @@ module TypeCheck =
                     (env, typedParms)
                         ||> Result.List.foldM (fun acc (ident, typ) ->
                             acc |> TypeEnvironment.tryAdd ident typ)
-                let! bodyType = Expr.typeOf env' decl.Body
+                let! bodyType = Expression.typeOf env' decl.Body
 
                 if bodyType <> outputType then
                     return! Type.mismatch outputType bodyType
@@ -186,7 +186,7 @@ module TypeCheck =
             let! env =
                 (TypeEnvironment.empty, program'.DeclGroups)
                     ||> Result.List.foldM DeclGroup.typeCheck
-            return! Expr.typeOf env program'.Main
+            return! Expression.typeOf env program'.Main
         }
 
     let validate program =

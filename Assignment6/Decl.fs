@@ -8,7 +8,7 @@ type Decl<'tag> =
         Identifier : IdentifierDef<'tag>
         Parameters : List<IdentifierDef<'tag>>
         Scheme : Scheme<'tag>
-        Body : Expr<'tag>
+        Body : Expression<'tag>
     }
 
 module Decl =
@@ -21,7 +21,7 @@ module Decl =
                 decl.Parameters
                     |> List.map IdentifierDef.untag
             Scheme = Scheme.untag decl.Scheme
-            Body = Expr.untag decl.Body
+            Body = Expression.untag decl.Body
         }
 
     let getSignature decl =
@@ -47,7 +47,7 @@ module Decl =
             match outputType with
                 | TypeBlank _ -> ""
                 | _ -> $" -> {Type.unparse outputType}"
-        let body = Expr.unparse decl.Body
+        let body = Expression.unparse decl.Body
         $"def {ident}{tvIdents}({parms}){sOutputType}:\n    {body}\n\n"
 
 type DeclGroup<'tag> =

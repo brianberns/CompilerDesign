@@ -39,13 +39,13 @@ module TypeInfer =
 
     let (++) = Substitution.compose
 
-    module private rec Expr =
+    module private rec Expression =
 
         let annotate subst typ expr =
             let fullType = Type.apply subst typ
             let expr' =
                 AnnotationExpr {
-                    Expr = Expr.apply subst expr
+                    Expr = Expression.apply subst expr
                     Type = fullType
                     Tag = expr.Tag'
                 }
@@ -262,7 +262,7 @@ module TypeInfer =
                             acc |> TypeEnvironment.tryAdd ident typ')
 
                 let! bodySubst, bodyType, bodyExpr =
-                    Expr.infer funenv env' decl.Body
+                    Expression.infer funenv env' decl.Body
 
                 let! parmTypes =
                     decl.Parameters
@@ -334,12 +334,12 @@ module TypeInfer =
                                     group' :: accGroups
                             })
                 let! mainSubst, mainType, mainExpr =
-                    Expr.infer 
+                    Expression.infer 
                         funenv
                         TypeEnvironment.empty
                         program.Main
                 let fullType, main =
-                    Expr.annotate
+                    Expression.annotate
                         substDecls
                         mainType
                         mainExpr
