@@ -14,8 +14,8 @@ module private CompilationUnit =
     *)
     let private printMethod =
         MethodDeclaration(
-            IdentifierName("T"),
-            Identifier("Print"))
+            returnType = IdentifierName("T"),
+            identifier = Identifier("Print"))
             .WithModifiers(
                 TokenList(
                     Token(SyntaxKind.StaticKeyword)))
