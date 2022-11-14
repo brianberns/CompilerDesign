@@ -69,7 +69,8 @@ module TypeCheck =
                 match def.Operator with
                     | Add1 | Sub1 -> return! check Type.int
                     | Not -> return! check Type.bool
-                    | Print | IsBool | IsNum -> return actual
+                    | IsBool | IsNum -> return Type.bool
+                    | Print -> return actual
             }
 
         let private typeOfPrim2 env def =

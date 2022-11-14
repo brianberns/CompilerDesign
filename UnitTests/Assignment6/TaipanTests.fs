@@ -38,7 +38,7 @@ type TaipanTests() =
 
             g(7)
             """
-        Assert.AreEqual(Ok "7\nfalse", run text)
+        Assert.AreEqual(Ok "7\nFalse", run text)
 
     [<TestMethod>]
     member _.Annotation() =

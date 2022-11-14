@@ -4,13 +4,10 @@ open CompilerDesign.Core
 
 let text =
     """
-    def f(x, y):
-        isnum(print(x)) && isbool(y)
+    def f(x):
+        isnum(x)
 
-    def g(z):
-        f(z, 5)
-
-    g(7)
+    0
     """
 
 let program =
