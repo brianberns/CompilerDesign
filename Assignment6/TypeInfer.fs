@@ -241,11 +241,15 @@ module TypeInfer =
         let infer funenv env (decl : Decl<_>) =
             result {
 
+                let! typedParms, _ = Decl.getSignature decl   // to-do: what if declared output type is more restrictive than inferred body type?
                 let! env' =
-                    (env, decl.Parameters)
-                        ||> Result.List.foldM (fun acc ident ->
-                            let typ = generateTypeVariable ident.Name
-                            acc |> TypeEnvironment.tryAdd ident typ)
+                    (env, typedParms)
+                        ||> Result.List.foldM (fun acc (ident, typ) ->
+                            let typ' =
+                                if typ = TypeBlank () then
+                                    generateTypeVariable ident.Name
+                                else typ
+                            acc |> TypeEnvironment.tryAdd ident typ')
 
                 let! bodySubst, bodyType, bodyExpr =
                     Expr.infer funenv env' decl.Body

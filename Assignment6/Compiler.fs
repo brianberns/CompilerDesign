@@ -245,6 +245,8 @@ module Compiler =
     let compile assemblyName text =
         result {
             let! program = Parser.parse text
+            let! program' = TypeInfer.annotate program
+            do! TypeCheck.validate program'
             let! mainNode, methodNodes =
                 Program.compile program
             let memberNodes =

@@ -150,12 +150,6 @@ module TypeCheck =
 
     module private Decl =
 
-        let tryAdd env decl =
-            TypeEnvironment.tryAdd
-                decl.Identifier
-                decl.Scheme.Type
-                env
-
         let typeCheck env decl =
             result {
                 let! typedParms, outputType = Decl.getSignature decl
@@ -175,7 +169,11 @@ module TypeCheck =
             result {
                 let! env' =
                     (env, group.Decls)
-                        ||> Result.List.foldM Decl.tryAdd
+                        ||> Result.List.foldM (fun env decl ->
+                            TypeEnvironment.tryAdd
+                                decl.Identifier
+                                decl.Scheme.Type
+                                env)
                 for decl in group.Decls do
                     do! Decl.typeCheck env' decl
                 return env'
@@ -188,4 +186,10 @@ module TypeCheck =
                 (TypeEnvironment.empty, program'.DeclGroups)
                     ||> Result.List.foldM DeclGroup.typeCheck
             return! Expr.typeOf env program'.Main
+        }
+
+    let validate program =
+        result {
+            let! _type = typeOf program
+            return ()
         }

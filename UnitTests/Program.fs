@@ -4,7 +4,7 @@ open CompilerDesign.Core
 
 let program =
     """
-    def whatever(x : Int):
+    def whatever(x):
         (x : Int)
 
     whatever(2)
