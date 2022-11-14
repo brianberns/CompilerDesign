@@ -2,7 +2,7 @@ open CompilerDesign.Assignment6
 
 open CompilerDesign.Core
 
-let program =
+let text =
     """
     def whatever(x):
         let y : Int = x + 5 in # type-annotations on let-bindings do not need parens
@@ -13,6 +13,9 @@ let program =
 
     plus(whatever(2), 3)
     """
+
+let program =
+    text
         |> Parser.parse
         |> Result.get
 
@@ -21,4 +24,5 @@ result {
     printfn "Inferred:\n%s" <| Program.unparse program'
     let! typ = TypeCheck.typeOf program'
     printfn "\nChecked: %s" (Type.unparse typ)
+    do! Compiler.compile "Taipan" text
 } |> printfn "\n%A"

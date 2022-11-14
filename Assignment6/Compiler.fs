@@ -248,7 +248,7 @@ module Compiler =
             let! program' = TypeInfer.annotate program
             do! TypeCheck.validate program'
             let! mainNode, methodNodes =
-                Program.compile program
+                Program.compile program'
             let memberNodes =
                 methodNodes
                     |> Array.map (fun node ->
