@@ -4,14 +4,10 @@ open CompilerDesign.Core
 
 let text =
     """
-    def whatever(x):
-        let y : Int = x + 5 in # type-annotations on let-bindings do not need parens
-        (x : Int) + y # type-annotated variables must be surrounded by parens
+    def whatever<'a>(anything : 'a) -> 'a:
+        print<'a>(anything)
 
-    # parameters to function definitions do not need parens
-    def plus(x : Int, y : Int) -> Int: x + y
-
-    plus(whatever(2), 3)
+    (3 ==<Int> print<Int>(whatever<Int>(5)) : Bool)
     """
 
 let program =

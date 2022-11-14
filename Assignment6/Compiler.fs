@@ -169,41 +169,49 @@ module Compiler =
 
     module private Decl =
 
-        let private predefinedType =
-            let map =
-                Map [
-                    Type.int, SyntaxKind.IntKeyword
-                    Type.bool, SyntaxKind.BoolKeyword
-                ]
-            fun typ ->
-                result {
-                    let typ' = Type.untag typ
-                    do! TypeCheck.Type.checkMissing typ'
-                    match Map.tryFind typ' map with
-                        | Some kind -> return kind
-                        | None -> return! Error $"Unknown type: {Type.unparse typ}"
-                }
+        let private predefinedTypeMap =
+            Map [
+                Type.int, SyntaxKind.IntKeyword
+                Type.bool, SyntaxKind.BoolKeyword
+            ]
+
+        let private compileType typ =
+            result {
+                do! TypeCheck.Type.checkMissing typ
+                match typ with
+                    | TypeConstant _ as typ ->
+                        let kind = predefinedTypeMap[typ]
+                        return (PredefinedType(Token(kind)) : Syntax.TypeSyntax)
+                    | TypeVariable def ->
+                        return IdentifierName(def.Name)
+                    | _ -> return! Error "Unexpected type"
+            }
 
         let private compileParameter parm typ =
             result {
-                let! kind = predefinedType typ
+                let! typeNode = compileType typ
                 return Parameter(
                     Identifier(parm.Name))
-                    .WithType(PredefinedType(Token(kind)))
+                        .WithType(typeNode)
             }
 
         let compile decl =
             result {
 
+                let typeParmNodes =
+                    decl.Scheme.TypeVariableIdents
+                        |> Seq.map (fun tvIdent ->
+                            TypeParameter(
+                                Identifier(tvIdent.Name)))
+                let! typedParms, _ = Decl.getSignature decl
                 let! env =
-                    (Env.empty, decl.Parameters)
-                        ||> Result.List.foldM (fun acc parm ->
+                    (Env.empty, typedParms)
+                        ||> Result.List.foldM (fun acc (parm, _) ->
                             result {
                                 let node = IdentifierName(parm.Name)
                                 return! acc
                                     |> Env.tryAdd parm.Name node
                             })
-                let! typedParms, _ = Decl.getSignature decl
                 let! parmNodes =
                     typedParms
                         |> Result.List.traverse (fun (parm, typ) ->
@@ -217,6 +225,8 @@ module Compiler =
                     identifier = decl.Identifier.Name)
                     .AddModifiers(
                         Token(SyntaxKind.StaticKeyword))
+                    .WithTypeParameterList(
+                        TypeParameterList(SeparatedList(typeParmNodes)))
                     .WithParameterList(
                         ParameterList(SeparatedList(parmNodes)))
                     .WithBody(
