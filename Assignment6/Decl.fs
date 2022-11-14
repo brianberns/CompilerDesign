@@ -58,6 +58,7 @@ module Decl =
         let body = Expression.unparse decl.Body
         $"def {ident}{tvIdents}({parms}){sOutputType}:\n    {body}\n\n"
 
+/// A group of mutually-recursive functions.
 type DeclGroup<'tag> =
     {
         Decls : List<Decl<'tag>>

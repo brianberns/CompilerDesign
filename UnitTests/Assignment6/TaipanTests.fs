@@ -70,15 +70,18 @@ type TaipanTests() =
 
         let text =
             """
-            def f(x):
-              print(x)
+            def even(n):
+              !(odd(n))
 
-            and def ab_bool(a, b):
-              isnum(f(a)) && f(b) # ???
+            and def odd(n):
+              if n == 0: false
+              else: if n == 1: true
+              else:
+                even(n - 1)
 
-            ab_bool(3, true) && ab_bool(true, false)
+            odd(5)
             """
-        Assert.AreEqual(Error "moo", run text)
+        Assert.AreEqual(Ok "True", run text)
 
     [<TestMethod>]
     member _.Annotation() =
