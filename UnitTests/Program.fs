@@ -4,10 +4,13 @@ open CompilerDesign.Core
 
 let text =
     """
-    def ab_bool(b):
-      true && print(b)
+    def f(x): # should have scheme Forall 'X, ('X -> 'X)
+        print(x)
 
-    ab_bool(true)
+    def ab_bool(a, b): # should have scheme Forall 'A, ('A, Bool -> Bool)
+        isnum(f(a)) && f(b)
+
+    ab_bool(3, true) && ab_bool(true, false)
     """
 
 let program =
