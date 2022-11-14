@@ -171,6 +171,14 @@ type TaipanTests() =
                     IdentifierDef.create "A", Type.int
                     IdentifierDef.create "B", Type.int
                 ]
+
+                "'x",
+                "'x",
+                Ok []
+
+                "('x -> 'x)",
+                "('y -> 'x)",
+                Ok [ IdentifierDef.create "x", TypeVariable (IdentifierDef.create "y") ]
             ]
         for (text1, text2, expected) in tuples do
             let actual =

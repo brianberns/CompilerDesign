@@ -63,6 +63,10 @@ module Substitution =
                         when ident1 = ident2 ->
                         return empty
 
+                    | TypeVariable ident1, TypeVariable ident2   // avoid occurs check
+                        when ident1 = ident2 ->
+                        return empty
+
                     | TypeVariable ident, _
                         when type2 |> occurs ident |> not ->
                         return [ ident, type2 ]
