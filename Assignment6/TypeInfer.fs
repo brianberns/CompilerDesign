@@ -41,12 +41,15 @@ module TypeInfer =
 
     module private rec Expr =
 
-        let annotate expr typ =
-            AnnotationExpr {
-                Expr = expr
-                Type = typ
-                Tag = expr.Tag'
-            }
+        let annotate subst typ expr =
+            let fullType = Type.apply subst typ
+            let expr' =
+                AnnotationExpr {
+                    Expr = Expr.apply subst expr
+                    Type = fullType
+                    Tag = expr.Tag'
+                }
+            fullType, expr'
 
         let infer funenv env expr =
             match expr with
@@ -82,11 +85,11 @@ module TypeInfer =
                         Tag = ()
                     }
                 let! subst = unify schemeType arrowType
-                let fullType = Type.apply subst outType
-                let expr =
+                let fullType, expr =
                     annotate
+                        subst
+                        outType
                         (Prim1Expr { def with Expr = argExpr })
-                        fullType
                 return argSubst ++ subst, fullType, expr
             }
 
@@ -107,14 +110,14 @@ module TypeInfer =
                         Tag = ()
                     }
                 let! subst = unify schemeType arrowType
-                let fullType = Type.apply subst outType
-                let expr =
+                let fullType, expr =
                     annotate
+                        subst
+                        outType
                         (Prim2Expr {
                             def with
                                 Left = leftExpr
                                 Right = rightExpr })
-                        fullType
                 return
                     leftSubst ++ rightSubst ++ subst,
                     fullType,
@@ -131,15 +134,15 @@ module TypeInfer =
                     infer funenv env def.Condition
                 let! boolSubst = unify condType Type.bool
                 let! sameSubst = unify trueType falseType
-                let fullType = Type.apply sameSubst trueType
-                let expr =
+                let fullType, expr =
                     annotate
+                        sameSubst
+                        trueType
                         (IfExpr {
                             def with
                                 Condition = condExpr
                                 TrueBranch = trueExpr
                                 FalseBranch = falseExpr })
-                        fullType
                 return
                     condSubst ++ trueSubst ++ falseSubst
                         ++ boolSubst ++ sameSubst,
@@ -180,14 +183,14 @@ module TypeInfer =
                             })
                 let! bodySubst, bodyType, bodyExpr =
                     infer funenv env' def.Expr
-                let fullType = Type.apply bodySubst bodyType
-                let expr =
+                let fullType, expr =
                     annotate
+                        bodySubst
+                        bodyType
                         (LetExpr {
                             def with
                                 Bindings = List.rev bindingsRev
                                 Expr = bodyExpr })
-                        fullType
                 return
                     bindingSubst ++ bodySubst,
                     fullType,
@@ -212,12 +215,12 @@ module TypeInfer =
                         Tag = ()
                     }
                 let! subst = unify schemeType arrowType
-                let fullType = Type.apply subst outType
-                let expr =
+                let fullType, expr =
                     annotate
+                        subst
+                        outType
                         (ApplicationExpr {
                             def with Arguments = argExprs })
-                        fullType
                 return
                     (List.reduce (++) argSubsts) ++ subst,
                     fullType,
@@ -232,12 +235,12 @@ module TypeInfer =
                     return innerSubst, innerType, innerExpr
                 else
                     let! annotSubst = unify innerType def.Type
-                    let fullType = Type.apply annotSubst innerType
-                    let expr =
+                    let fullType, expr =
                         annotate
+                            annotSubst
+                            innerType
                             (AnnotationExpr {
                                 def with Expr = innerExpr })
-                            fullType
                     return innerSubst ++ annotSubst,
                         fullType,
                         expr
@@ -335,13 +338,16 @@ module TypeInfer =
                         funenv
                         TypeEnvironment.empty
                         program.Main
-                let fullType =
-                    Type.apply substDecls mainType
+                let fullType, main =
+                    Expr.annotate
+                        substDecls
+                        mainType
+                        mainExpr
                 let program' =
                     {
                         program with
                             DeclGroups = List.rev groupsRev
-                            Main = Expr.annotate mainExpr fullType
+                            Main = main
                     }
                 return
                     substDecls ++ mainSubst,

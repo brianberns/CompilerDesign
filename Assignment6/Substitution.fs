@@ -125,3 +125,75 @@ module Substitution =
                 ||> List.fold (fun acc (fromIdent, toType) ->
                     Map.map (fun _ typ ->
                         Type.substitute fromIdent toType typ) acc)
+
+    module Expr =
+
+        let rec apply (subst : Substitution<_>) = function
+            | LetExpr def -> applyLet subst def
+            | Prim1Expr def -> applyPrim1 subst def
+            | Prim2Expr def -> applyPrim2 subst def
+            | IfExpr def -> applyIf subst def
+            | ApplicationExpr def -> applyApplication subst def
+            | AnnotationExpr def -> applyAnnotation subst def
+            | expr -> expr
+
+        and private applyBinding subst (binding : Binding<_>) =
+            { binding with
+                Type = Type.apply subst binding.Type }
+
+        and private applyLet subst def =
+            let bindings =
+                def.Bindings
+                    |> List.map (applyBinding subst)
+            LetExpr {
+                def with
+                    Bindings = bindings
+                    Expr = apply subst def.Expr }
+
+        and private applyPrim1 subst def =
+            let typeArgs =
+                def.TypeArguments
+                    |> List.map (Type.apply subst)
+            Prim1Expr {
+                def with
+                    TypeArguments = typeArgs
+                    Expr = apply subst def.Expr }
+
+        and private applyPrim2 subst def =
+            let typeArgs =
+                def.TypeArguments
+                    |> List.map (Type.apply subst)
+            Prim2Expr {
+                def with
+                    TypeArguments = typeArgs
+                    Left = apply subst def.Left
+                    Right = apply subst def.Right
+            }
+
+        and private applyIf subst def =
+            IfExpr {
+                def with
+                    Condition = apply subst def.Condition
+                    TrueBranch = apply subst def.TrueBranch
+                    FalseBranch = apply subst def.FalseBranch
+            }
+
+        and private applyApplication subst def =
+            let typeArgs =
+                def.TypeArguments
+                    |> List.map (Type.apply subst)
+            let args =
+                def.Arguments
+                    |> List.map (apply subst)
+            ApplicationExpr {
+                def with
+                    TypeArguments = typeArgs
+                    Arguments = args
+            }
+
+        and private applyAnnotation subst def =
+            AnnotationExpr {
+                def with
+                    Expr = apply subst def.Expr
+                    Type = Type.apply subst def.Type
+            }
