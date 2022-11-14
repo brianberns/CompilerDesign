@@ -24,33 +24,31 @@ module Decl =
             Body = Expr.untag decl.Body
         }
 
-    let getTypeArrow decl =
+    let getSignature decl =
         match decl.Scheme.Type with
-            | TypeArrow arrowDef -> Ok arrowDef
+            | TypeArrow arrowDef ->
+                let typedParms = List.zip decl.Parameters arrowDef.InputTypes
+                Ok (typedParms, arrowDef.OutputType)
             | _ -> Error "Invalid decl scheme"
 
     let unparse decl =
         let ident = decl.Identifier.Name
         let tvIdents = Scheme.unparseTypeVariableIdents decl.Scheme
-        let parmTypes, outType =
-            let arrowDef =
-                decl
-                    |> getTypeArrow
-                    |> Result.get
-            arrowDef.InputTypes, arrowDef.OutputType
+        let typedParms, outputType =
+            getSignature decl |> Result.get
         let parms =
-            (decl.Parameters, parmTypes)
-                ||> Seq.map2 (fun ident typ ->
+            typedParms
+                |> Seq.map (fun (ident, typ) ->
                     match typ with
                         | TypeBlank _ -> ident.Name
                         | _ -> $"{ident.Name} : {Type.unparse typ}")
                 |> String.concat ", "
-        let sOutType =
-            match outType with
+        let sOutputType =
+            match outputType with
                 | TypeBlank _ -> ""
-                | _ -> $" -> {Type.unparse outType}"
+                | _ -> $" -> {Type.unparse outputType}"
         let body = Expr.unparse decl.Body
-        $"def {ident}{tvIdents}({parms}){sOutType}:\n    {body}\n\n"
+        $"def {ident}{tvIdents}({parms}){sOutputType}:\n    {body}\n\n"
 
 type DeclGroup<'tag> =
     {

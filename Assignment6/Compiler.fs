@@ -203,9 +203,9 @@ module Compiler =
                                 return! acc
                                     |> Env.tryAdd parm.Name node
                             })
-                let! arrowDef = Decl.getTypeArrow decl
+                let! typedParms, _ = Decl.getSignature decl
                 let! parmNodes =
-                    List.zip decl.Parameters arrowDef.InputTypes
+                    typedParms
                         |> Result.List.traverse (fun (parm, typ) ->
                             compileParameter parm typ)
                 let! bodyNode, _ = Expr.compile env decl.Body

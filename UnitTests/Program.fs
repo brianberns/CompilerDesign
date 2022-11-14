@@ -4,8 +4,10 @@ open CompilerDesign.Core
 
 let program =
     """
-    def f(x) : x
-    let a = f(0), b = f(false) in 0
+    def whatever(x : Int):
+        (x : Int)
+
+    whatever(2)
     """
         |> Parser.parse
         |> Result.get

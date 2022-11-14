@@ -158,16 +158,15 @@ module TypeCheck =
 
         let typeCheck env decl =
             result {
-                let! arrowDef = Decl.getTypeArrow decl
+                let! typedParms, outputType = Decl.getSignature decl
                 let! env' =
-                    let pairs = List.zip decl.Parameters arrowDef.InputTypes
-                    (env, pairs)
+                    (env, typedParms)
                         ||> Result.List.foldM (fun acc (ident, typ) ->
                             acc |> TypeEnvironment.tryAdd ident typ)
                 let! bodyType = Expr.typeOf env' decl.Body
 
-                if bodyType <> arrowDef.OutputType then
-                    return! Type.mismatch arrowDef.OutputType bodyType
+                if bodyType <> outputType then
+                    return! Type.mismatch outputType bodyType
             }
 
     module private DeclGroup =
