@@ -4,10 +4,13 @@ open CompilerDesign.Core
 
 let text =
     """
-    def whatever<'a>(anything : 'a) -> 'a:
-        print<'a>(anything)
+    def f(x, y):
+        isnum(print(x)) && isbool(y)
 
-    (3 ==<Int> print<Int>(whatever<Int>(5)) : Bool)
+    def g(z):
+        f(z, 5)
+
+    g(7)
     """
 
 let program =

@@ -16,6 +16,31 @@ type TaipanTests() =
         }
 
     [<TestMethod>]
+    member _.Example1() =
+        let text =
+            """
+            def f(x):
+              x + 6
+
+            f(38)
+            """
+        Assert.AreEqual(Ok "44", run text)
+
+    [<TestMethod>]
+    member _.Example2() =
+        let text =
+            """
+            def f(x, y):
+              isnum(print(x)) && isbool(y)
+
+            def g(z):
+              f(z, 5)
+
+            g(7)
+            """
+        Assert.AreEqual(Ok "7\nfalse", run text)
+
+    [<TestMethod>]
     member _.Annotation() =
         let text =
             """
