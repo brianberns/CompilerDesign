@@ -4,10 +4,10 @@ open CompilerDesign.Core
 
 let text =
     """
-    def f(x):
-        isnum(x)
+    def ab_bool(b):
+      true && print(b)
 
-    0
+    ab_bool(true)
     """
 
 let program =
@@ -16,9 +16,13 @@ let program =
         |> Result.get
 
 result {
+
     let! program' = TypeInfer.annotate program
     printfn "Inferred:\n%s" <| Program.unparse program'
+
     let! typ = TypeCheck.typeOf program'
     printfn "\nChecked: %s" (Type.unparse typ)
+
     do! Compiler.compile "Taipan" text
+
 } |> printfn "\n%A"
