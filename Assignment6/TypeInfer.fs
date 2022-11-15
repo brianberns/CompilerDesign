@@ -11,12 +11,56 @@ module TypeInfer =
             count <- count + 1
             $"{str}_{count}"
 
-    let private generateTypeVariable str =
+    let private generateTypeVarIdent str =
         generateSymbol str
             |> IdentifierDef.create
+
+    let private generateTypeVariable str =
+        generateTypeVarIdent str
             |> TypeVariable
 
     module Scheme =
+
+        /// Prepares a scheme for instantiation, but does not infer
+        /// anything about its type.
+        /// E.g. (_ -> _) => <'a, 'b>('a -> 'b)
+        let preinstantiate scheme =
+
+            let rec replaceBlanks = function
+
+                | TypeBlank _ ->
+                    let tvIdent = generateTypeVarIdent "tv"
+                    TypeVariable tvIdent, [tvIdent]
+
+                | TypeConstant _ as typ -> typ, []
+
+                | TypeVariable def as typ -> typ, [def]
+
+                | TypeArrow def ->
+                    let inputTypes, inputTypeVarIdentLists =
+                        def.InputTypes
+                            |> List.map replaceBlanks
+                            |> List.unzip
+                    let outputType, outputTypeVarIdents =
+                        replaceBlanks def.OutputType
+                    let typeArrow =
+                        TypeArrow {
+                            def with
+                                InputTypes = inputTypes
+                                OutputType = outputType
+                        }
+                    let typeVarIdents =
+                        List.concat (
+                            inputTypeVarIdentLists
+                                @ [outputTypeVarIdents])
+                    typeArrow, typeVarIdents
+
+            let typ, typeVarIdents = replaceBlanks scheme.Type
+            {
+                scheme with
+                    TypeVariableIdents = typeVarIdents
+                    Type = typ
+            }
 
         let instantiate scheme =
             let subst =
