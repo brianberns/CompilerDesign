@@ -277,7 +277,7 @@ module TypeInfer =
 
     module private Decl =
 
-        let infer funenv env (decl : Decl<_>) =
+        let preinstantiate funenv decl =
             result {
 
                     // flesh out the provided scheme
@@ -290,10 +290,16 @@ module TypeInfer =
                             decl.Identifier.Name
                             scheme
 
+                return funenv', { decl with Scheme = scheme }
+            }
+
+        let infer funenv env (decl : Decl<_>) =
+            result {
+
+                let! funenv', decl' = preinstantiate funenv decl
+
                     // make the function's parameters available
-                let! typedParms, _ =
-                    Decl.getSignature {
-                        decl with Scheme = scheme }
+                let! typedParms, _ = Decl.getSignature decl'
                 let! env' =
                     (env, typedParms)
                         ||> Result.List.foldM (fun acc (ident, typ) ->
