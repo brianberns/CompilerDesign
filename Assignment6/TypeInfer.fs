@@ -11,12 +11,9 @@ module TypeInfer =
             count <- count + 1
             $"{str}_{count}"
 
-    let private generateTypeVarIdent str =
+    let private generateTypeVariable str =
         generateSymbol str
             |> IdentifierDef.create
-
-    let private generateTypeVariable str =
-        generateTypeVarIdent str
             |> TypeVariable
 
     module Scheme =
@@ -28,37 +25,25 @@ module TypeInfer =
 
             let rec replaceBlanks = function
 
-                | TypeBlank _ ->
-                    let tvIdent = generateTypeVarIdent "tv"
-                    TypeVariable tvIdent, [tvIdent]
-
-                | TypeConstant _ as typ -> typ, []
-
-                | TypeVariable def as typ -> typ, [def]
+                | TypeBlank _ -> generateTypeVariable "tv"
 
                 | TypeArrow def ->
-                    let inputTypes, inputTypeVarIdentLists =
-                        def.InputTypes
-                            |> List.map replaceBlanks
-                            |> List.unzip
-                    let outputType, outputTypeVarIdents =
-                        replaceBlanks def.OutputType
-                    let typeArrow =
-                        TypeArrow {
-                            def with
-                                InputTypes = inputTypes
-                                OutputType = outputType
-                        }
-                    let typeVarIdents =
-                        List.concat (
-                            inputTypeVarIdentLists
-                                @ [outputTypeVarIdents])
-                    typeArrow, typeVarIdents
+                    TypeArrow {
+                        def with
+                            InputTypes =
+                                List.map replaceBlanks def.InputTypes
+                            OutputType = replaceBlanks def.OutputType
+                    }
 
-            let typ, typeVarIdents = replaceBlanks scheme.Type
+                | typ -> typ
+
+            let typ = replaceBlanks scheme.Type
             {
                 scheme with
-                    TypeVariableIdents = typeVarIdents
+                    TypeVariableIdents =
+                        typ
+                            |> Type.freeTypeVars
+                            |> Set.toList
                     Type = typ
             }
 
