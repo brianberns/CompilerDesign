@@ -4,8 +4,11 @@ open CompilerDesign.Core
 
 let text =
     """
-    def f(x): x + 6
-    f(38)
+    def factorial(n):
+        if n <= 0: 1
+        else: n * factorial(n-1)
+
+    factorial(6)
     """
 
 let program =

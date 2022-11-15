@@ -280,19 +280,30 @@ module TypeInfer =
         let infer funenv env (decl : Decl<_>) =
             result {
 
-                let! typedParms, _ = Decl.getSignature decl   // to-do: what if declared output type is more restrictive than inferred body type?
+                    // flesh out the provided scheme
+                let scheme = Scheme.preinstantiate decl.Scheme
+
+                    // make the function available for a recursive call
+                let! funenv' =
+                    funenv
+                        |> SchemeEnvironment.tryAdd
+                            decl.Identifier.Name
+                            scheme
+
+                    // make the function's parameters available
+                let! typedParms, _ =
+                    Decl.getSignature {
+                        decl with Scheme = scheme }
                 let! env' =
                     (env, typedParms)
                         ||> Result.List.foldM (fun acc (ident, typ) ->
-                            let typ' =
-                                if typ = TypeBlank () then
-                                    generateTypeVariable ident.Name
-                                else typ
-                            acc |> TypeEnvironment.tryAdd ident typ')
+                            acc |> TypeEnvironment.tryAdd ident typ)
 
+                    // infer the body's type
                 let! bodySubst, bodyType, bodyExpr =
-                    Expression.infer funenv env' decl.Body
+                    Expression.infer funenv' env' decl.Body
 
+                    // generalize the resulting scheme
                 let! parmTypes =
                     decl.Parameters
                         |> Result.List.traverse (fun ident ->
@@ -301,19 +312,17 @@ module TypeInfer =
                                     env' |> TypeEnvironment.tryFind ident
                                 return Type.apply bodySubst typ
                             })
-
                 let scheme =
                     TypeArrow {
                         InputTypes = parmTypes
                         OutputType = bodyType
                         Tag = ()
                     } |> Scheme.generalize env
-                let! funenv' =
+                let! funenv'' =
                     funenv
                         |> SchemeEnvironment.tryAdd
                             decl.Identifier.Name
                             scheme
-
                 let decl' =
                     {
                         decl with
@@ -321,7 +330,7 @@ module TypeInfer =
                             Scheme = scheme
                     }
 
-                return bodySubst, funenv', decl'
+                return bodySubst, funenv'', decl'
             }
 
     module private DeclGroup =
