@@ -341,7 +341,7 @@ module Parser =
 
     module private Decl =
 
-        let private parseTypeVariableIdentifiers =
+        let parseTypeVariableIdentifiers =
             parseCsv1 Type.parseVariableIdentifier
                 |> parseAngles
                 |> opt
@@ -368,6 +368,9 @@ module Parser =
                 |> Type.parseOrBlank
 
         (*
+            def whatever(anything):
+              print(anything)
+
             def whatever<'a>(anything : 'a) -> 'a:
               print<'a>(anything)
         *)
@@ -443,13 +446,8 @@ module Parser =
 
     module Scheme =
 
-        let private parseTypeVarIdents =
-            skipChar '<'
-                >>. many1 Type.parseVariableIdentifier
-                .>> skipChar '>'
-
         let private parseScheme =
-            (parseTypeVarIdents <|>% List.empty)
+            Decl.parseTypeVariableIdentifiers
                 .>>. Type.parse
                 |> parsePos (fun (tvIdents, typ) tag ->
                     {
@@ -458,5 +456,6 @@ module Parser =
                         Tag = tag
                     })
 
+        /// E.g. <'a>('a, 'a -> Bool)
         let parse text =
             run parseScheme text
