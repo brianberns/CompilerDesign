@@ -167,6 +167,13 @@ module Compiler =
                 return node, env
             }
 
+    type Syntax.MethodDeclarationSyntax with
+        member node.MaybeWithTypeParameterList(
+            typeParameterList : Syntax.TypeParameterListSyntax) =
+            if typeParameterList.Parameters.Count > 0 then
+                node.WithTypeParameterList(typeParameterList)
+            else node
+
     module private Decl =
 
         let private predefinedTypeMap =
@@ -224,7 +231,7 @@ module Compiler =
                     identifier = decl.Identifier.Name)
                     .AddModifiers(
                         Token(SyntaxKind.StaticKeyword))
-                    .WithTypeParameterList(
+                    .MaybeWithTypeParameterList(
                         TypeParameterList(SeparatedList(typeParmNodes)))
                     .WithParameterList(
                         ParameterList(SeparatedList(parmNodes)))
