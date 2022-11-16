@@ -4,16 +4,9 @@ open CompilerDesign.Core
 
 let text =
     """
-        def even(n):
-            !(odd(n))
-
-        and def odd(n):
-            if n == 0: false
-            else: if n == 1: true
-            else:
-            even(n - 1)
-
-        odd(5)
+    def f(x): x
+    and def g(y): f(y)
+    g(3)
     """
 
 let program =
