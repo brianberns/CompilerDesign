@@ -295,11 +295,10 @@ module TypeInfer =
 
         let infer funenv env (decl : Decl<_>) =
             result {
-
-                let! funenv', decl' = preinstantiate funenv decl
+                printfn "%s" (Decl.unparse decl)
 
                     // make the function's parameters available
-                let! typedParms, _ = Decl.getSignature decl'
+                let! typedParms, outputType = Decl.getSignature decl
                 let! env' =
                     (env, typedParms)
                         ||> Result.List.foldM (fun acc (ident, typ) ->
@@ -307,56 +306,71 @@ module TypeInfer =
 
                     // infer the body's type
                 let! bodySubst, bodyType, bodyExpr =
-                    Expression.infer funenv' env' decl.Body
+                    Expression.infer funenv env' decl.Body
 
-                    // generalize the resulting scheme
-                let! parmTypes =
-                    decl.Parameters
-                        |> Result.List.traverse (fun ident ->
-                            result {
-                                let! typ =
-                                    env' |> TypeEnvironment.tryFind ident
-                                return Type.apply bodySubst typ
-                            })
+                    // unify inferred output type
+                let! outputSubst = unify outputType bodyType
+
+                return
+                    bodySubst ++ outputSubst,
+                    { decl with Body = bodyExpr }
+            }
+
+        let generalize funenv env subst decl =
+            result {
                 let scheme =
-                    TypeArrow {
-                        InputTypes = parmTypes
-                        OutputType = bodyType
-                        Tag = ()
-                    } |> Scheme.generalize env
-                let! funenv'' =
+                    Type.apply subst decl.Scheme.Type
+                        |> Scheme.generalize env
+                let! funenv' =
                     funenv
                         |> SchemeEnvironment.tryAdd
                             decl.Identifier.Name
                             scheme
-                let decl' =
-                    {
-                        decl with
-                            Body = bodyExpr
-                            Scheme = scheme
-                    }
-
-                return bodySubst, funenv'', decl'
+                let decl' = { decl with Scheme = scheme }
+                return funenv', decl'
             }
 
     module private DeclGroup =
 
         let infer funenv env group =
             result {
-                let! subst, typ, declsRev =
-                    ((Substitution.empty, funenv, []), group.Decls)
-                        ||> Result.List.foldM (fun (subst, accFunenv, accDecls) decl ->
+
+                let! funenv', declsRev =
+                    ((funenv, []), group.Decls)
+                        ||> Result.List.foldM (fun (accFunenv, accDecls) decl ->
                             result {
-                                let! subst', accFunenv', decl' =
-                                    Decl.infer accFunenv env decl
+                                let! accFunenv', decl' =
+                                    Decl.preinstantiate accFunenv decl
                                 return
-                                    subst ++ subst',
                                     accFunenv',
                                     decl' :: accDecls
                             })
+
+                let! subst, declsRev' =
+                    ((Substitution.empty, []), List.rev declsRev)
+                        ||> Result.List.foldM (fun (accSubst, accDecls) decl ->
+                            result {
+                                let! declSubst, decl' =
+                                    Decl.infer funenv' env decl
+                                return
+                                    accSubst ++ declSubst,
+                                    decl' :: accDecls
+                            })
+
+                let! funenv'', declsRev'' =
+                    ((funenv, []), List.rev declsRev')
+                        ||> Result.List.foldM (fun (accFunenv, accDecls) decl ->
+                            result {
+                                let! accFunenv', decl' =
+                                    Decl.generalize accFunenv env subst decl
+                                return
+                                    accFunenv',
+                                    decl' :: accDecls
+                            })
+
                 let group' =
-                    { group with Decls = List.rev declsRev }
-                return subst, typ, group'
+                    { group with Decls = List.rev declsRev'' }
+                return subst, funenv'', group'
             }
 
     module private Program =

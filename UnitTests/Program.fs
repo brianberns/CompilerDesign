@@ -4,11 +4,16 @@ open CompilerDesign.Core
 
 let text =
     """
-    def factorial(n):
-        if n <= 0: 1
-        else: n * factorial(n-1)
+        def even(n):
+            !(odd(n))
 
-    factorial(6)
+        and def odd(n):
+            if n == 0: false
+            else: if n == 1: true
+            else:
+            even(n - 1)
+
+        odd(5)
     """
 
 let program =
