@@ -1,6 +1,7 @@
 ﻿namespace CompilerDesign.Assignment6
 
 /// The type of a value or function.
+[<System.Diagnostics.DebuggerDisplay("{Unparse()}")>]
 type Type<'tag> =
 
     /// No type specified. Will be inferred later.
@@ -14,6 +15,23 @@ type Type<'tag> =
 
     /// Function type. E.g. "('a, Bool) -> Int".
     | TypeArrow of TypeArrowDef<'tag>
+
+    with
+
+    member typ.Unparse() =
+        match typ with
+            | TypeBlank _ -> "_"
+            | TypeConstant def -> def.Name
+            | TypeVariable def -> $"'{def.Name}"     // apostrophe is implicit
+            | TypeArrow def ->
+                let inputs =
+                    if def.InputTypes.IsEmpty then
+                        "Unit"                       // no other way to represent a function with no inputs
+                    else
+                        def.InputTypes
+                            |> Seq.map (fun t -> t.Unparse())
+                            |> String.concat ", "
+                $"({inputs} -> {def.OutputType.Unparse()})"
 
 /// Function type. E.g. "('a, Bool) -> Int".
 and TypeArrowDef<'tag> =
@@ -37,19 +55,8 @@ module Type =
                 Tag = ()
             }
 
-    let rec unparse = function
-        | TypeBlank _ -> "_"
-        | TypeConstant def -> def.Name
-        | TypeVariable def -> $"'{def.Name}"     // apostrophe is implicit
-        | TypeArrow def ->
-            let inputs =
-                if def.InputTypes.IsEmpty then
-                    "Unit"                       // no other way to represent a function with no inputs
-                else
-                    def.InputTypes
-                        |> Seq.map unparse
-                        |> String.concat ", "
-            $"({inputs} -> {unparse def.OutputType})"
+    let unparse (typ : Type<_>) =
+        typ.Unparse()
 
     let rec freeTypeVars = function
         | TypeVariable ident -> Set.singleton ident
