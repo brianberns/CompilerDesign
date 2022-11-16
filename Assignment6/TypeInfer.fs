@@ -20,13 +20,11 @@ module TypeInfer =
 
         /// Prepares a scheme for instantiation, but does not infer
         /// anything about its type.
-        /// E.g. (_ -> _) => <'a, 'b>('a -> 'b)
+        /// E.g. <'a>('a -> _ -> _) => <'a>('a -> 'b -> 'c)
         let preinstantiate scheme =
 
             let rec replaceBlanks = function
-
                 | TypeBlank _ -> generateTypeVariable "tv"
-
                 | TypeArrow def ->
                     TypeArrow {
                         def with
@@ -34,18 +32,10 @@ module TypeInfer =
                                 List.map replaceBlanks def.InputTypes
                             OutputType = replaceBlanks def.OutputType
                     }
-
                 | typ -> typ
 
             let typ = replaceBlanks scheme.Type
-            {
-                scheme with
-                    TypeVariableIdents =
-                        typ
-                            |> Type.freeTypeVars
-                            |> Set.toList
-                    Type = typ
-            }
+            { scheme with Type = typ }
 
         let instantiate scheme =
             let subst =
@@ -295,7 +285,6 @@ module TypeInfer =
 
         let infer funenv env (decl : Decl<_>) =
             result {
-                printfn "%s" (Decl.unparse decl)
 
                     // make the function's parameters available
                 let! typedParms, outputType = Decl.getSignature decl
