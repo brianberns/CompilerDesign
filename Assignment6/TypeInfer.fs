@@ -244,8 +244,11 @@ module TypeInfer =
                         outType
                         (ApplicationExpr {
                             def with Arguments = argExprs })
+                let argSubst =
+                    argSubsts
+                        |> List.fold (++) Substitution.empty
                 return
-                    (List.reduce (++) argSubsts) ++ subst,
+                    argSubst ++ subst,
                     fullType,
                     expr
             }
