@@ -2,6 +2,7 @@
 
 /// Generalized type signature of a function.
 /// E.g. isnum has scheme: <'a>('a -> Bool)
+[<System.Diagnostics.DebuggerDisplay("{Unparse()}")>]
 type Scheme<'tag> =
     {
         /// E.g. <'a, 'b>.
@@ -12,6 +13,20 @@ type Scheme<'tag> =
 
         Tag : 'tag
     }
+
+    with
+
+    member scheme.UnparseTypeVariableIdents() =
+        if scheme.TypeVariableIdents.IsEmpty then ""
+        else
+            scheme.TypeVariableIdents
+                |> Seq.map (fun ident -> $"'{ident.Name}")
+                |> String.concat ", "
+                |> sprintf "<%s>"
+
+    member scheme.Unparse() =
+        let typeVars = scheme.UnparseTypeVariableIdents()
+        $"{typeVars}{Type.unparse scheme.Type}"
 
 module Scheme =
 
@@ -24,14 +39,8 @@ module Scheme =
             Tag = ()
         }
 
-    let unparseTypeVariableIdents scheme =
-        if scheme.TypeVariableIdents.IsEmpty then ""
-        else
-            scheme.TypeVariableIdents
-                |> Seq.map (fun ident -> $"'{ident.Name}")
-                |> String.concat ", "
-                |> sprintf "<%s>"
+    let unparseTypeVariableIdents (scheme : Scheme<_>) =
+        scheme.UnparseTypeVariableIdents()
 
-    let unparse scheme =
-        let typeVars = unparseTypeVariableIdents scheme
-        $"{typeVars}{Type.unparse scheme.Type}"
+    let unparse (scheme : Scheme<_>) =
+        scheme.Unparse()
