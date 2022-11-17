@@ -62,13 +62,17 @@ module TypeInfer =
 
         let annotate subst typ expr =
             let fullType = Type.apply subst typ
-            let expr' =
-                AnnotationExpr {
-                    Expr = Expression.apply subst expr
-                    Type = fullType
-                    Tag = expr.Tag'
-                }
-            fullType, expr'
+            let def =
+                match Expression.apply subst expr with
+                    | AnnotationExpr def when def.Type = fullType ->
+                        { def with Tag = expr.Tag' }
+                    | expr' ->
+                        {
+                            Expr = expr'
+                            Type = fullType
+                            Tag = expr.Tag'
+                        }
+            fullType, AnnotationExpr def
 
         let infer funenv env expr =
             match expr with

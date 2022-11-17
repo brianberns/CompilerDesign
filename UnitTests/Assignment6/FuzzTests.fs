@@ -112,6 +112,93 @@ type Arbitraries =
     static member Decl() = Decl.arb
     static member DeclGroup() = DeclGroup.arb
 
+[<AutoOpen>]
+module Untype =
+
+    module Expression =
+
+        let rec untype = function
+            | LetExpr def->
+                LetExpr {
+                    def with
+                        Bindings =
+                            def.Bindings
+                                |> List.map (fun binding ->
+                                    {
+                                        binding with
+                                            Type = TypeBlank ()
+                                            Expr = untype binding.Expr
+                                    })
+                        Expr = untype def.Expr
+                }
+            | Prim1Expr def ->
+                Prim1Expr {
+                    def with
+                        TypeArguments = []
+                        Expr = untype def.Expr
+                }
+            | Prim2Expr def ->
+                Prim2Expr {
+                    def with
+                        TypeArguments = []
+                        Left = untype def.Left
+                        Right = untype def.Right
+                }
+            | IfExpr def ->
+                IfExpr {
+                    def with
+                        Condition = untype def.Condition
+                        TrueBranch = untype def.TrueBranch
+                        FalseBranch = untype def.FalseBranch
+                }
+            | ApplicationExpr def ->
+                ApplicationExpr {
+                    def with
+                        Identifier = IdentifierDef.untag def.Identifier
+                        TypeArguments = []
+                        Arguments =
+                            def.Arguments |> List.map untype
+                }
+            | AnnotationExpr def ->
+                untype def.Expr
+            | expr -> expr
+
+    module Scheme =
+
+        let untype (scheme : Scheme<_>) =
+            {
+                scheme with
+                    Type = Type.TypeBlank ()
+            }
+
+    module Decl =
+
+        let untype decl =
+            {
+                decl with
+                    Scheme = Scheme.untype decl.Scheme
+                    Body = Expression.untype decl.Body
+            }
+
+    module DeclGroup =
+
+        let untype group =
+            {
+                Decls =
+                    List.map Decl.untype group.Decls
+            }
+
+    module Program =
+
+        let untype program =
+            {
+                program with
+                    DeclGroups =
+                        List.map DeclGroup.untype program.DeclGroups
+                    Main =
+                        Expression.untype program.Main
+            }
+
 [<TestClass>]
 type FuzzTests() =
 
@@ -173,4 +260,21 @@ type FuzzTests() =
 
         let config = { config with MaxTest = 100000 }
         Check.One(config, unifyArrows)
-            
+
+    [<TestMethod>]
+    member _.InferType() =
+
+        let reannotateUntypedIsOriginal (program : Program<unit>) =
+            match TypeInfer.annotate program with
+                | Ok annotated ->
+                    let untyped = Program.untype annotated
+                    match TypeInfer.annotate untyped with
+                        | Ok reannotated ->
+                            if reannotated = annotated then
+                                true |@ ""
+                            else
+                                false |@ Program.unparse program
+                        | Error msg -> false |@ msg
+                | Error _ -> true |@ ""
+
+        Check.One(config, reannotateUntypedIsOriginal)
