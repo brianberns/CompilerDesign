@@ -278,11 +278,8 @@ type FuzzTests() =
         let reannotateUntypedIsOriginal (program : Program<unit>) =
             match TypeInfer.annotate program with
                 | Ok annotated ->
-                    let untyped = Program.untype annotated
-                    if Program.untype program = untyped then
-                        true |@ ""
-                    else
-                        false |@ Program.unparse program
+                    Program.untype program = Program.untype annotated
+                        |@ Program.unparse program
                 | Error _ -> true |@ ""
 
         let config = { config with MaxTest = 10000 }
