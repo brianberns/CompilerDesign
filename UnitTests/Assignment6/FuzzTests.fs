@@ -34,7 +34,7 @@ module TypeArrowDef =
     let arb =
         gen {
             let! inputs =
-                Generator.from<NonEmptyArray<_>>
+                Generator.from<NonEmptyArray<_>>   // ensure there is at least one input type
             let! output =
                 Generator.from<Type<_>>
             return {
@@ -51,7 +51,7 @@ module Type =
             match! Gen.choose (1, 4) with
                 | 1 -> return TypeBlank ()
                 | 2 ->
-                    return! Gen.elements [
+                    return! Gen.elements [   // choose from actual type constants
                         Type.int
                         Type.bool
                     ]
@@ -69,15 +69,13 @@ module Decl =
     let arb =
         gen {
             let! ident = Generator.from<IdentifierDef<_>>
-            let! tvIdents = Generator.from<List<IdentifierDef<_>>>
             let! parmPairs =
-                Generator.from<List<IdentifierDef<_> * Type<_>>>
+                Generator.from<List<IdentifierDef<_> * Type<_>>>   // ensure # of parameters = # of input types
+            let parms, parmTypes = List.unzip parmPairs
+            let! tvIdents = Generator.from<List<IdentifierDef<_>>>
             let! outType =
                 Generator.from<Type<_>>
-
             let! body = Generator.from<Expression<_>>
-
-            let parms, parmTypes = List.unzip parmPairs
 
             return {
                 Identifier = ident
@@ -102,7 +100,7 @@ module DeclGroup =
     let arb =
         gen {
             let! decls =
-                Generator.from<NonEmptyArray<Decl<unit>>>
+                Generator.from<NonEmptyArray<Decl<unit>>>   // ensure at least one decl per group
             return { Decls = Seq.toList decls.Get }
         } |> Arb.fromGen
 
