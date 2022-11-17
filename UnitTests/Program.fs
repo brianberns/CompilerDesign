@@ -18,15 +18,12 @@ let text =
     """
 
 result {
-
     let! program = Parser.parse text
 
     let! program' = TypeInfer.annotate program
     printfn "Inferred:\n%s" <| Program.unparse program'
 
-    let! typ = TypeCheck.typeOf program'
-    printfn "\nChecked: %s" (Type.unparse typ)
-
+    printfn "\nCompiled:"
     let assemblyName = "Taipan"
     do! Compiler.compile assemblyName text
     return! Process.run assemblyName
