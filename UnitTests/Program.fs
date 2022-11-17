@@ -17,12 +17,9 @@ let text =
     odd(5)
     """
 
-let program =
-    text
-        |> Parser.parse
-        |> Result.get
-
 result {
+
+    let! program = Parser.parse text
 
     let! program' = TypeInfer.annotate program
     printfn "Inferred:\n%s" <| Program.unparse program'
