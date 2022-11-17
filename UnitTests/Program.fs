@@ -4,12 +4,23 @@ open CompilerDesign.Core
 
 let text =
     """
-    def f(x, y): 0
-    0
+    def f(): 0
+    f()
     """
 
 let program =
     text
         |> Parser.parse
         |> Result.get
-        |> printfn "%A"
+
+result {
+
+    let! program' = TypeInfer.annotate program
+    printfn "Inferred:\n%s" <| Program.unparse program'
+
+    let! typ = TypeCheck.typeOf program'
+    printfn "\nChecked: %s" (Type.unparse typ)
+
+    do! Compiler.compile "Taipan" text
+
+} |> printfn "\n%A"

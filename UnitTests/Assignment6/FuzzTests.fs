@@ -281,7 +281,7 @@ type FuzzTests() =
                     let untyped = Program.untype annotated
                     match TypeInfer.annotate untyped with
                         | Ok reannotated ->
-                            if reannotated = annotated then
+                            if Program.untype reannotated = untyped then
                                 true |@ ""
                             else
                                 false |@ Program.unparse program
