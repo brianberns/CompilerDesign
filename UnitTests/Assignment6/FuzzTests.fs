@@ -10,7 +10,7 @@ module Generator =
 module IdentifierDef =
 
     let arb =
-        Gen.elements ['a' .. 'z']
+        Gen.elements ['a' .. 'z']       // limit to single character names for simplicity
             |> Gen.map (string >> IdentifierDef.create)
             |> Arb.fromGen
 
@@ -19,7 +19,7 @@ module LetDef =
     let arb =
         gen {
             let! bindings =
-                Generator.from<NonEmptyArray<_>>
+                Generator.from<NonEmptyArray<_>>   // ensure there is at least one binding
             let! expr =
                 Generator.from<Expression<_>>
             return {
@@ -28,17 +28,6 @@ module LetDef =
                 Tag = ()
             }
         } |> Arb.fromGen
-
-module NumberDef =
-
-    let arb =
-        Generator.from<int>
-            |> Gen.map (fun n ->
-                {
-                    Number = n
-                    Tag = ()
-                })
-            |> Arb.fromGen
 
 module TypeArrowDef =
 
@@ -119,7 +108,6 @@ module DeclGroup =
 
 type Arbitraries =
     static member LetDef() = LetDef.arb
-    static member NumberDef() = NumberDef.arb
     static member IdentifierDef() = IdentifierDef.arb
     static member TypeArrowDef() = TypeArrowDef.arb
     static member Type() = Type.arb
