@@ -6,7 +6,7 @@ let text =
     """
     def f(x): x
     and def g(y): f(y)
-    g(3)
+    0
     """
 
 let program =

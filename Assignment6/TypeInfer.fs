@@ -300,9 +300,10 @@ module TypeInfer =
                     // unify inferred output type
                 let! outputSubst = unify outputType bodyType
 
-                return
-                    bodySubst ++ outputSubst,
-                    { decl with Body = bodyExpr }
+                let subst = bodySubst ++ outputSubst
+                let funenv' = SchemeEnvironment.apply subst funenv
+                let decl' = { decl with Body = bodyExpr }
+                return subst, funenv', decl'
             }
 
         let generalize funenv env subst decl =
@@ -335,14 +336,15 @@ module TypeInfer =
                                     decl' :: accDecls
                             })
 
-                let! subst, declsRev' =
-                    ((Substitution.empty, []), List.rev declsRev)
-                        ||> Result.List.foldM (fun (accSubst, accDecls) decl ->
+                let! subst, _funenv, declsRev' =
+                    ((Substitution.empty, funenv', []), List.rev declsRev)
+                        ||> Result.List.foldM (fun (accSubst, accFunenv, accDecls) decl ->
                             result {
-                                let! declSubst, decl' =
-                                    Decl.infer funenv' env decl
+                                let! declSubst, accFunenv', decl' =
+                                    Decl.infer accFunenv env decl
                                 return
                                     accSubst ++ declSubst,
+                                    accFunenv',
                                     decl' :: accDecls
                             })
 

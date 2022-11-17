@@ -70,6 +70,18 @@ type TaipanTests() =
 
         let text =
             """
+            def f(x):
+              print(x)
+
+            and def ab_bool(a, b):
+              isnum(f(a)) && f(b) # ???
+
+            ab_bool(3, true) && ab_bool(true, false)
+            """
+        Assert.IsTrue(run text |> Result.isError)
+
+        let text =
+            """
             # out of order
             def ab_bool(a, b):
               isnum(f(a)) && f(b)
