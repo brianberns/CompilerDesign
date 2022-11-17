@@ -16,7 +16,7 @@ module TypeInfer =
             |> IdentifierDef.create
             |> TypeVariable
 
-    module Scheme =
+    module private Scheme =
 
         /// Prepares a scheme for instantiation, but does not infer
         /// anything about its type.

@@ -166,10 +166,21 @@ module Untype =
     module Scheme =
 
         let untype (scheme : Scheme<_>) =
-            {
-                scheme with
-                    Type = Type.TypeBlank ()
-            }
+            match scheme.Type with
+                | TypeArrow def ->
+                    {
+                        scheme with
+                            TypeVariableIdents = []
+                            Type =
+                                TypeArrow {
+                                    InputTypes =
+                                        def.InputTypes
+                                            |> List.map (fun _ -> TypeBlank ())
+                                    OutputType = TypeBlank ()
+                                    Tag = ()
+                                }
+                    }
+                | _ -> failwith "Unexpected"
 
     module Decl =
 
