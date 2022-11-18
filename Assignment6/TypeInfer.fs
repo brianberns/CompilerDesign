@@ -274,6 +274,8 @@ module TypeInfer =
 
     module private Decl =
 
+        /// Fleshes out a function's scheme and adds it to the given
+        /// environment. This is different from instantiation.
         let preinstantiate funenv decl =
             result {
                 let scheme = Scheme.preinstantiate decl.Scheme
