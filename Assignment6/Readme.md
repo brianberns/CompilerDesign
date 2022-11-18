@@ -12,9 +12,9 @@ This is a **big** step up from Assignment 5. Type inference is quite difficult t
 
 * The type inference "[occurs check](https://course.ccs.neu.edu/cs4410sp21/lec_type-inference_notes.html#%28part._.Unification%29)" should *not* prohibit unification of a type variable with itself. In other words, `'A` unifies with `'A`, even though "the variable we're trying to constrain appears within its constraint".
 
-* It doesn't make any sense to [instantiate a function's type scheme when inferring its type](https://course.ccs.neu.edu/cs4410sp21/lec_type-inference_notes.html#%28part._.Inference_and_.Generalization%29). Instead, I had to invent a "`preinstantiate`" function at this step. Scheme instantiation happens later, when applying the function.
+* It doesn't make any sense to [instantiate a function's type scheme when inferring its type](https://course.ccs.neu.edu/cs4410sp21/lec_type-inference_notes.html#%28part._.Inference_and_.Generalization%29). Instead, I had to invent a different "`preinstantiate`" function at this step. Scheme instantiation happens later, when applying the function.
 
-* The comment in following example is incorrect:
+* The comment in the following example is incorrect:
 
 ```
 def ab_bool(a, b): # should have scheme Forall 'A, 'B, ('A, 'B -> Bool)
