@@ -276,17 +276,12 @@ module TypeInfer =
 
         let preinstantiate funenv decl =
             result {
-
-                    // flesh out the provided scheme
                 let scheme = Scheme.preinstantiate decl.Scheme
-
-                    // make the function available for a recursive call
                 let! funenv' =
                     funenv
                         |> SchemeEnvironment.tryAdd
                             decl.Identifier.Name
                             scheme
-
                 return funenv', { decl with Scheme = scheme }
             }
 
@@ -411,6 +406,7 @@ module TypeInfer =
                     program'
             }
 
+    /// Infers the type of the given program's main expression.
     let typeOf program =
         result {
             let! _, typ, _ =
@@ -420,6 +416,7 @@ module TypeInfer =
             return typ
         }
 
+    /// Answers a fully annotated version of the given program.
     let annotate program =
         result {
             let! _, _, program' =

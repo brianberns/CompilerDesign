@@ -15,7 +15,6 @@ type Scheme<'tag> =
     }
 
     with
-
     member scheme.UnparseTypeVariableIdents() =
         if scheme.TypeVariableIdents.IsEmpty then ""
         else
@@ -38,9 +37,6 @@ module Scheme =
             Type = Type.untag scheme.Type
             Tag = ()
         }
-
-    let unparseTypeVariableIdents (scheme : Scheme<_>) =
-        scheme.UnparseTypeVariableIdents()
 
     let unparse (scheme : Scheme<_>) =
         scheme.Unparse()

@@ -435,6 +435,7 @@ module Parser =
                 }
             }
 
+    /// Runs the given parser on the given text.
     let run parser text =
         let parser' = parser .>> eof
         match runParserOnString parser' () "" text with

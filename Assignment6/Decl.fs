@@ -41,7 +41,7 @@ module Decl =
 
     let unparse decl =
         let ident = decl.Identifier.Name
-        let tvIdents = Scheme.unparseTypeVariableIdents decl.Scheme
+        let tvIdents = decl.Scheme.UnparseTypeVariableIdents()
         let typedParms, outputType =
             getSignature decl |> Result.get
         let parms =

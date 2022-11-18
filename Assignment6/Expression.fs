@@ -85,8 +85,8 @@ type Expression<'tag> =
 
     /// Type annotation. E.g. "(x : Int)".
     | AnnotationExpr of AnnotationDef<'tag>
+
     with
-    
     member expr.Tag' =   // F# uses the name "Tag" internally :(
         match expr with
             | LetExpr def -> def.Tag

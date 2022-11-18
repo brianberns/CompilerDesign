@@ -180,6 +180,8 @@ module TypeCheck =
                 return env'
             }
 
+    /// Answers the type returned by the main expression of the
+    /// given function.
     let typeOf program =
         result {
             let program' = Program.untag program
@@ -189,6 +191,7 @@ module TypeCheck =
             return! Expression.typeOf env program'.Main
         }
 
+    /// Type-checks the given program.
     let validate program =
         result {
             let! _type = typeOf program

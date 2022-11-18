@@ -49,6 +49,7 @@ module Substitution =
             |> Type.freeTypeVars
             |> Set.contains ident
 
+    /// Finds a substitution that unifies the given types.
     let unify type1 type2 =
 
         let err type1 type2 =
