@@ -21,4 +21,4 @@ def ab_bool(a, b): # should have scheme Forall 'A, 'B, ('A, 'B -> Bool)
   isnum(f(a)) && f(b)
 ```
 
-The correct scheme is `Forall 'A, ('A, Bool -> Bool)`. This wasn't a major mistake, but it confused me for a while.
+The correct scheme is `Forall 'A, ('A, Bool -> Bool)`, because parameter `b` must be a `Bool`. This wasn't a major mistake, but it confused me for a while.
