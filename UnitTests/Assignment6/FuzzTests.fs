@@ -104,6 +104,20 @@ module DeclGroup =
             return { Decls = Seq.toList decls.Get }
         } |> Arb.fromGen
 
+type WellFormed = WellFormed of Program<unit>
+
+module WellFormed =
+
+    let arb =
+        gen {
+            let! program =
+                Generator.from<Program<_>>
+                    |> Gen.where (fun prog ->
+                        TypeInfer.typeOf prog
+                            |> Result.isOk)
+            return WellFormed program
+        } |> Arb.fromGen
+
 type Arbitraries =
     static member LetDef() = LetDef.arb
     static member IdentifierDef() = IdentifierDef.arb
@@ -111,6 +125,7 @@ type Arbitraries =
     static member Type() = Type.arb
     static member Decl() = Decl.arb
     static member DeclGroup() = DeclGroup.arb
+    static member WellFormed() = WellFormed.arb
 
 [<AutoOpen>]
 module Untype =
@@ -275,12 +290,11 @@ type FuzzTests() =
     [<TestMethod>]
     member _.InferType() =
 
-        let reannotateUntypedIsOriginal (program : Program<unit>) =
+        let annotate (WellFormed program) =
             match TypeInfer.annotate program with
                 | Ok annotated ->
                     Program.untype program = Program.untype annotated
                         |@ Program.unparse program
-                | Error _ -> true |@ ""
+                | Error msg -> true |@ msg
 
-        let config = { config with MaxTest = 10000 }
-        Check.One(config, reannotateUntypedIsOriginal)
+        Check.One(config, annotate)
