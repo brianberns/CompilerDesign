@@ -186,7 +186,7 @@ module Compiler =
             result {
                 do! TypeCheck.Type.checkMissing typ
                 match typ with
-                    | TypeConstant _ as typ ->
+                    | TypeConstant _ ->
                         let kind = predefinedTypeMap[typ]
                         return (PredefinedType(Token(kind)) : Syntax.TypeSyntax)
                     | TypeVariable def ->
