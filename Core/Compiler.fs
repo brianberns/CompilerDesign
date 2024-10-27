@@ -26,8 +26,8 @@ module Compiler =
                 CSharpCompilation
                     .Create(assemblyName)
                     .WithReferences(
-                        Net60.SystemRuntime,
-                        Net60.SystemConsole)
+                        Net80.References.SystemRuntime,
+                        Net80.References.SystemConsole)
                     .AddSyntaxTrees(compilationUnit.SyntaxTree)
                     .WithOptions(options)
             compilation.Emit($"{assemblyName}.dll")
